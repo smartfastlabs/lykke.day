@@ -30,8 +30,6 @@ type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
 const KioskPage: Component = () => {
   const {
-    dayContext,
-    isLoading,
     day,
     tasks,
     events,
@@ -345,7 +343,7 @@ const KioskPage: Component = () => {
             </div>
           </Portal>
         ) : null}
-        {!isLoading() && dayContext() ? (
+        {day() ? (
           <div class="relative z-10 h-full w-full">
             <div class="h-full w-full flex flex-col gap-3 p-[25px]">
               <div class="flex items-center justify-between">

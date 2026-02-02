@@ -21,28 +21,57 @@ from lykke.application.commands import (
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
+    GetDayBrainDumpsHandler,
+    GetDayBrainDumpsQuery,
+    GetDayCalendarEntriesHandler,
+    GetDayCalendarEntriesQuery,
     GetDayContextHandler,
-    GetDayContextQuery,
+    GetDayEntityHandler,
+    GetDayEntityQuery,
+    GetDayMessagesHandler,
+    GetDayMessagesQuery,
+    GetDayPushNotificationsHandler,
+    GetDayPushNotificationsQuery,
+    GetDayRoutinesHandler,
+    GetDayRoutinesQuery,
+    GetDayTasksHandler,
+    GetDayTasksQuery,
     GetIncrementalChangesHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import NotFoundError
-from lykke.core.utils.dates import get_current_date
+from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.domain_event_serialization import (
     deserialize_domain_event,
     serialize_domain_event,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import UserEntity
+from lykke.domain.entities import (
+    BrainDumpEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    MessageEntity,
+    PushNotificationEntity,
+    RoutineEntity,
+    TaskEntity,
+    UserEntity,
+)
 from lykke.domain.events.day_events import NewDayEvent
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
+    map_brain_dump_to_schema,
+    map_calendar_entry_to_schema,
     map_day_context_to_schema,
     map_day_to_schema,
+    map_message_to_schema,
+    map_push_notification_to_schema,
     map_routine_to_schema,
+    map_task_to_schema,
 )
 from lykke.presentation.api.schemas.websocket_message import (
+    DayContextPartialSchema,
+    DayContextPartKey,
     EntityChangeSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
@@ -55,7 +84,9 @@ from lykke.presentation.handler_factory import CommandHandlerFactory
 
 from .dependencies.factories import command_handler_factory
 from .dependencies.services import (
+    DayContextPartHandlers,
     day_context_handler_websocket,
+    day_context_part_handlers_websocket,
     get_pubsub_gateway,
     get_pubsub_gateway_for_request,
     get_read_only_repository_factory,
@@ -65,6 +96,16 @@ from .dependencies.services import (
 from .dependencies.user import get_current_user
 
 router = APIRouter()
+
+DAY_CONTEXT_PART_ORDER: tuple[DayContextPartKey, ...] = (
+    "day",
+    "tasks",
+    "calendar_entries",
+    "routines",
+    "brain_dumps",
+    "push_notifications",
+    "messages",
+)
 
 
 # ============================================================================
@@ -158,22 +199,9 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
     await send_ws_message(websocket, error_schema.model_dump(mode="json"))
 
 
-async def _build_full_sync_response(
-    *,
-    get_day_context_handler: GetDayContextHandler,
-    pubsub_gateway: PubSubGatewayProtocol,
-    user_id: UUID,
-    schedule_day_handler: ScheduleDayHandler,
-    date_value: date,
-    user_timezone: str | None,
-) -> WebSocketSyncResponseSchema:
-    try:
-        context = await get_day_context_handler.handle(
-            GetDayContextQuery(date=date_value)
-        )
-    except NotFoundError:
-        context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
-
+async def _get_last_sync_state(
+    *, pubsub_gateway: PubSubGatewayProtocol, user_id: UUID
+) -> tuple[str | None, str | None]:
     last_change_stream_id: str | None = None
     last_audit_timestamp: str | None = None
     latest_entry = await pubsub_gateway.get_latest_user_stream_entry(
@@ -187,26 +215,312 @@ async def _build_full_sync_response(
             ) or latest_payload.get("stored_at")
     if last_audit_timestamp is None:
         last_audit_timestamp = dt_datetime.now(UTC).isoformat()
+    return last_change_stream_id, last_audit_timestamp
 
-    routines = await get_day_context_handler.routine_ro_repo.search(
-        value_objects.RoutineQuery(date=date_value)
-    )
-    routine_schemas = [
-        map_routine_to_schema(
-            routine,
-            tasks=context.tasks,
-            user_timezone=user_timezone,
+
+def _build_partial_context(
+    *,
+    part_key: DayContextPartKey,
+    day: DayEntity | None = None,
+    tasks: list[TaskEntity] | None = None,
+    calendar_entries: list[CalendarEntryEntity] | None = None,
+    routines: list[RoutineEntity] | None = None,
+    brain_dumps: list[BrainDumpEntity] | None = None,
+    push_notifications: list[PushNotificationEntity] | None = None,
+    messages: list[MessageEntity] | None = None,
+    user_timezone: str | None,
+) -> DayContextPartialSchema:
+    current_time = get_current_datetime_in_timezone(user_timezone)
+
+    if part_key == "day":
+        if day is None:
+            raise ValueError("Day is required for day context part.")
+        return DayContextPartialSchema(
+            day=map_day_to_schema(day, brain_dumps=brain_dumps or []),
         )
-        for routine in routines
-    ]
+    if part_key == "tasks":
+        return DayContextPartialSchema(
+            tasks=[
+                map_task_to_schema(
+                    task, current_time=current_time, user_timezone=user_timezone
+                )
+                for task in (tasks or [])
+            ],
+        )
+    if part_key == "calendar_entries":
+        return DayContextPartialSchema(
+            calendar_entries=[
+                map_calendar_entry_to_schema(entry, user_timezone=user_timezone)
+                for entry in (calendar_entries or [])
+            ],
+        )
+    if part_key == "routines":
+        return DayContextPartialSchema(
+            routines=[
+                map_routine_to_schema(
+                    routine,
+                    tasks=list(tasks) if tasks is not None else None,
+                    current_time=current_time,
+                    user_timezone=user_timezone,
+                )
+                for routine in (routines or [])
+            ],
+        )
+    if part_key == "brain_dumps":
+        return DayContextPartialSchema(
+            brain_dumps=[
+                map_brain_dump_to_schema(item) for item in (brain_dumps or [])
+            ],
+        )
+    if part_key == "push_notifications":
+        return DayContextPartialSchema(
+            push_notifications=[
+                map_push_notification_to_schema(notification)
+                for notification in (push_notifications or [])
+            ],
+        )
+    if part_key == "messages":
+        return DayContextPartialSchema(
+            messages=[map_message_to_schema(message) for message in (messages or [])],
+        )
 
-    return WebSocketSyncResponseSchema(
-        day_context=map_day_context_to_schema(context, user_timezone=user_timezone),
-        changes=None,
-        routines=routine_schemas,
-        last_audit_log_timestamp=last_audit_timestamp,
-        last_change_stream_id=last_change_stream_id,
+    raise ValueError(f"Unsupported day context part key: {part_key}")
+
+
+async def _ensure_day_context(
+    *,
+    date_value: date,
+    part_handlers: DayContextPartHandlers,
+    schedule_day_handler: ScheduleDayHandler,
+) -> tuple[value_objects.DayContext | None, DayEntity]:
+    try:
+        day = await part_handlers.day.handle(GetDayEntityQuery(date=date_value))
+        return None, day
+    except NotFoundError:
+        context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
+        return context, context.day
+
+
+async def _load_day_context_part(
+    *,
+    part_key: DayContextPartKey,
+    date_value: date,
+    user_timezone: str | None,
+    part_handlers: DayContextPartHandlers,
+    context_cache: value_objects.DayContext | None,
+    day_entity: DayEntity,
+    tasks_cache: list[TaskEntity] | None,
+) -> tuple[DayContextPartialSchema, list[TaskEntity] | None]:
+    if context_cache:
+        if part_key == "day":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    day=context_cache.day,
+                    brain_dumps=context_cache.brain_dumps,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "tasks":
+            tasks_cache = list(context_cache.tasks)
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    tasks=tasks_cache,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "calendar_entries":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    calendar_entries=context_cache.calendar_entries,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "routines":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    routines=context_cache.routines,
+                    tasks=tasks_cache or list(context_cache.tasks),
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "brain_dumps":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    brain_dumps=context_cache.brain_dumps,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "push_notifications":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    push_notifications=context_cache.push_notifications,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+        if part_key == "messages":
+            return (
+                _build_partial_context(
+                    part_key=part_key,
+                    messages=context_cache.messages,
+                    user_timezone=user_timezone,
+                ),
+                tasks_cache,
+            )
+
+    if part_key == "day":
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                day=day_entity,
+                brain_dumps=[],
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "tasks":
+        tasks_cache = await part_handlers.tasks.handle(
+            GetDayTasksQuery(date=date_value)
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                tasks=tasks_cache,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "calendar_entries":
+        calendar_entries = await part_handlers.calendar_entries.handle(
+            GetDayCalendarEntriesQuery(date=date_value)
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                calendar_entries=calendar_entries,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "routines":
+        if tasks_cache is None:
+            tasks_cache = await part_handlers.tasks.handle(
+                GetDayTasksQuery(date=date_value)
+            )
+        routines = await part_handlers.routines.get_routines(
+            date_value, tasks=tasks_cache
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                routines=routines,
+                tasks=tasks_cache,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "brain_dumps":
+        brain_dumps = await part_handlers.brain_dumps.handle(
+            GetDayBrainDumpsQuery(date=date_value)
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                brain_dumps=brain_dumps,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "push_notifications":
+        push_notifications = await part_handlers.push_notifications.handle(
+            GetDayPushNotificationsQuery(date=date_value)
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                push_notifications=push_notifications,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+    if part_key == "messages":
+        messages = await part_handlers.messages.handle(
+            GetDayMessagesQuery(date=date_value)
+        )
+        return (
+            _build_partial_context(
+                part_key=part_key,
+                messages=messages,
+                user_timezone=user_timezone,
+            ),
+            tasks_cache,
+        )
+
+    raise ValueError(f"Unsupported day context part key: {part_key}")
+
+
+async def _send_day_context_parts(
+    *,
+    websocket: WebSocket,
+    part_handlers: DayContextPartHandlers,
+    schedule_day_handler: ScheduleDayHandler,
+    pubsub_gateway: PubSubGatewayProtocol,
+    user_id: UUID,
+    date_value: date,
+    user_timezone: str | None,
+    parts: list[DayContextPartKey],
+) -> str | None:
+    if not parts:
+        parts = list(DAY_CONTEXT_PART_ORDER)
+
+    context_cache, day_entity = await _ensure_day_context(
+        date_value=date_value,
+        part_handlers=part_handlers,
+        schedule_day_handler=schedule_day_handler,
     )
+    tasks_cache: list[TaskEntity] | None = (
+        list(context_cache.tasks) if context_cache else None
+    )
+
+    last_change_stream_id, last_audit_timestamp = await _get_last_sync_state(
+        pubsub_gateway=pubsub_gateway,
+        user_id=user_id,
+    )
+
+    for index, part_key in enumerate(parts):
+        partial_context, tasks_cache = await _load_day_context_part(
+            part_key=part_key,
+            date_value=date_value,
+            user_timezone=user_timezone,
+            part_handlers=part_handlers,
+            context_cache=context_cache,
+            day_entity=day_entity,
+            tasks_cache=tasks_cache,
+        )
+        response = WebSocketSyncResponseSchema(
+            day_context=None,
+            changes=None,
+            routines=None,
+            partial_context=partial_context,
+            partial_key=part_key,
+            sync_complete=index == len(parts) - 1,
+            last_audit_log_timestamp=last_audit_timestamp,
+            last_change_stream_id=last_change_stream_id,
+        )
+        await send_ws_message(websocket, response.model_dump(mode="json"))
+
+    return last_change_stream_id
 
 
 @router.websocket("/today/context")
@@ -215,6 +529,9 @@ async def days_context_websocket(
     pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
     day_context_handler: Annotated[
         GetDayContextHandler, Depends(day_context_handler_websocket)
+    ],
+    day_context_part_handlers: Annotated[
+        DayContextPartHandlers, Depends(day_context_part_handlers_websocket)
     ],
     incremental_changes_handler_ws: Annotated[
         GetIncrementalChangesHandler,
@@ -268,6 +585,7 @@ async def days_context_websocket(
                 _handle_client_messages(
                     websocket,
                     day_context_handler,
+                    day_context_part_handlers,
                     incremental_changes_handler_ws,
                     schedule_day_handler,
                     pubsub_gateway,
@@ -282,6 +600,7 @@ async def days_context_websocket(
                     websocket,
                     domain_events_subscription,
                     day_context_handler,
+                    day_context_part_handlers,
                     schedule_day_handler,
                     pubsub_gateway,
                     date_state,
@@ -330,6 +649,7 @@ async def days_context_websocket(
 async def _handle_client_messages(
     websocket: WebSocket,
     get_day_context_handler: GetDayContextHandler,
+    day_context_part_handlers: DayContextPartHandlers,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
     schedule_day_handler: ScheduleDayHandler,
     pubsub_gateway: PubSubGatewayProtocol,
@@ -407,6 +727,9 @@ async def _handle_client_messages(
                     response = WebSocketSyncResponseSchema(
                         changes=changes,
                         day_context=None,
+                        partial_context=None,
+                        partial_key=None,
+                        sync_complete=None,
                         last_audit_log_timestamp=last_timestamp,
                         last_change_stream_id=last_stream_id,
                     )
@@ -419,23 +742,34 @@ async def _handle_client_messages(
                     )
                     continue
             else:
+                parts = []
+                if sync_request.partial_keys:
+                    parts = list(sync_request.partial_keys)
+                elif sync_request.partial_key:
+                    parts = [sync_request.partial_key]
+                else:
+                    parts = list(DAY_CONTEXT_PART_ORDER)
                 try:
-                    response = await _build_full_sync_response(
-                        get_day_context_handler=get_day_context_handler,
+                    last_stream_id = await _send_day_context_parts(
+                        websocket=websocket,
+                        part_handlers=day_context_part_handlers,
                         schedule_day_handler=schedule_day_handler,
                         pubsub_gateway=pubsub_gateway,
                         user_id=get_day_context_handler.user_id,
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
+                        parts=parts,
                     )
-                    if response.last_change_stream_id:
-                        stream_state["last_id"] = response.last_change_stream_id
+                    if last_stream_id:
+                        stream_state["last_id"] = last_stream_id
                 except Exception as e:
-                    logger.error(f"Error getting day context: {e}")
+                    logger.error(f"Error getting day context parts: {e}")
                     await send_error(
-                        websocket, "INTERNAL_ERROR", f"Failed to get day context: {e}"
+                        websocket,
+                        "INTERNAL_ERROR",
+                        f"Failed to get day context parts: {e}",
                     )
-                    continue
+                continue
 
             await send_ws_message(websocket, response.model_dump(mode="json"))
 
@@ -452,6 +786,7 @@ async def _handle_realtime_domain_events(
     websocket: WebSocket,
     domain_events_subscription: Any,
     day_context_handler: GetDayContextHandler,
+    day_context_part_handlers: DayContextPartHandlers,
     schedule_day_handler: ScheduleDayHandler,
     pubsub_gateway: PubSubGatewayProtocol,
     date_state: dict[str, date],
@@ -483,17 +818,18 @@ async def _handle_realtime_domain_events(
                         f"New day detected ({current_date} -> {next_date}). Sending full sync.",
                     )
                     date_state["value"] = next_date
-                    response = await _build_full_sync_response(
-                        get_day_context_handler=day_context_handler,
+                    last_stream_id = await _send_day_context_parts(
+                        websocket=websocket,
+                        part_handlers=day_context_part_handlers,
                         schedule_day_handler=schedule_day_handler,
                         pubsub_gateway=pubsub_gateway,
                         user_id=day_context_handler.user_id,
                         date_value=next_date,
                         user_timezone=user_timezone,
+                        parts=list(DAY_CONTEXT_PART_ORDER),
                     )
-                    if response.last_change_stream_id:
-                        stream_state["last_id"] = response.last_change_stream_id
-                    await send_ws_message(websocket, response.model_dump(mode="json"))
+                    if last_stream_id:
+                        stream_state["last_id"] = last_stream_id
                 continue
 
             event_topic = domain_event.__class__.__name__

@@ -6,8 +6,36 @@ from uuid import UUID
 from .audit_log import AuditLogSchema
 from .base import BaseSchema
 from .day_context import DayContextSchema
+from .task import TaskSchema
+from .calendar_entry import CalendarEntrySchema
+from .brain_dump import BrainDumpSchema
+from .day import DaySchema
 from .message import MessageSchema
+from .push_notification import PushNotificationSchema
 from .routine import RoutineSchema
+
+
+DayContextPartKey = Literal[
+    "day",
+    "tasks",
+    "calendar_entries",
+    "routines",
+    "brain_dumps",
+    "push_notifications",
+    "messages",
+]
+
+
+class DayContextPartialSchema(BaseSchema):
+    """Partial day context payload for incremental sync."""
+
+    day: DaySchema | None = None
+    calendar_entries: list[CalendarEntrySchema] | None = None
+    tasks: list[TaskSchema] | None = None
+    routines: list[RoutineSchema] | None = None
+    brain_dumps: list[BrainDumpSchema] | None = None
+    push_notifications: list[PushNotificationSchema] | None = None
+    messages: list[MessageSchema] | None = None
 
 
 class WebSocketUserMessageSchema(BaseSchema):
@@ -57,6 +85,8 @@ class WebSocketSyncRequestSchema(BaseSchema):
     since_change_stream_id: str | None = (
         None  # Redis stream id for entity change stream incremental sync
     )
+    partial_key: DayContextPartKey | None = None
+    partial_keys: list[DayContextPartKey] | None = None
 
 
 class WebSocketSubscriptionSchema(BaseSchema):
@@ -92,6 +122,9 @@ class WebSocketSyncResponseSchema(BaseSchema):
     routines: list[RoutineSchema] | None = (
         None  # Routines (included in full sync response)
     )
+    partial_context: DayContextPartialSchema | None = None
+    partial_key: DayContextPartKey | None = None
+    sync_complete: bool | None = None
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
     last_change_stream_id: str | None = None
 

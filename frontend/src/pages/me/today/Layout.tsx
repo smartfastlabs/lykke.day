@@ -11,7 +11,7 @@ import { useStreamingData } from "@/providers/streamingData";
 import TimeBlocksSummary from "@/components/today/TimeBlocksSummary";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
-  const { dayContext, isLoading, day, sync } = useStreamingData();
+  const { day, sync } = useStreamingData();
 
   const date = createMemo(() => {
     const dayValue = day();
@@ -53,7 +53,7 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
     <Page variant="app" hideFooter>
       <div class="min-h-[100dvh] box-border relative overflow-hidden">
         <Show
-          when={!isLoading() && dayContext()}
+          when={Boolean(day())}
           fallback={
             <div class="relative z-10 p-8 text-center text-stone-400">
               Loading...

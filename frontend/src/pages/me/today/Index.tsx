@@ -34,7 +34,8 @@ const isAllDayEvent = (event: Event): boolean => {
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tasks, events, reminders, alarms, routines } = useStreamingData();
+  const { tasks, events, reminders, alarms, routines, isLoading } =
+    useStreamingData();
   const [now, setNow] = createSignal(new Date());
 
   // Update time every 30 seconds to keep sections aligned
@@ -91,6 +92,7 @@ export const TodayPage: Component = () => {
   // Redirect to /me/thats-all-for-today if it's end of day, unless user
   // chose "Back to home" from thats-all (short-lived cookie set).
   createEffect(() => {
+    if (isLoading()) return;
     if (!isEndOfDay() || location.pathname === "/me/thats-all-for-today")
       return;
     if (getShowTodayCookie()) {

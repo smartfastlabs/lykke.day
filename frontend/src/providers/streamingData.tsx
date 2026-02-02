@@ -132,10 +132,29 @@ interface WebSocketMessage {
   [key: string]: unknown;
 }
 
+type DayContextPartKey =
+  | "day"
+  | "tasks"
+  | "calendar_entries"
+  | "routines"
+  | "brain_dumps"
+  | "push_notifications";
+
+interface PartialDayContext {
+  day?: Day;
+  calendar_entries?: Event[];
+  tasks?: Task[];
+  routines?: Routine[];
+  brain_dumps?: BrainDump[];
+  push_notifications?: PushNotification[];
+}
+
 interface SyncRequestMessage extends WebSocketMessage {
   type: "sync_request";
   since_timestamp?: string | null;
   since_change_stream_id?: string | null;
+  partial_key?: DayContextPartKey | null;
+  partial_keys?: DayContextPartKey[] | null;
 }
 
 interface SyncResponseMessage extends WebSocketMessage {
@@ -143,6 +162,9 @@ interface SyncResponseMessage extends WebSocketMessage {
   day_context?: DayContextWithRoutines;
   changes?: EntityChange[];
   routines?: Routine[];
+  partial_context?: PartialDayContext;
+  partial_key?: DayContextPartKey | null;
+  sync_complete?: boolean | null;
   last_audit_log_timestamp?: string | null;
   last_change_stream_id?: string | null;
 }
@@ -206,6 +228,7 @@ export function StreamingDataProvider(props: ParentProps) {
   let syncDebounceTimeout: number | null = null;
   let isMounted = false;
   let wsClient: WsClient<DomainEventEnvelope> | null = null;
+  let fullSyncBaseContext: DayContextWithRoutines | undefined = undefined;
 
   type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
     id?: string | null;
@@ -242,6 +265,24 @@ export function StreamingDataProvider(props: ParentProps) {
     return deduped;
   };
 
+  const DAY_CONTEXT_PARTS: DayContextPartKey[] = [
+    "day",
+    "tasks",
+    "calendar_entries",
+    "routines",
+    "brain_dumps",
+    "push_notifications",
+  ];
+
+  const buildEmptyDayContext = (currentDay: Day): DayContextWithRoutines => ({
+    day: currentDay,
+    tasks: [],
+    calendar_entries: [],
+    routines: [],
+    brain_dumps: [],
+    push_notifications: [],
+  });
+
   const createDebugEventId = (): string => {
     debugEventSeq += 1;
     return `${Date.now()}-${debugEventSeq}`;
@@ -264,8 +305,11 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const summarizeSyncResponse = (message: SyncResponseMessage) => {
     const dayContext = message.day_context;
+    const partialContext = message.partial_context;
     return {
       hasDayContext: Boolean(dayContext),
+      partialKey: message.partial_key ?? null,
+      hasPartialContext: Boolean(partialContext),
       changesCount: message.changes?.length ?? 0,
       dayContextSummary: dayContext
         ? {
@@ -276,6 +320,17 @@ export function StreamingDataProvider(props: ParentProps) {
               (dayContext as DayContextWithRoutines).routines?.length ?? 0,
           }
         : undefined,
+      partialContextSummary: partialContext
+        ? {
+            tasks: partialContext.tasks?.length ?? 0,
+            calendarEntries: partialContext.calendar_entries?.length ?? 0,
+            routines: partialContext.routines?.length ?? 0,
+            brainDumps: partialContext.brain_dumps?.length ?? 0,
+            pushNotifications: partialContext.push_notifications?.length ?? 0,
+            hasDay: Boolean(partialContext.day),
+          }
+        : undefined,
+      syncComplete: message.sync_complete ?? null,
       lastAuditLogTimestamp: message.last_audit_log_timestamp ?? null,
       lastChangeStreamId: message.last_change_stream_id ?? null,
     };
@@ -449,14 +504,17 @@ export function StreamingDataProvider(props: ParentProps) {
 
   // Request full sync
   const requestFullSync = () => {
+    fullSyncBaseContext = dayContextStore.data;
     const request: SyncRequestMessage = {
       type: "sync_request",
       since_timestamp: null,
+      partial_keys: DAY_CONTEXT_PARTS,
     };
     const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
     logDebugEvent("out", "sync_request", {
       since_timestamp: request.since_timestamp,
       since_change_stream_id: request.since_change_stream_id ?? null,
+      partial_keys: request.partial_keys ?? null,
       sent,
     });
     if (sent) {
@@ -479,11 +537,100 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const mergePartialContext = (
+    current: DayContextWithRoutines,
+    partial: PartialDayContext,
+  ): DayContextWithRoutines => {
+    let next = { ...current };
+    if (partial.day) {
+      next = { ...next, day: partial.day };
+    }
+    if (partial.tasks) {
+      next = { ...next, tasks: partial.tasks };
+    }
+    if (partial.calendar_entries) {
+      next = { ...next, calendar_entries: partial.calendar_entries };
+    }
+    if (partial.routines) {
+      next = { ...next, routines: partial.routines };
+    }
+    if (partial.brain_dumps) {
+      next = {
+        ...next,
+        brain_dumps: partial.brain_dumps,
+        day: next.day
+          ? { ...next.day, brain_dumps: partial.brain_dumps }
+          : next.day,
+      };
+    }
+    if (partial.push_notifications) {
+      next = { ...next, push_notifications: partial.push_notifications };
+    }
+    return next;
+  };
+
+  const applyPartialContext = (partial: PartialDayContext): boolean => {
+    let didUpdate = false;
+    setDayContextStore((current) => {
+      if (!current.data) {
+        if (!partial.day) {
+          logDebugEvent("state", "partial_sync_skipped", {
+            reason: "missing_day",
+          });
+          return current;
+        }
+        const initial = buildEmptyDayContext(partial.day);
+        didUpdate = true;
+        return { data: mergePartialContext(initial, partial) };
+      }
+      didUpdate = true;
+      return { data: mergePartialContext(current.data, partial) };
+    });
+    return didUpdate;
+  };
+
   // Handle sync response
   const handleSyncResponse = async (message: SyncResponseMessage) => {
-    setIsLoading(false);
+    if (message.partial_context) {
+      const previousContext = dayContextStore.data;
+      const didApplyChanges = applyPartialContext(message.partial_context);
+      logDebugEvent("state", "apply_partial_context", {
+        partialKey: message.partial_key ?? null,
+        didApplyChanges,
+      });
+      if (message.last_audit_log_timestamp) {
+        setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      }
+      if (message.last_change_stream_id) {
+        setLastChangeStreamId(message.last_change_stream_id);
+      }
+      if (message.sync_complete) {
+        setIsLoading(false);
+        setIsOutOfSync(false);
+        void refreshAuxiliaryData();
+        const baselineContext = fullSyncBaseContext ?? previousContext;
+        fullSyncBaseContext = undefined;
+        if (isOnMeRoute() && baselineContext) {
+          const completedCount = countCompletedTasksFromFullSync(
+            baselineContext.tasks ?? [],
+            dayContextStore.data?.tasks ?? [],
+          );
+          if (completedCount > 0) {
+            globalNotifications.addInfo(
+              buildTaskCompletedNotification(completedCount),
+              {
+                duration: 4000,
+              },
+            );
+          }
+        }
+      }
+      return;
+    }
 
     if (message.day_context) {
+      setIsLoading(false);
+      fullSyncBaseContext = undefined;
       const previousContext = dayContextStore.data;
       // Full context - replace store
       setDayContextStore({ data: message.day_context });

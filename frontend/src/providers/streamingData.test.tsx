@@ -122,6 +122,7 @@ describe("StreamingDataProvider", () => {
         <div data-testid="is-out-of-sync">
           {context.isOutOfSync().toString()}
         </div>
+        <div data-testid="has-day">{Boolean(context.day()).toString()}</div>
         <div data-testid="tasks-count">{context.tasks().length}</div>
         <div data-testid="events-count">{context.events().length}</div>
       </div>
@@ -187,6 +188,14 @@ describe("StreamingDataProvider", () => {
         expect(sentMessages).toContainEqual({
           type: "sync_request",
           since_timestamp: null,
+          partial_keys: [
+            "day",
+            "tasks",
+            "calendar_entries",
+            "routines",
+            "brain_dumps",
+            "push_notifications",
+          ],
         });
       });
     });
@@ -276,6 +285,51 @@ describe("StreamingDataProvider", () => {
       ws.simulateMessage({
         type: "sync_response",
         day_context: mockDayContext,
+        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+      });
+
+      await waitFor(() => {
+        expect(getByTestId("tasks-count").textContent).toBe("1");
+        expect(getByTestId("is-loading").textContent).toBe("false");
+      });
+    });
+
+    it("should merge partial sync responses and finish on sync_complete", async () => {
+      const { getByTestId } = render(() => (
+        <StreamingDataProvider>
+          <TestComponent />
+        </StreamingDataProvider>
+      ));
+
+      await waitFor(() => {
+        expect(ControllableWebSocket.instances.length).toBe(1);
+      });
+
+      const ws = ControllableWebSocket.instances[0];
+      ws.simulateOpen();
+
+      ws.simulateMessage({
+        type: "sync_response",
+        partial_key: "day",
+        partial_context: {
+          day: mockDayContext.day,
+        },
+        sync_complete: false,
+        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+      });
+
+      await waitFor(() => {
+        expect(getByTestId("has-day").textContent).toBe("true");
+        expect(getByTestId("is-loading").textContent).toBe("true");
+      });
+
+      ws.simulateMessage({
+        type: "sync_response",
+        partial_key: "tasks",
+        partial_context: {
+          tasks: mockDayContext.tasks,
+        },
+        sync_complete: true,
         last_audit_log_timestamp: "2026-01-15T12:00:00Z",
       });
 

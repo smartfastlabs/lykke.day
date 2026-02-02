@@ -6,6 +6,7 @@ with FastAPI's Depends() in route handlers.
 """
 
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Request, WebSocket
@@ -13,7 +14,14 @@ from fastapi import Depends, Request, WebSocket
 from lykke.application.commands import ScheduleDayHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
+    GetDayBrainDumpsHandler,
+    GetDayCalendarEntriesHandler,
     GetDayContextHandler,
+    GetDayEntityHandler,
+    GetDayMessagesHandler,
+    GetDayPushNotificationsHandler,
+    GetDayRoutinesHandler,
+    GetDayTasksHandler,
     GetIncrementalChangesHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
@@ -149,6 +157,38 @@ async def day_context_handler_websocket(
     """Get a GetDayContextHandler instance for WebSocket handlers."""
     factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
     return factory.create(GetDayContextHandler)
+
+
+@dataclass(frozen=True)
+class DayContextPartHandlers:
+    """Container for DayContext part query handlers."""
+
+    day: GetDayEntityHandler
+    tasks: GetDayTasksHandler
+    calendar_entries: GetDayCalendarEntriesHandler
+    routines: GetDayRoutinesHandler
+    brain_dumps: GetDayBrainDumpsHandler
+    push_notifications: GetDayPushNotificationsHandler
+    messages: GetDayMessagesHandler
+
+
+async def day_context_part_handlers_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> DayContextPartHandlers:
+    """Get DayContext part handlers for WebSocket handlers."""
+    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    return DayContextPartHandlers(
+        day=factory.create(GetDayEntityHandler),
+        tasks=factory.create(GetDayTasksHandler),
+        calendar_entries=factory.create(GetDayCalendarEntriesHandler),
+        routines=factory.create(GetDayRoutinesHandler),
+        brain_dumps=factory.create(GetDayBrainDumpsHandler),
+        push_notifications=factory.create(GetDayPushNotificationsHandler),
+        messages=factory.create(GetDayMessagesHandler),
+    )
 
 
 async def incremental_changes_handler_websocket(
