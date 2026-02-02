@@ -132,6 +132,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         entries_to_upsert = [
             entry for entry in filtered_entries if entry.status != "cancelled"
         ]
+        current_time = datetime.now(UTC)
 
         series_notification_sent: set[UUID] = set()
 
@@ -314,6 +315,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             deleted_entry_ids = {entry.id for entry in entries_to_delete}
             series_ids_with_deletions: set[UUID] = set()
             for entry in entries_to_delete:
+                if entry.starts_at < current_time:
+                    continue
                 if entry.calendar_entry_series_id:
                     series_ids_with_deletions.add(entry.calendar_entry_series_id)
                 if should_emit_series_notification(entry.calendar_entry_series_id):
@@ -322,7 +325,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     entry.delete_silently()
                 uow.add(entry)
 
-            # If an entire series was removed, delete remaining entries and the series
+            # If an entire series was removed, delete future entries and end the series
             if series_ids_with_deletions:
                 for series_id in series_ids_with_deletions:
                     existing_series_entries = (
@@ -332,18 +335,17 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                             )
                         )
                     )
-                    remaining_entries = [
+                    future_entries = [
                         entry
                         for entry in existing_series_entries
-                        if entry.platform_id not in deleted_platform_ids
+                        if entry.starts_at >= current_time
+                        and entry.platform_id not in deleted_platform_ids
                         and entry.platform_id
                         not in upsert_platform_ids_by_series.get(series_id, set())
                     ]
-                    if remaining_entries:
-                        continue
 
-                    # Delete any entries for the series not already marked
-                    for entry in existing_series_entries:
+                    # Delete any future entries for the series not already marked
+                    for entry in future_entries:
                         if entry.id in deleted_entry_ids:
                             continue
                         if should_emit_series_notification(series_id):
@@ -352,7 +354,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                             entry.delete_silently()
                         uow.add(entry)
 
-                    # Delete the series itself
+                    # End the series itself to avoid FK violations
                     series_for_delete = series_by_id.get(series_id)
                     if series_for_delete is None:
                         try:
@@ -362,8 +364,22 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                         except NotFoundError:
                             series_for_delete = None
                     if series_for_delete is not None:
-                        series_for_delete.delete()
-                        uow.add(series_for_delete)
+                        series_end_update_fields: dict[str, Any] = {}
+                        if series_for_delete.ends_at is None or (
+                            series_for_delete.ends_at > current_time
+                        ):
+                            series_end_update_fields["ends_at"] = current_time
+                        if series_for_delete.recurrence:
+                            series_end_update_fields["recurrence"] = []
+
+                        if series_end_update_fields:
+                            series_update_object = CalendarEntrySeriesUpdateObject(
+                                **series_end_update_fields
+                            )
+                            updated_series = series_for_delete.apply_update(
+                                series_update_object, CalendarEntrySeriesUpdatedEvent
+                            )
+                            uow.add(updated_series)
 
         updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
         return uow.add(updated_calendar)

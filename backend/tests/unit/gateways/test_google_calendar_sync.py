@@ -1,6 +1,6 @@
 """Unit tests for Google Calendar sync logic."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -19,7 +19,9 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
 )
-from lykke.domain.events.base import EntityDeletedEvent
+from lykke.domain.events.calendar_entry_series_events import (
+    CalendarEntrySeriesUpdatedEvent,
+)
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
     CalendarEntryDeletedEvent,
@@ -542,6 +544,7 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
         platform="google",
         frequency=TaskFrequency.DAILY,
     )
+    now = datetime.now(UTC)
     entry_one = CalendarEntryEntity(
         user_id=test_user_id,
         name="Series To Delete",
@@ -550,8 +553,8 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
         platform_id="entry-10",
         platform="google",
         status="confirmed",
-        starts_at=datetime(2025, 2, 1, 9, 0, tzinfo=UTC),
-        ends_at=datetime(2025, 2, 1, 10, 0, tzinfo=UTC),
+        starts_at=now - timedelta(days=1),
+        ends_at=now - timedelta(days=1),
         frequency=TaskFrequency.DAILY,
     )
     entry_two = CalendarEntryEntity(
@@ -562,8 +565,8 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
         platform_id="entry-11",
         platform="google",
         status="confirmed",
-        starts_at=datetime(2025, 2, 2, 9, 0, tzinfo=UTC),
-        ends_at=datetime(2025, 2, 2, 10, 0, tzinfo=UTC),
+        starts_at=now + timedelta(days=1),
+        ends_at=now + timedelta(days=1),
         frequency=TaskFrequency.DAILY,
     )
     deleted_stub_one = CalendarEntryEntity(
@@ -631,16 +634,18 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
         if isinstance(event, CalendarEntryDeletedEvent)
     )
     assert deleted_event_count == 1
+    assert any(entry.platform_id == "entry-11" for entry in deleted_entries)
 
-    deleted_series = [
+    updated_series = [
         entity
         for entity in mock_uow.added
         if isinstance(entity, CalendarEntrySeriesEntity)
     ]
-    assert deleted_series
+    assert updated_series
+    assert updated_series[0].ends_at is not None
     assert any(
-        isinstance(event, EntityDeletedEvent)
-        for event in deleted_series[0].collect_events()
+        isinstance(event, CalendarEntrySeriesUpdatedEvent)
+        for event in updated_series[0].collect_events()
     )
 
 
