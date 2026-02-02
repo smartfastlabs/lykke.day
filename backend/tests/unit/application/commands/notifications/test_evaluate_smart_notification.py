@@ -14,9 +14,9 @@ from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
-from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.application.llm.mixin import LLMRunSnapshotContext
+from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -26,9 +26,9 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
 )
 from tests.support.dobles import (
-    create_repo_double,
     create_push_subscription_repo_double,
     create_read_only_repos_double,
+    create_repo_double,
     create_uow_double,
     create_uow_factory_double,
 )
@@ -247,7 +247,9 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
     prompt_context = _build_prompt_context(user_id)
     uow = create_uow_double()
     push_subscription_repo = create_push_subscription_repo_double()
-    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
+    push_notification_repo = create_repo_double(
+        PushNotificationRepositoryReadOnlyProtocol
+    )
     handler = SmartNotificationHandler(
         create_read_only_repos_double(
             push_notification_repo=push_notification_repo,
@@ -295,7 +297,9 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
-    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
+    push_notification_repo = create_repo_double(
+        PushNotificationRepositoryReadOnlyProtocol
+    )
     subscription = _build_subscription(user_id)
     send_recorder = _Recorder(commands=[])
 
@@ -336,7 +340,9 @@ async def test_smart_tool_skips_when_recent_notification_sent() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
-    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
+    push_notification_repo = create_repo_double(
+        PushNotificationRepositoryReadOnlyProtocol
+    )
     subscription = _build_subscription(user_id)
     send_recorder = _Recorder(commands=[])
     current_time = datetime(2025, 11, 27, 9, 0, tzinfo=UTC)
@@ -387,7 +393,9 @@ async def test_smart_tool_handles_send_errors() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
-    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
+    push_notification_repo = create_repo_double(
+        PushNotificationRepositoryReadOnlyProtocol
+    )
     subscription = _build_subscription(user_id)
 
     async def return_subscriptions() -> list[PushSubscriptionEntity]:
@@ -422,6 +430,7 @@ async def test_smart_tool_handles_send_errors() -> None:
     allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
+    await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")

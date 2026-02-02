@@ -157,21 +157,12 @@ async def evaluate_morning_overviews_for_all_users_task(
     task = enqueue_task or evaluate_morning_overview_task
     for user in eligible_users:
         try:
-            overview_time_str = user.settings.morning_overview_time
-            if not overview_time_str:
+            overview_time = user.settings.morning_overview_time
+            if not overview_time:
                 continue
 
-            try:
-                hour_str, minute_str = overview_time_str.split(":")
-                overview_hour = int(hour_str)
-                overview_minute = int(minute_str)
-            except (ValueError, AttributeError):
-                logger.warning(
-                    "Invalid morning_overview_time format for user %s: %s",
-                    user.id,
-                    overview_time_str,
-                )
-                continue
+            overview_hour = overview_time.hour
+            overview_minute = overview_time.minute
 
             current_time = current_time_provider(user.settings.timezone)
             current_hour = current_time.hour

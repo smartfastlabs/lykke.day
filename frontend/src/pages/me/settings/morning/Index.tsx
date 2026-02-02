@@ -31,6 +31,8 @@ const MorningOverviewConfigPage: Component = () => {
     createSignal<string>("");
   const [isSaving, setIsSaving] = createSignal(false);
   const [error, setError] = createSignal<string>("");
+  const normalizeTimeValue = (value: string | null | undefined) =>
+    value ? value.slice(0, 5) : "";
 
   createEffect(() => {
     const configData = config();
@@ -48,7 +50,9 @@ const MorningOverviewConfigPage: Component = () => {
   createEffect(() => {
     const currentUser = user();
     if (currentUser?.settings.morning_overview_time) {
-      setMorningOverviewTime(currentUser.settings.morning_overview_time);
+      setMorningOverviewTime(
+        normalizeTimeValue(currentUser.settings.morning_overview_time),
+      );
     } else {
       setMorningOverviewTime("");
     }
@@ -63,7 +67,7 @@ const MorningOverviewConfigPage: Component = () => {
       });
       mutate(updated);
 
-      const timeValue = morningOverviewTime().trim() || null;
+      const timeValue = normalizeTimeValue(morningOverviewTime().trim()) || null;
       if (user()) {
         await authAPI.updateProfile({
           settings: {

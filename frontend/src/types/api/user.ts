@@ -9,7 +9,7 @@ export interface UserSettings {
   timezone?: string | null;
   base_personality_slug?: string;
   llm_personality_amendments: string[];
-  morning_overview_time?: string | null; // HH:MM format in user's local timezone
+  morning_overview_time?: string | null; // HH:MM[:SS] format in user's local timezone
   alarm_presets?: AlarmPreset[];
 }
 
@@ -19,7 +19,7 @@ export interface UserSettingsUpdate {
   timezone?: string | null;
   base_personality_slug?: string | null;
   llm_personality_amendments?: string[] | null;
-  morning_overview_time?: string | null; // HH:MM format in user's local timezone
+  morning_overview_time?: string | null; // HH:MM[:SS] format in user's local timezone
   alarm_presets?: AlarmPreset[] | null;
 }
 

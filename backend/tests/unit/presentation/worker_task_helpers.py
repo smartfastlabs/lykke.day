@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import time
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -89,7 +90,7 @@ def build_user(
     user_id: UUID,
     *,
     llm_provider: value_objects.LLMProvider | None = None,
-    morning_overview_time: str | None = None,
+    morning_overview_time: time | None = None,
     timezone: str | None = None,
 ) -> UserEntity:
     return UserEntity(

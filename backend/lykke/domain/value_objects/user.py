@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import time
 from enum import Enum
 from typing import Any, cast
 
@@ -15,8 +16,21 @@ class UserSetting(BaseValueObject):
     timezone: str | None = None
     base_personality_slug: str = "default"
     llm_personality_amendments: list[str] = field(default_factory=list)
-    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
+    morning_overview_time: time | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPreset] = field(default_factory=list)
+
+    @staticmethod
+    def _parse_morning_overview_time(value: Any) -> time | None:
+        if value is None:
+            return None
+        if isinstance(value, time):
+            return value
+        if isinstance(value, str):
+            try:
+                return time.fromisoformat(value)
+            except ValueError:
+                return None
+        return None
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any] | None) -> "UserSetting":
@@ -31,6 +45,10 @@ class UserSetting(BaseValueObject):
 
         allowed_keys = set(cls.__dataclass_fields__.keys())
         filtered = {k: v for k, v in data.items() if k in allowed_keys}
+        if "morning_overview_time" in filtered:
+            filtered["morning_overview_time"] = cls._parse_morning_overview_time(
+                filtered["morning_overview_time"]
+            )
         return cls(**filtered)
 
     def __post_init__(self) -> None:
@@ -105,8 +123,8 @@ class UserSettingUpdate(BaseRequestObject):
 
         # morning_overview_time is special: explicit null should clear the value.
         if "morning_overview_time" in self.data:
-            morning_overview_time = cast(
-                "str | None", self.data.get("morning_overview_time")
+            morning_overview_time = UserSetting._parse_morning_overview_time(
+                self.data.get("morning_overview_time")
             )
         else:
             morning_overview_time = existing.morning_overview_time

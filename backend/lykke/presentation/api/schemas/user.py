@@ -1,6 +1,6 @@
 """User response schemas."""
 
-from datetime import datetime
+from datetime import datetime, time
 from uuid import UUID
 
 from pydantic import Field, field_validator
@@ -20,7 +20,7 @@ class UserSettingsSchema(BaseSchema):
     timezone: str | None = None
     base_personality_slug: str = "default"
     llm_personality_amendments: list[str] = Field(default_factory=list)
-    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
+    morning_overview_time: time | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPresetSchema] = Field(default_factory=list)
 
 
@@ -49,7 +49,7 @@ class UserSettingsUpdateSchema(BaseSchema):
     timezone: str | None = None
     base_personality_slug: str | None = None
     llm_personality_amendments: list[str] | None = None
-    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
+    morning_overview_time: time | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPresetSchema] | None = None
 
 

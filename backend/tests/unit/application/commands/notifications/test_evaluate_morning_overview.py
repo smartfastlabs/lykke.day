@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC, date as dt_date, datetime, time
 from typing import Any
 from uuid import uuid4
 
@@ -254,7 +254,7 @@ async def test_morning_overview_runs_llm_when_configured(
         hashed_password="hash",
         settings=value_objects.UserSetting(
             llm_provider=value_objects.LLMProvider.OPENAI,
-            morning_overview_time="08:00",
+            morning_overview_time=time(8, 0),
             timezone="UTC",
         ),
     )

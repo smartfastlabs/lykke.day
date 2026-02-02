@@ -57,19 +57,19 @@ async def test_evaluate_morning_overviews_for_all_users_task() -> None:
     eligible_user = build_user(
         uuid4(),
         llm_provider=value_objects.LLMProvider.OPENAI,
-        morning_overview_time="08:00",
+        morning_overview_time=time(8, 0),
         timezone="UTC",
     )
     invalid_user = build_user(
         uuid4(),
         llm_provider=value_objects.LLMProvider.OPENAI,
-        morning_overview_time="bad",
+        morning_overview_time=None,
         timezone="UTC",
     )
     late_user = build_user(
         uuid4(),
         llm_provider=value_objects.LLMProvider.OPENAI,
-        morning_overview_time="09:00",
+        morning_overview_time=time(9, 0),
         timezone="UTC",
     )
     users = [eligible_user, invalid_user, late_user]
