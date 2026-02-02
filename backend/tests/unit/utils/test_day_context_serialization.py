@@ -84,20 +84,9 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     )
 
     llm_snapshot = value_objects.LLMRunResultSnapshot(
-        tool_calls=[
-            value_objects.LLMToolCallResultSnapshot(
-                tool_name="decide_notification",
-                arguments={"should_notify": True},
-                result=None,
-            )
-        ],
-        prompt_context={"day": {"id": str(day.id)}},
         current_time=current_time,
         llm_provider=value_objects.LLMProvider.ANTHROPIC,
         system_prompt="system prompt",
-        context_prompt="context prompt",
-        ask_prompt="ask prompt",
-        tools_prompt="tools prompt",
         referenced_entities=[
             value_objects.LLMReferencedEntitySnapshot(
                 entity_type="day",
@@ -163,4 +152,4 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     )
     assert notification["priority"] == "high"
     assert notification["llm_snapshot"]["llm_provider"] == "anthropic"
-    assert notification["llm_snapshot"]["tools_prompt"] == "tools prompt"
+    assert "tools_prompt" not in notification["llm_snapshot"]

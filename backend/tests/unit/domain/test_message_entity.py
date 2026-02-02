@@ -163,14 +163,9 @@ def test_message_updates_llm_run_result_emits_event() -> None:
     )
 
     snapshot = value_objects.LLMRunResultSnapshot(
-        tool_calls=[],
-        prompt_context={"day": {"id": str(uuid4())}},
         current_time=datetime(2026, 1, 31, 8, 30, tzinfo=UTC),
         llm_provider=value_objects.LLMProvider.OPENAI,
         system_prompt="system",
-        context_prompt="context",
-        ask_prompt="ask",
-        tools_prompt="tools",
         referenced_entities=[],
     )
 

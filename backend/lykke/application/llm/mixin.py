@@ -65,13 +65,10 @@ class LLMRunSnapshotContext:
     current_time: datetime
     llm_provider: value_objects.LLMProvider
     system_prompt: str
-    context_prompt: str
-    ask_prompt: str
-    tools_prompt: str
-    request_messages: list[dict[str, Any]] | None = None
-    request_tools: list[dict[str, Any]] | None = None
-    request_tool_choice: Any = None
-    request_model_params: dict[str, Any] | None = None
+    messages: list[dict[str, Any]] | None = None
+    tools: list[dict[str, Any]] | None = None
+    tool_choice: Any = None
+    model_params: dict[str, Any] | None = None
 
 
 class LLMHandlerMixin(ABC):
@@ -192,13 +189,10 @@ class LLMHandlerMixin(ABC):
             current_time=current_time,
             llm_provider=llm_provider,
             system_prompt=system_prompt,
-            context_prompt=context_prompt,
-            ask_prompt=ask_prompt,
-            tools_prompt=tools_prompt,
-            request_messages=request_messages,
-            request_tools=request_tools,
-            request_tool_choice=request_tool_choice,
-            request_model_params=request_model_params,
+            messages=request_messages,
+            tools=request_tools,
+            tool_choice=request_tool_choice,
+            model_params=request_model_params,
         )
 
         tool_result = await llm_gateway.run_usecase(

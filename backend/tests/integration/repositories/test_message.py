@@ -107,21 +107,14 @@ async def test_entity_to_row_and_back(message_repo, test_user):
             "latency_ms": 1234,
         },
         llm_run_result=value_objects.LLMRunResultSnapshot(
-            tool_calls=[
-                value_objects.LLMToolCallResultSnapshot(
-                    tool_name="no_action",
-                    arguments={"reason": "test"},
-                    result=None,
-                )
-            ],
-            prompt_context={"hello": "world"},
             current_time=datetime(2025, 1, 15, 10, 29, 0, tzinfo=UTC),
             llm_provider=value_objects.LLMProvider.OPENAI,
             system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-            tools_prompt="tools",
             referenced_entities=[],
+            messages=[{"role": "system", "content": "system"}],
+            tools=[{"name": "no_action"}],
+            tool_choice="auto",
+            model_params={"temperature": 0.2},
         ),
         created_at=datetime(2025, 1, 15, 10, 30, 0, tzinfo=UTC),
     )
@@ -147,8 +140,7 @@ async def test_entity_to_row_and_back(message_repo, test_user):
     assert restored.llm_run_result is not None
     assert restored.llm_run_result.llm_provider == value_objects.LLMProvider.OPENAI
     assert restored.llm_run_result.system_prompt == "system"
-    assert restored.llm_run_result.tool_calls
-    assert restored.llm_run_result.tool_calls[0].tool_name == "no_action"
+    assert restored.llm_run_result.messages
     assert restored.created_at == original.created_at
 
 

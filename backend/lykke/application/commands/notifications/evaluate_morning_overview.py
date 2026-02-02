@@ -36,7 +36,6 @@ from lykke.application.repositories import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
-from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
@@ -165,30 +164,16 @@ class MorningOverviewHandler(
             if snapshot_context is None:
                 return None
             return value_objects.LLMRunResultSnapshot(
-                tool_calls=[
-                    value_objects.LLMToolCallResultSnapshot(
-                        tool_name=tool_name,
-                        arguments=tool_args,
-                        result=None,
-                    )
-                ],
-                prompt_context=serialize_day_context(
-                    snapshot_context.prompt_context,
-                    current_time=snapshot_context.current_time,
-                ),
                 current_time=snapshot_context.current_time,
                 llm_provider=snapshot_context.llm_provider,
                 system_prompt=snapshot_context.system_prompt,
-                context_prompt=snapshot_context.context_prompt,
-                ask_prompt=snapshot_context.ask_prompt,
-                tools_prompt=snapshot_context.tools_prompt,
                 referenced_entities=build_referenced_entities(
                     snapshot_context.prompt_context
                 ),
-                request_messages=snapshot_context.request_messages,
-                request_tools=snapshot_context.request_tools,
-                request_tool_choice=snapshot_context.request_tool_choice,
-                request_model_params=snapshot_context.request_model_params,
+                messages=snapshot_context.messages,
+                tools=snapshot_context.tools,
+                tool_choice=snapshot_context.tool_choice,
+                model_params=snapshot_context.model_params,
             )
 
         async def decide_morning_overview(

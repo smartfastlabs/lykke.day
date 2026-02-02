@@ -34,11 +34,10 @@ const PromptDetailsBlock: Component<{
 
 const hasRequestPayload = (snapshot: LLMRunResultSnapshot): boolean =>
   Boolean(
-    snapshot.request_messages?.length ||
-    snapshot.request_tools?.length ||
-    snapshot.request_tool_choice !== undefined ||
-    (snapshot.request_model_params &&
-      Object.keys(snapshot.request_model_params).length > 0),
+    snapshot.messages?.length ||
+    snapshot.tools?.length ||
+    snapshot.tool_choice !== undefined ||
+    (snapshot.model_params && Object.keys(snapshot.model_params).length > 0),
   );
 
 const LLMSnapshotDetails: Component<Props> = (props) => (
@@ -46,11 +45,11 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
     <div class="rounded-xl border border-stone-200/80 bg-white/70 p-4 space-y-3">
       <div class="text-sm font-semibold text-stone-700">Tools</div>
       <Show
-        when={(props.snapshot.request_tools?.length ?? 0) > 0}
+        when={(props.snapshot.tools?.length ?? 0) > 0}
         fallback={<div class="text-xs text-stone-500">No tools available.</div>}
       >
         <div class="space-y-2">
-          {props.snapshot.request_tools!.map((tool, index) => {
+          {props.snapshot.tools!.map((tool, index) => {
             const toolName =
               typeof tool?.name === "string" && tool.name.trim().length > 0
                 ? tool.name
@@ -87,13 +86,13 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
           This preview shows the exact payload that will be sent to the LLM
           provider.
         </p>
-        <Show when={(props.snapshot.request_messages?.length ?? 0) > 0}>
+        <Show when={(props.snapshot.messages?.length ?? 0) > 0}>
           <div>
             <div class="text-xs font-semibold text-emerald-900 mb-2">
               Messages
             </div>
             <div class="space-y-2">
-              {props.snapshot.request_messages!.map((msg) => (
+              {props.snapshot.messages!.map((msg) => (
                 <div class="rounded-lg border border-stone-200/80 bg-white/90 p-3">
                   <span class="text-xs font-medium text-stone-500 uppercase">
                     {msg.role}
@@ -110,8 +109,8 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
         </Show>
         <Show
           when={
-            props.snapshot.request_tool_choice !== undefined &&
-            props.snapshot.request_tool_choice !== null
+            props.snapshot.tool_choice !== undefined &&
+            props.snapshot.tool_choice !== null
           }
         >
           <div>
@@ -119,14 +118,14 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
               Tool choice
             </div>
             <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-              {safeStringify(props.snapshot.request_tool_choice)}
+              {safeStringify(props.snapshot.tool_choice)}
             </pre>
           </div>
         </Show>
         <Show
           when={
-            props.snapshot.request_model_params &&
-            Object.keys(props.snapshot.request_model_params).length > 0
+            props.snapshot.model_params &&
+            Object.keys(props.snapshot.model_params).length > 0
           }
         >
           <div>
@@ -134,7 +133,7 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
               Model params
             </div>
             <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-              {safeStringify(props.snapshot.request_model_params)}
+              {safeStringify(props.snapshot.model_params)}
             </pre>
           </div>
         </Show>

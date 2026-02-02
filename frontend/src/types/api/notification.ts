@@ -1,23 +1,12 @@
-export type LLMToolCallResultSnapshot = {
-  tool_name: string;
-  arguments?: Record<string, unknown>;
-  result?: unknown;
-};
-
 export type LLMRunResultSnapshot = {
-  tool_calls?: LLMToolCallResultSnapshot[];
-  prompt_context?: Record<string, unknown>;
   current_time?: string;
   llm_provider?: string;
   system_prompt?: string;
-  context_prompt?: string;
-  ask_prompt?: string;
-  tools_prompt?: string;
   referenced_entities?: { entity_type: string; entity_id: string }[];
-  request_messages?: { role: string; content: string | unknown }[];
-  request_tools?: Record<string, unknown>[];
-  request_tool_choice?: unknown;
-  request_model_params?: Record<string, unknown>;
+  messages?: { role: string; content: string | unknown }[];
+  tools?: Record<string, unknown>[];
+  tool_choice?: unknown;
+  model_params?: Record<string, unknown>;
 };
 
 export type PushNotification = {

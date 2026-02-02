@@ -25,7 +25,6 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
-from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 
@@ -295,33 +294,17 @@ class ProcessBrainDumpHandler(
     def _build_llm_run_result_snapshot(
         self, result: LLMRunResult
     ) -> value_objects.LLMRunResultSnapshot:
-        prompt_context_snapshot = serialize_day_context(
-            result.prompt_context, current_time=result.current_time
-        )
         referenced_entities = build_referenced_entities(result.prompt_context)
-        tool_calls = [
-            value_objects.LLMToolCallResultSnapshot(
-                tool_name=tool_result.tool_name,
-                arguments=tool_result.arguments,
-                result=tool_result.result,
-            )
-            for tool_result in result.tool_results
-        ]
         payload = result.request_payload or {}
         return value_objects.LLMRunResultSnapshot(
-            tool_calls=tool_calls,
-            prompt_context=prompt_context_snapshot,
             current_time=result.current_time,
             llm_provider=result.llm_provider,
             system_prompt=result.system_prompt,
-            context_prompt=result.context_prompt,
-            ask_prompt=result.ask_prompt,
-            tools_prompt=result.tools_prompt,
             referenced_entities=referenced_entities,
-            request_messages=payload.get("request_messages"),
-            request_tools=payload.get("request_tools"),
-            request_tool_choice=payload.get("request_tool_choice"),
-            request_model_params=payload.get("request_model_params"),
+            messages=payload.get("request_messages"),
+            tools=payload.get("request_tools"),
+            tool_choice=payload.get("request_tool_choice"),
+            model_params=payload.get("request_model_params"),
         )
 
     async def _record_llm_run_result(

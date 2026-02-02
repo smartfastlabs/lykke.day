@@ -396,9 +396,6 @@ async def test_morning_overview_tool_creates_skipped_notification() -> None:
         current_time=datetime(2025, 11, 27, 9, 0, tzinfo=UTC),
         llm_provider=value_objects.LLMProvider.OPENAI,
         system_prompt="system",
-        context_prompt="context",
-        ask_prompt="ask",
-        tools_prompt="tools",
     )
 
     async def no_subscriptions() -> list[PushSubscriptionEntity]:

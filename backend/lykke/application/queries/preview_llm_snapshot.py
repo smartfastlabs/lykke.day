@@ -27,7 +27,6 @@ from lykke.application.queries.get_llm_prompt_context import (
 from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
-from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
@@ -146,28 +145,14 @@ class PreviewLLMSnapshotHandler(
         request_model_params = request_payload.get("request_model_params")
 
         return value_objects.LLMRunResultSnapshot(
-            tool_calls=[
-                value_objects.LLMToolCallResultSnapshot(
-                    tool_name=tool.name or "tool",
-                    arguments=self._default_tool_call_arguments(tool.name or "tool"),
-                    result=None,
-                )
-                for tool in tools
-            ],
-            prompt_context=serialize_day_context(
-                prompt_context, current_time=current_time
-            ),
             current_time=current_time,
             llm_provider=user.settings.llm_provider,
             system_prompt=system_prompt,
-            context_prompt=context_prompt,
-            ask_prompt=ask_prompt,
-            tools_prompt=tools_prompt,
             referenced_entities=build_referenced_entities(prompt_context),
-            request_messages=request_messages,
-            request_tools=request_tools,
-            request_tool_choice=request_tool_choice,
-            request_model_params=request_model_params,
+            messages=request_messages,
+            tools=request_tools,
+            tool_choice=request_tool_choice,
+            model_params=request_model_params,
         )
 
     @staticmethod

@@ -28,17 +28,12 @@ class LLMToolCallResultSnapshot(BaseValueObject):
 class LLMRunResultSnapshot(BaseValueObject):
     """Serializable snapshot of an LLM run."""
 
-    tool_calls: list[LLMToolCallResultSnapshot] = field(default_factory=list)
-    prompt_context: dict[str, Any]
     current_time: datetime
     llm_provider: LLMProvider
     system_prompt: str
-    context_prompt: str
-    ask_prompt: str
-    tools_prompt: str
     referenced_entities: list[LLMReferencedEntitySnapshot] = field(default_factory=list)
     # Exact request payload sent to the LLM (optional, for debugging)
-    request_messages: list[dict[str, Any]] | None = None
-    request_tools: list[dict[str, Any]] | None = None
-    request_tool_choice: Any = None
-    request_model_params: dict[str, Any] | None = None
+    messages: list[dict[str, Any]] | None = None
+    tools: list[dict[str, Any]] | None = None
+    tool_choice: Any = None
+    model_params: dict[str, Any] | None = None

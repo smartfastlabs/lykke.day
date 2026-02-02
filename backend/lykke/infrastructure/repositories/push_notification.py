@@ -87,22 +87,26 @@ class PushNotificationRepository(
 
         llm_snapshot = data.get("llm_snapshot")
         if isinstance(llm_snapshot, dict):
-            tool_calls = llm_snapshot.get("tool_calls")
-            if tool_calls is None:
-                tool_calls = llm_snapshot.get("tool_results", [])
-            if isinstance(tool_calls, list):
-                tool_calls = [
-                    value_objects.LLMToolCallResultSnapshot(
-                        **filter_init_false_fields(
-                            result, value_objects.LLMToolCallResultSnapshot
-                        )
-                    )
-                    if isinstance(result, dict)
-                    else result
-                    for result in tool_calls
-                ]
-            llm_snapshot["tool_calls"] = tool_calls
+            request_messages = llm_snapshot.pop("request_messages", None)
+            request_tools = llm_snapshot.pop("request_tools", None)
+            request_tool_choice = llm_snapshot.pop("request_tool_choice", None)
+            request_model_params = llm_snapshot.pop("request_model_params", None)
+
+            if "messages" not in llm_snapshot:
+                llm_snapshot["messages"] = request_messages
+            if "tools" not in llm_snapshot:
+                llm_snapshot["tools"] = request_tools
+            if "tool_choice" not in llm_snapshot:
+                llm_snapshot["tool_choice"] = request_tool_choice
+            if "model_params" not in llm_snapshot:
+                llm_snapshot["model_params"] = request_model_params
+
+            llm_snapshot.pop("tool_calls", None)
             llm_snapshot.pop("tool_results", None)
+            llm_snapshot.pop("prompt_context", None)
+            llm_snapshot.pop("context_prompt", None)
+            llm_snapshot.pop("ask_prompt", None)
+            llm_snapshot.pop("tools_prompt", None)
 
             referenced_entities = llm_snapshot.get("referenced_entities")
             if isinstance(referenced_entities, list):
