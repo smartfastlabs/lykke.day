@@ -87,26 +87,28 @@ class PushNotificationRepository(
 
         llm_snapshot = data.get("llm_snapshot")
         if isinstance(llm_snapshot, dict):
-            request_messages = llm_snapshot.pop("request_messages", None)
-            request_tools = llm_snapshot.pop("request_tools", None)
-            request_tool_choice = llm_snapshot.pop("request_tool_choice", None)
-            request_model_params = llm_snapshot.pop("request_model_params", None)
-
             if "messages" not in llm_snapshot:
-                llm_snapshot["messages"] = request_messages
+                llm_snapshot["messages"] = llm_snapshot.pop("request_messages", None)
             if "tools" not in llm_snapshot:
-                llm_snapshot["tools"] = request_tools
+                llm_snapshot["tools"] = llm_snapshot.pop("request_tools", None)
             if "tool_choice" not in llm_snapshot:
-                llm_snapshot["tool_choice"] = request_tool_choice
+                llm_snapshot["tool_choice"] = llm_snapshot.pop(
+                    "request_tool_choice", None
+                )
             if "model_params" not in llm_snapshot:
-                llm_snapshot["model_params"] = request_model_params
+                llm_snapshot["model_params"] = llm_snapshot.pop(
+                    "request_model_params", None
+                )
 
-            llm_snapshot.pop("tool_calls", None)
-            llm_snapshot.pop("tool_results", None)
-            llm_snapshot.pop("prompt_context", None)
-            llm_snapshot.pop("context_prompt", None)
-            llm_snapshot.pop("ask_prompt", None)
-            llm_snapshot.pop("tools_prompt", None)
+            for key in [
+                "tool_calls",
+                "tool_results",
+                "prompt_context",
+                "context_prompt",
+                "ask_prompt",
+                "tools_prompt",
+            ]:
+                llm_snapshot.pop(key, None)
 
             referenced_entities = llm_snapshot.get("referenced_entities")
             if isinstance(referenced_entities, list):

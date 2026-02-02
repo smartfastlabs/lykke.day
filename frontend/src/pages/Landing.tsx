@@ -26,7 +26,7 @@ const Landing: Component = () => {
 
   const AccountLink: Component = () => (
     <a
-      href={isAuthenticated() ? "/me" : "/login"}
+      href={isAuthenticated() ? "/me/today" : "/login"}
       class="absolute top-6 right-6 z-20 px-4 py-2 rounded-full bg-white/80 border border-stone-200 text-sm font-medium text-stone-700 shadow-sm hover:bg-white transition-colors"
     >
       {isAuthenticated() ? "My LYKKE" : "Log in"}
