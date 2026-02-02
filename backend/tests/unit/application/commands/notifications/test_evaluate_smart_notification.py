@@ -97,7 +97,7 @@ def _build_prompt_context(user_id: Any) -> value_objects.LLMPromptContext:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -430,8 +430,4 @@ async def test_smart_tool_handles_send_errors() -> None:
     allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")

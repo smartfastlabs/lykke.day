@@ -94,7 +94,7 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -162,7 +162,7 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -228,7 +228,7 @@ async def test_process_brain_dump_update_reminder_records_task_action() -> None:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -295,7 +295,7 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -346,7 +346,4 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     updated = uow.added[0]
     assert updated.type == value_objects.BrainDumpType.COMMAND
     events = updated.collect_events()
-    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
-    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
-    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)

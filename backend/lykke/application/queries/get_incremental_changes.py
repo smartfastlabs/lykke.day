@@ -223,17 +223,15 @@ class GetIncrementalChangesHandler(
                     "BrainDumpStatusChangedEvent",
                     "BrainDumpRemovedEvent",
                 }:
-                    brain_dump_items = []
+                    brain_dumps = []
                     try:
-                        brain_dump_items = await self.brain_dump_ro_repo.search(
+                        brain_dumps = await self.brain_dump_ro_repo.search(
                             value_objects.BrainDumpQuery(date=day.date)
                         )
                     except Exception:
-                        brain_dump_items = []
+                        brain_dumps = []
 
-                    day_schema = map_day_to_schema(
-                        day, brain_dump_items=brain_dump_items
-                    )
+                    day_schema = map_day_to_schema(day, brain_dumps=brain_dumps)
                 else:
                     day_schema = map_day_to_schema(day)
                 return day_schema.model_dump(mode="json")

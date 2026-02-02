@@ -111,7 +111,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         day=day,
         tasks=[task],
         calendar_entries=[calendar_entry],
-        brain_dump_items=[brain_dump_item],
+        brain_dumps=[brain_dump_item],
         factoids=[factoid],
         messages=[message],
         push_notifications=[push_notification],
@@ -136,7 +136,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     assert serialized["calendar_entries"][0]["id"] == str(calendar_entry.id)
     assert serialized["calendar_entries"][0]["minutes_until_start"] == 240
 
-    assert serialized["brain_dump_items"][0]["created_at"] == current_time.isoformat()
+    assert serialized["brain_dumps"][0]["created_at"] == current_time.isoformat()
 
     assert serialized["factoids"][0]["content"] == "Has a dog named Oakley"
     assert serialized["factoids"][0]["criticality"] == "important"

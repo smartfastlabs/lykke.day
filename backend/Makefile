@@ -80,7 +80,24 @@ serve: docker-up
 		kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null || true'
 
 serve-prod: docker-up
-	@echo "Starting FastAPI server, scheduler, and worker against production DB..."
+	@echo "Starting FastAPI server against production DB..."
+	@bash -c ' \
+		if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
+			if [ -f .env.prod ] && grep -q "^PRODUCTION_MIGRATION_DB_URL=" .env.prod; then \
+				DATABASE_URL=$$(grep "^PRODUCTION_MIGRATION_DB_URL=" .env.prod | cut -d"=" -f2-); \
+			else \
+				echo "Error: PRODUCTION_MIGRATION_DB_URL not set and .env.prod missing"; \
+				exit 1; \
+			fi; \
+		else \
+			DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL; \
+		fi; \
+		export REDIS_URL=redis://localhost:6379; \
+		export DATABASE_URL=$$DATABASE_URL; \
+		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload'
+
+worker-prod: docker-up
+	@echo "Starting Taskiq worker (and scheduler) against production DB..."
 	@bash -c ' \
 		if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
 			if [ -f .env.prod ] && grep -q "^PRODUCTION_MIGRATION_DB_URL=" .env.prod; then \
@@ -96,11 +113,9 @@ serve-prod: docker-up
 		export DATABASE_URL=$$DATABASE_URL; \
 		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
 		SCHEDULER_PID=$$!; \
-		poetry run taskiq worker lykke.infrastructure.workers.config:broker & \
-		WORKER_PID=$$!; \
-		trap "kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null; exit" EXIT INT TERM; \
-		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload; \
-		kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null || true'
+		trap "kill $$SCHEDULER_PID 2>/dev/null; exit" EXIT INT TERM; \
+		poetry run taskiq worker lykke.infrastructure.workers.config:broker; \
+		kill $$SCHEDULER_PID 2>/dev/null || true'
 
 serve-http: docker-up
 	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload

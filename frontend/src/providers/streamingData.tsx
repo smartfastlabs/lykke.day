@@ -4,6 +4,7 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  untrack,
   useContext,
   type Accessor,
   type ParentProps,
@@ -25,9 +26,8 @@ import {
   Routine,
 } from "@/types/api";
 import {
-  brainDumpAPI,
-  notificationAPI,
   alarmAPI,
+  brainDumpAPI,
   routineAPI,
   TaskActionPayload,
   taskAPI,
@@ -70,6 +70,10 @@ interface StreamingDataContextValue {
   // Connection state
   isConnected: Accessor<boolean>;
   isOutOfSync: Accessor<boolean>;
+  lastProcessedTimestamp: Accessor<string | null>;
+  lastChangeStreamId: Accessor<string | null>;
+  debugEvents: Accessor<StreamingDebugEvent[]>;
+  clearDebugEvents: () => void;
   // Actions
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
@@ -113,6 +117,14 @@ interface StreamingDataContextValue {
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
+
+interface StreamingDebugEvent {
+  id: string;
+  timestamp: string;
+  direction: "in" | "out" | "state" | "error";
+  label: string;
+  payload?: unknown;
+}
 
 // WebSocket message types
 interface WebSocketMessage {
@@ -179,9 +191,12 @@ export function StreamingDataProvider(props: ParentProps) {
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
-  const [lastChangeStreamId, setLastChangeStreamId] = createSignal<string | null>(
-    null,
-  );
+  const [lastChangeStreamId, setLastChangeStreamId] = createSignal<
+    string | null
+  >(null);
+  const [debugEvents, setDebugEvents] = createSignal<StreamingDebugEvent[]>([]);
+
+  let debugEventSeq = 0;
 
   const routines = createMemo(() => {
     const context = dayContextStore.data as DayContextWithRoutines | undefined;
@@ -227,6 +242,58 @@ export function StreamingDataProvider(props: ParentProps) {
     return deduped;
   };
 
+  const createDebugEventId = (): string => {
+    debugEventSeq += 1;
+    return `${Date.now()}-${debugEventSeq}`;
+  };
+
+  const appendDebugEvent = (entry: Omit<StreamingDebugEvent, "id">) => {
+    const nextEntry: StreamingDebugEvent = {
+      id: createDebugEventId(),
+      ...entry,
+    };
+    setDebugEvents((prev) => {
+      const next = [nextEntry, ...prev];
+      return next.length > 200 ? next.slice(0, 200) : next;
+    });
+  };
+
+  const clearDebugEvents = () => {
+    setDebugEvents([]);
+  };
+
+  const summarizeSyncResponse = (message: SyncResponseMessage) => {
+    const dayContext = message.day_context;
+    return {
+      hasDayContext: Boolean(dayContext),
+      changesCount: message.changes?.length ?? 0,
+      dayContextSummary: dayContext
+        ? {
+            tasks: dayContext.tasks?.length ?? 0,
+            calendarEntries: dayContext.calendar_entries?.length ?? 0,
+            events: dayContext.calendar_entries?.length ?? 0,
+            routines:
+              (dayContext as DayContextWithRoutines).routines?.length ?? 0,
+          }
+        : undefined,
+      lastAuditLogTimestamp: message.last_audit_log_timestamp ?? null,
+      lastChangeStreamId: message.last_change_stream_id ?? null,
+    };
+  };
+
+  const logDebugEvent = (
+    direction: StreamingDebugEvent["direction"],
+    label: string,
+    payload?: unknown,
+  ) => {
+    appendDebugEvent({
+      timestamp: new Date().toISOString(),
+      direction,
+      label,
+      payload,
+    });
+  };
+
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
@@ -243,12 +310,8 @@ export function StreamingDataProvider(props: ParentProps) {
     (tasks() ?? []).filter((t) => t.type === "REMINDER"),
   );
   const alarms = createMemo(() => {
-    const day = dayContextStore.data?.day;
-    if (!day) return [];
-    const allAlarms = (day as { alarms?: Alarm[] }).alarms ?? [];
-    return allAlarms.filter(
-      (alarm) => (alarm.status ?? "ACTIVE") !== "CANCELLED",
-    );
+    const context = dayContextStore.data;
+    return (context?.day?.alarms || []) as Alarm[];
   });
   const triggeredAlarm = createMemo<Alarm | undefined>(() => {
     const active = (alarms() ?? []).filter(
@@ -269,8 +332,7 @@ export function StreamingDataProvider(props: ParentProps) {
     const day = dayContextStore.data?.day;
     if (!day) return [];
     return normalizeBrainDumps(
-      (day as { brain_dump_items?: BrainDumpWithOptionalId[] })
-        .brain_dump_items,
+      (day as { brain_dumps?: BrainDumpWithOptionalId[] }).brain_dumps,
     );
   });
   const day = createMemo<Day | undefined>(() => {
@@ -279,7 +341,7 @@ export function StreamingDataProvider(props: ParentProps) {
     return {
       ...currentDay,
       alarms: alarms(),
-      brain_dump_items: brainDumps(),
+      brain_dumps: brainDumps(),
     };
   });
 
@@ -321,37 +383,55 @@ export function StreamingDataProvider(props: ParentProps) {
       onOpen: () => {
         setIsConnected(true);
         setError(undefined);
+        logDebugEvent("state", "socket_open");
         requestFullSync();
       },
       onClose: () => {
         setIsConnected(false);
+        logDebugEvent("state", "socket_closed");
       },
       onError: (err) => {
         console.error("StreamingDataProvider: WebSocket error:", err);
         setError(new Error("Connection error occurred"));
         setIsConnected(false);
+        logDebugEvent("error", "socket_error", { message: String(err) });
       },
       onMessage: async (message) => {
         if (message.type === "connection_ack") {
           const ack = message as ConnectionAckMessage;
+          logDebugEvent("in", "connection_ack", { user_id: ack.user_id });
           console.log(
             "StreamingDataProvider: Connection acknowledged for user:",
             ack.user_id,
           );
         } else if (message.type === "sync_response") {
+          logDebugEvent(
+            "in",
+            "sync_response",
+            summarizeSyncResponse(message as SyncResponseMessage),
+          );
           await handleSyncResponse(message as SyncResponseMessage);
         } else if (message.type === "audit_log_event") {
+          logDebugEvent("in", "audit_log_event", {
+            hasAuditLog: Boolean((message as AuditLogEventMessage).audit_log),
+          });
           // Deprecated: This handler is kept for backward compatibility
           // The backend now sends sync_response messages for real-time updates
           await handleAuditLogEvent(message as AuditLogEventMessage);
         } else if (message.type === "error") {
           const errorMsg = message as ErrorMessage;
           setError(new Error(errorMsg.message || "Unknown error"));
+          logDebugEvent("error", "server_error", {
+            code: errorMsg.code,
+            message: errorMsg.message,
+          });
           console.error(
             "StreamingDataProvider: WebSocket error:",
             errorMsg.code,
             errorMsg.message,
           );
+        } else if (message.type) {
+          logDebugEvent("in", `message:${message.type}`, message);
         }
       },
     });
@@ -363,6 +443,7 @@ export function StreamingDataProvider(props: ParentProps) {
   const connectWebSocket = () => {
     setIsConnected(false);
     setError(undefined);
+    logDebugEvent("state", "connect");
     getOrCreateWsClient()?.connect();
   };
 
@@ -373,6 +454,11 @@ export function StreamingDataProvider(props: ParentProps) {
       since_timestamp: null,
     };
     const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
+    logDebugEvent("out", "sync_request", {
+      since_timestamp: request.since_timestamp,
+      since_change_stream_id: request.since_change_stream_id ?? null,
+      sent,
+    });
     if (sent) {
       setIsLoading(true);
     }
@@ -385,7 +471,12 @@ export function StreamingDataProvider(props: ParentProps) {
       since_timestamp: sinceTimestamp ?? null,
       since_change_stream_id: lastChangeStreamId(),
     };
-    getOrCreateWsClient()?.sendJson(request);
+    const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
+    logDebugEvent("out", "sync_request", {
+      since_timestamp: request.since_timestamp,
+      since_change_stream_id: request.since_change_stream_id ?? null,
+      sent,
+    });
   };
 
   // Handle sync response
@@ -418,6 +509,8 @@ export function StreamingDataProvider(props: ParentProps) {
         });
       }
 
+      void refreshAuxiliaryData();
+
       if (isOnMeRoute() && previousContext) {
         const completedCount = countCompletedTasksFromFullSync(
           previousContext.tasks ?? [],
@@ -436,6 +529,10 @@ export function StreamingDataProvider(props: ParentProps) {
       const currentContext = dayContextStore.data;
       // Incremental changes - apply to existing store
       const didApplyChanges = applyChanges(message.changes);
+      logDebugEvent("state", "apply_changes", {
+        changesCount: message.changes.length,
+        didApplyChanges,
+      });
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
@@ -499,6 +596,10 @@ export function StreamingDataProvider(props: ParentProps) {
     if (lastTimestamp && occurredAt < lastTimestamp) {
       // Received older event than what we've already processed
       setIsOutOfSync(true);
+      logDebugEvent("state", "out_of_sync_detected", {
+        occurredAt,
+        lastProcessed: lastTimestamp,
+      });
       console.warn(
         "StreamingDataProvider: Out of sync detected - received older event",
       );
@@ -551,7 +652,7 @@ export function StreamingDataProvider(props: ParentProps) {
       // This avoids reactivity warnings and ensures we use the correct timestamp
       const timestampToUse = occurredAt;
       syncDebounceTimeout = window.setTimeout(() => {
-        requestIncrementalSync(timestampToUse);
+        untrack(() => requestIncrementalSync(timestampToUse));
       }, syncDelay);
     } else if (changeType === "deleted") {
       // Apply deletion immediately
@@ -675,10 +776,7 @@ export function StreamingDataProvider(props: ParentProps) {
     });
 
     try {
-      const updatedTask = await taskAPI.rescheduleTask(
-        task.id,
-        scheduledDate,
-      );
+      const updatedTask = await taskAPI.rescheduleTask(task.id, scheduledDate);
       const currentDay = day();
       if (currentDay?.date === updatedTask.scheduled_date) {
         addTaskLocally(updatedTask);
@@ -745,18 +843,18 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const updateAlarmsLocally = (updatedAlarms: Alarm[]) => {
     setDayContextStore((current) => {
-      if (!current.data || !current.data.day) return current;
+      if (!current.data) return current;
       const dedupedAlarms = dedupeAlarms(updatedAlarms);
-      const updated = {
+      const nextDay = current.data.day
+        ? { ...current.data.day, alarms: dedupedAlarms }
+        : current.data.day;
+      return {
         data: {
           ...current.data,
-          day: {
-            ...current.data.day,
-            alarms: dedupedAlarms,
-          },
+          alarms: dedupedAlarms,
+          day: nextDay,
         },
       };
-      return updated;
     });
   };
 
@@ -775,12 +873,24 @@ export function StreamingDataProvider(props: ParentProps) {
           ...current.data,
           day: {
             ...current.data.day,
-            brain_dump_items: updatedItems,
+            brain_dumps: updatedItems,
           },
         },
       };
       return updated;
     });
+  };
+
+  const refreshAuxiliaryData = async () => {
+    const context = dayContextStore.data;
+    if (context?.day) {
+      const normalized = normalizeBrainDumps(
+        (context.day as { brain_dumps?: BrainDumpWithOptionalId[] })
+          .brain_dumps,
+      );
+      updateBrainDumpsLocally(normalized);
+    }
+    setNotifications(context?.push_notifications ?? []);
   };
 
   const addReminder = async (name: string): Promise<void> => {
@@ -997,8 +1107,7 @@ export function StreamingDataProvider(props: ParentProps) {
     }
     setNotificationsLoading(true);
     try {
-      const items = await notificationAPI.getToday();
-      setNotifications(items);
+      setNotifications(dayContextStore.data?.push_notifications ?? []);
     } catch (err) {
       console.error("StreamingDataProvider: Failed to load notifications", err);
     } finally {
@@ -1052,6 +1161,10 @@ export function StreamingDataProvider(props: ParentProps) {
     error,
     isConnected,
     isOutOfSync,
+    lastProcessedTimestamp,
+    lastChangeStreamId,
+    debugEvents,
+    clearDebugEvents,
     sync,
     syncIncremental,
     setTaskStatus,

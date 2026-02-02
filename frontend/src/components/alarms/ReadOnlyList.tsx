@@ -21,6 +21,7 @@ const formatTime = (timeValue: string): string => {
 export interface ReadOnlyAlarmListProps {
   alarms: Accessor<Alarm[]>;
   onRemove?: (alarm: Alarm) => void | Promise<void>;
+  onItemClick?: (alarm: Alarm) => void;
 }
 
 export const ReadOnlyAlarmList: Component<ReadOnlyAlarmListProps> = (props) => {
@@ -30,7 +31,12 @@ export const ReadOnlyAlarmList: Component<ReadOnlyAlarmListProps> = (props) => {
     <div class="space-y-2">
       <For each={items()}>
         {(alarm) => (
-          <div class="bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm">
+          <div
+            class={`bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm ${
+              props.onItemClick ? "cursor-pointer hover:bg-white/90" : ""
+            }`}
+            onClick={() => props.onItemClick?.(alarm)}
+          >
             <div class="flex items-center gap-3">
               <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
                 <span class="text-lg">⏰</span>
@@ -50,6 +56,7 @@ export const ReadOnlyAlarmList: Component<ReadOnlyAlarmListProps> = (props) => {
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Open alarm link"
+                  onClick={(event) => event.stopPropagation()}
                 >
                   <span>Open</span>
                   <Icon
@@ -61,7 +68,10 @@ export const ReadOnlyAlarmList: Component<ReadOnlyAlarmListProps> = (props) => {
               <Show when={props.onRemove}>
                 <button
                   type="button"
-                  onClick={() => props.onRemove?.(alarm)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    props.onRemove?.(alarm);
+                  }}
                   class="ml-1 inline-flex items-center justify-center w-8 h-8 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-700 transition hover:bg-amber-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
                   aria-label="Remove alarm"
                   title="Remove alarm"

@@ -23,12 +23,20 @@ const isAllDayEvent = (event: Event): boolean => {
 const formatCategory = (category?: Event["category"]): string =>
   (category ?? "OTHER").toLowerCase().replace("_", " ");
 
-const AllDayEventItem: Component<{ event: Event }> = (props) => {
+const AllDayEventItem: Component<{
+  event: Event;
+  onClick?: (event: Event) => void;
+}> = (props) => {
   const icon = () => getTypeIcon("EVENT");
   const categoryLabel = () => formatCategory(props.event.category);
 
   return (
-    <div class="group px-5 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+    <div
+      class={`group px-5 py-3 border-b border-gray-100 transition-colors ${
+        props.onClick ? "cursor-pointer hover:bg-gray-50" : ""
+      }`}
+      onClick={() => props.onClick?.(props.event)}
+    >
       <div class="flex items-center gap-4">
         <div class="w-14 flex-shrink-0 text-right">
           <span class="text-xs text-gray-400">all day</span>
@@ -53,12 +61,20 @@ const AllDayEventItem: Component<{ event: Event }> = (props) => {
   );
 };
 
-const TimedEventItem: Component<{ event: Event }> = (props) => {
+const TimedEventItem: Component<{
+  event: Event;
+  onClick?: (event: Event) => void;
+}> = (props) => {
   const icon = () => getTypeIcon("EVENT");
   const categoryLabel = () => formatCategory(props.event.category);
 
   return (
-    <div class="group px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+    <div
+      class={`group px-5 py-3.5 border-b border-gray-100 transition-colors ${
+        props.onClick ? "cursor-pointer hover:bg-gray-50" : ""
+      }`}
+      onClick={() => props.onClick?.(props.event)}
+    >
       <div class="flex items-center gap-4">
         <div class="w-14 flex-shrink-0 text-right">
           <span class="text-xs tabular-nums text-gray-500">
@@ -95,6 +111,7 @@ const sortEvents = (events: Event[]): Event[] => {
 
 interface EventListProps {
   events: Accessor<Event[]>;
+  onItemClick?: (event: Event) => void;
 }
 
 const EventList: Component<EventListProps> = (props) => {
@@ -106,10 +123,14 @@ const EventList: Component<EventListProps> = (props) => {
   return (
     <>
       <For each={allDayEvents()}>
-        {(event) => <AllDayEventItem event={event} />}
+        {(event) => (
+          <AllDayEventItem event={event} onClick={props.onItemClick} />
+        )}
       </For>
       <For each={timedEvents()}>
-        {(event) => <TimedEventItem event={event} />}
+        {(event) => (
+          <TimedEventItem event={event} onClick={props.onItemClick} />
+        )}
       </For>
     </>
   );

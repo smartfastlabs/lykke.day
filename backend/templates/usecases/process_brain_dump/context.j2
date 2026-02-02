@@ -46,7 +46,7 @@
 
 {% block brain_dumps_section %}
 ## Other brain dump items:
-{% for item in context.brain_dump_items %}
+{% for item in context.brain_dumps %}
 - id: {{ item.id }}
   text: {{ item.text }}
   status: {{ item.status.value }}

@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date as datetime_date
+from datetime import UTC, date as datetime_date, datetime, time, timedelta
 from typing import cast
 
 from lykke.application.queries.base import BaseQueryHandler, Query
@@ -11,6 +11,8 @@ from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    PushNotificationRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
@@ -22,6 +24,8 @@ from lykke.domain.entities import (
     BrainDumpEntity,
     CalendarEntryEntity,
     DayEntity,
+    MessageEntity,
+    PushNotificationEntity,
     RoutineEntity,
     TaskEntity,
 )
@@ -43,6 +47,8 @@ class GetDayContextHandler(
     brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
@@ -62,12 +68,17 @@ class GetDayContextHandler(
         """
         day_id = DayEntity.id_from_date_and_user(date, self.user_id)
 
+        start_of_day = datetime.combine(date, time.min, tzinfo=UTC)
+        end_of_day = start_of_day + timedelta(days=1)
+
         (
             tasks_result,
             calendar_entries_result,
             routines_result,
             day_result,
-            brain_dump_items_result,
+            brain_dumps_result,
+            push_notifications_result,
+            messages_result,
         ) = await asyncio.gather(
             self.task_ro_repo.search(value_objects.TaskQuery(date=date)),
             self.calendar_entry_ro_repo.search(
@@ -76,6 +87,22 @@ class GetDayContextHandler(
             self.routine_ro_repo.search(value_objects.RoutineQuery(date=date)),
             self.day_ro_repo.get(day_id),
             self.brain_dump_ro_repo.search(value_objects.BrainDumpQuery(date=date)),
+            self.push_notification_ro_repo.search(
+                value_objects.PushNotificationQuery(
+                    sent_after=start_of_day,
+                    sent_before=end_of_day,
+                    order_by="sent_at",
+                    order_by_desc=True,
+                )
+            ),
+            self.message_ro_repo.search(
+                value_objects.MessageQuery(
+                    created_after=start_of_day,
+                    created_before=end_of_day,
+                    order_by="created_at",
+                    order_by_desc=False,
+                )
+            ),
             return_exceptions=True,
         )
 
@@ -90,9 +117,17 @@ class GetDayContextHandler(
             "list[RoutineEntity]",
             self._unwrap_result(routines_result, "routines result"),
         )
-        brain_dump_items = cast(
+        brain_dumps = cast(
             "list[BrainDumpEntity]",
-            self._unwrap_result(brain_dump_items_result, "brain dump items result"),
+            self._unwrap_result(brain_dumps_result, "brain dumps result"),
+        )
+        push_notifications = cast(
+            "list[PushNotificationEntity]",
+            self._unwrap_result(push_notifications_result, "push notifications result"),
+        )
+        messages = cast(
+            "list[MessageEntity]",
+            self._unwrap_result(messages_result, "messages result"),
         )
 
         if isinstance(day_result, NotFoundError):
@@ -111,7 +146,13 @@ class GetDayContextHandler(
             routines = await self._build_routines_from_tasks(date, tasks)
 
         return self._build_context(
-            day, tasks, calendar_entries, routines, brain_dump_items
+            day,
+            tasks,
+            calendar_entries,
+            routines,
+            brain_dumps,
+            push_notifications,
+            messages,
         )
 
     @staticmethod
@@ -127,7 +168,9 @@ class GetDayContextHandler(
         tasks: list[TaskEntity],
         calendar_entries: list[CalendarEntryEntity],
         routines: list[RoutineEntity],
-        brain_dump_items: list[BrainDumpEntity],
+        brain_dumps: list[BrainDumpEntity],
+        push_notifications: list[PushNotificationEntity],
+        messages: list[MessageEntity],
     ) -> value_objects.DayContext:
         """Build a DayContext from loaded data.
 
@@ -156,9 +199,18 @@ class GetDayContextHandler(
                 routines,
                 key=lambda r: getattr(r, "name", ""),
             ),
-            brain_dump_items=sorted(
-                brain_dump_items,
+            brain_dumps=sorted(
+                brain_dumps,
                 key=lambda item: item.created_at,
+            ),
+            push_notifications=sorted(
+                push_notifications,
+                key=lambda notification: notification.sent_at,
+                reverse=True,
+            ),
+            messages=sorted(
+                messages,
+                key=lambda message: message.created_at,
             ),
         )
 

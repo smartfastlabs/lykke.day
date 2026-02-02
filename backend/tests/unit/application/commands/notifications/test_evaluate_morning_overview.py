@@ -105,7 +105,7 @@ def _build_prompt_context(user_id: Any) -> value_objects.LLMPromptContext:
         day=day,
         tasks=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -305,7 +305,7 @@ async def test_morning_overview_build_prompt_input_includes_risk_data() -> None:
         day=day,
         tasks=[task],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -355,7 +355,7 @@ async def test_morning_overview_build_prompt_input_skips_unrated_tasks() -> None
         day=day,
         tasks=[task],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         messages=[],
         push_notifications=[],
     )
@@ -524,8 +524,4 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
     )
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Morning plan", priority="high")
-    await tool.callback(should_notify=True, message="Morning plan", priority="high")
-    await tool.callback(should_notify=True, message="Morning plan", priority="high")
-    await tool.callback(should_notify=True, message="Morning plan", priority="high")
     await tool.callback(should_notify=True, message="Morning plan", priority="high")

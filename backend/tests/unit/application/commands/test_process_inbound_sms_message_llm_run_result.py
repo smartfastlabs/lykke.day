@@ -42,7 +42,7 @@ async def test_process_inbound_sms_records_llm_run_result_on_message() -> None:
         tasks=[],
         routines=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         factoids=[],
         messages=[],
         push_notifications=[],

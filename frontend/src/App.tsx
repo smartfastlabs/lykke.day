@@ -94,6 +94,7 @@ import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/D
 import AdminLayout from "@/pages/admin/Layout";
 import AdminIndexPage from "@/pages/admin/Index";
 import DomainEventsPage from "@/pages/admin/DomainEvents";
+import StreamingSyncPage from "@/pages/admin/Sync";
 import NotFound from "@/pages/NotFound";
 
 import "@/utils/icons";
@@ -331,12 +332,13 @@ export default function App() {
                   <Route path="/calendar" component={CalendarPage} />
                   <Route path="/commands" component={CommandsPage} />
                 </Route>
-              <Route path="/admin" component={AdminGuard}>
-                <Route path="/" component={AdminLayout}>
-                  <Route path="/" component={AdminIndexPage} />
-                  <Route path="/events" component={DomainEventsPage} />
+                <Route path="/admin" component={AdminGuard}>
+                  <Route path="/" component={AdminLayout}>
+                    <Route path="/" component={AdminIndexPage} />
+                    <Route path="/events" component={DomainEventsPage} />
+                    <Route path="/sync" component={StreamingSyncPage} />
+                  </Route>
                 </Route>
-              </Route>
                 <Route path="/settings" component={SettingsLayout}>
                   <Route path="/" component={SettingsIndexPage} />
                   <Route path="/profile" component={ProfileSettingsPage} />

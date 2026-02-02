@@ -29,7 +29,7 @@ class DaySchema(BaseEntitySchema):
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
     alarms: list["AlarmSchema"] = Field(default_factory=list)
-    brain_dump_items: list["BrainDumpSchema"] = Field(default_factory=list)
+    brain_dumps: list["BrainDumpSchema"] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None
 
 

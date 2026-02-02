@@ -4,6 +4,7 @@ import type { Task } from "@/types/api";
 
 export interface ReadOnlyReminderListProps {
   reminders: Accessor<Task[]>;
+  onItemClick?: (reminder: Task) => void;
 }
 
 export const ReadOnlyReminderList: Component<ReadOnlyReminderListProps> = (
@@ -15,7 +16,12 @@ export const ReadOnlyReminderList: Component<ReadOnlyReminderListProps> = (
     <div class="space-y-2">
       <For each={items()}>
         {(reminder) => (
-          <div class="bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm">
+          <div
+            class={`bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm ${
+              props.onItemClick ? "cursor-pointer hover:bg-white/90" : ""
+            }`}
+            onClick={() => props.onItemClick?.(reminder)}
+          >
             <div class="flex items-center gap-3">
               <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
                 <span class="text-lg">🎯</span>

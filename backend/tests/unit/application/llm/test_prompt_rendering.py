@@ -33,7 +33,7 @@ def test_render_context_prompt_serializes_llm_prompt_context() -> None:
         tasks=[],
         routines=[],
         calendar_entries=[],
-        brain_dump_items=[],
+        brain_dumps=[],
         factoids=[],
         messages=[],
         push_notifications=[],
@@ -81,7 +81,4 @@ async def test_render_system_prompt_uses_base_personality_slug() -> None:
         usecase_config_ro_repo=usecase_config_repo,
     )
 
-    assert "direct, no-nonsense tone" in result
-    assert "direct, no-nonsense tone" in result
-    assert "direct, no-nonsense tone" in result
     assert "direct, no-nonsense tone" in result

@@ -53,6 +53,8 @@ export interface ReadOnlyRoutineGroupsChronologicalListProps {
   tasks: Task[];
   routines: Routine[];
   expandedByDefault?: boolean;
+  onTaskClick?: (task: Task) => void;
+  onRoutineClick?: (routineDefinitionId: string) => void;
 }
 
 export const ReadOnlyRoutineGroupsChronologicalList: Component<
@@ -107,7 +109,10 @@ export const ReadOnlyRoutineGroupsChronologicalList: Component<
               <button
                 type="button"
                 class="w-full flex items-center gap-3"
-                onClick={() => toggleExpanded(routineDefinitionId())}
+                onClick={() => {
+                  props.onRoutineClick?.(routineDefinitionId());
+                  toggleExpanded(routineDefinitionId());
+                }}
                 aria-expanded={isExpanded(routineDefinitionId())}
               >
                 <Icon icon={icon()} class="w-5 h-5 fill-amber-600" />
@@ -128,7 +133,10 @@ export const ReadOnlyRoutineGroupsChronologicalList: Component<
               </button>
               <Show when={isExpanded(routineDefinitionId())}>
                 <div class="mt-3">
-                  <ReadOnlyTaskList tasks={sortedTasks} />
+                  <ReadOnlyTaskList
+                    tasks={sortedTasks}
+                    onItemClick={props.onTaskClick}
+                  />
                 </div>
               </Show>
             </div>

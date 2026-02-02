@@ -1,7 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, For } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { faListCheck } from "@fortawesome/free-solid-svg-icons";
+import { faListCheck, faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
 import SettingsPage from "@/components/shared/SettingsPage";
@@ -32,6 +32,12 @@ const AdminIndexPage: Component = () => {
           description: "View and search all domain events in the system.",
           icon: faListCheck,
           url: "/me/admin/events",
+        },
+        {
+          label: "Sync Debugger",
+          description: "Inspect streaming sync state and message log.",
+          icon: faArrowsRotate,
+          url: "/me/admin/sync",
         },
       ],
     },

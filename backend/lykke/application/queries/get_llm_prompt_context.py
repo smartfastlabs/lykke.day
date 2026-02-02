@@ -75,7 +75,7 @@ class GetLLMPromptContextHandler(
             day=day_context.day,
             tasks=day_context.tasks,
             calendar_entries=day_context.calendar_entries,
-            brain_dump_items=day_context.brain_dump_items,
+            brain_dumps=day_context.brain_dumps,
             factoids=factoids,
             messages=messages,
             push_notifications=push_notifications,

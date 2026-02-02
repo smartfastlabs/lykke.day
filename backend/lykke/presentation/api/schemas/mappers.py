@@ -22,6 +22,7 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     RoutineDefinitionEntity,
     RoutineEntity,
+    SmsLoginCodeEntity,
     TacticEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -53,6 +54,7 @@ from lykke.presentation.api.schemas import (
     RoutineDefinitionSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
+    SmsLoginCodeSchema,
     TacticSchema,
     TaskDefinitionSchema,
     TaskSchema,
@@ -105,6 +107,21 @@ def map_brain_dump_to_schema(item: BrainDumpEntity) -> BrainDumpSchema:
         llm_run_result=(
             dataclass_to_json_dict(item.llm_run_result) if item.llm_run_result else None
         ),
+    )
+
+
+def map_sms_login_code_to_schema(code: SmsLoginCodeEntity) -> SmsLoginCodeSchema:
+    """Convert SmsLoginCode entity to schema."""
+    return SmsLoginCodeSchema(
+        id=code.id,
+        user_id=code.user_id,
+        phone_number=code.phone_number,
+        code_hash=code.code_hash,
+        expires_at=code.expires_at,
+        consumed_at=code.consumed_at,
+        created_at=code.created_at,
+        attempt_count=code.attempt_count,
+        last_attempt_at=code.last_attempt_at,
     )
 
 
@@ -243,14 +260,14 @@ def map_day_template_to_schema(
 def map_day_to_schema(
     day: DayEntity,
     *,
-    brain_dump_items: list[BrainDumpEntity] | None = None,
+    brain_dumps: list[BrainDumpEntity] | None = None,
 ) -> DaySchema:
     """Convert Day entity to Day schema."""
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     alarm_schemas = [map_alarm_to_schema(alarm) for alarm in day.alarms]
-    brain_dump_item_schemas = [
-        map_brain_dump_to_schema(item) for item in (brain_dump_items or [])
+    brain_dump_schemas = [
+        map_brain_dump_to_schema(item) for item in (brain_dumps or [])
     ]
 
     return DaySchema(
@@ -264,7 +281,7 @@ def map_day_to_schema(
         tags=day.tags,
         template=template_schema,
         alarms=alarm_schemas,
-        brain_dump_items=brain_dump_item_schemas,
+        brain_dumps=brain_dump_schemas,
         high_level_plan=(
             HighLevelPlanSchema(
                 title=day.high_level_plan.title,
@@ -315,7 +332,7 @@ def map_day_context_to_schema(
     current_time = get_current_datetime_in_timezone(user_timezone)
     day_schema = map_day_to_schema(
         context.day,
-        brain_dump_items=context.brain_dump_items,
+        brain_dumps=context.brain_dumps,
     )
     calendar_entry_schemas = [
         map_calendar_entry_to_schema(entry, user_timezone=user_timezone)
@@ -334,12 +351,23 @@ def map_day_context_to_schema(
         )
         for routine in context.routines
     ]
+    brain_dump_schemas = [
+        map_brain_dump_to_schema(item) for item in context.brain_dumps
+    ]
+    push_notification_schemas = [
+        map_push_notification_to_schema(notification)
+        for notification in context.push_notifications
+    ]
+    message_schemas = [map_message_to_schema(message) for message in context.messages]
 
     return DayContextSchema(
         day=day_schema,
         calendar_entries=calendar_entry_schemas,
         tasks=task_schemas,
         routines=routine_schemas,
+        brain_dumps=brain_dump_schemas,
+        push_notifications=push_notification_schemas,
+        messages=message_schemas,
     )
 
 

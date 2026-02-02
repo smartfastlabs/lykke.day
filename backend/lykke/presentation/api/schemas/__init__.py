@@ -51,6 +51,7 @@ from .routine_definition import (
     RoutineDefinitionUpdateSchema,
     TimeWindowSchema,
 )
+from .sms_login_code import SmsLoginCodeSchema
 from .tactic import TacticCreateSchema, TacticSchema, TacticUpdateSchema
 from .task import AdhocTaskCreateSchema, TaskRescheduleSchema, TaskSchema
 from .task_definition import (
@@ -145,6 +146,7 @@ MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
 SendMessageResponseSchema.model_rebuild()
 BasePersonalitySchema.model_rebuild()
+SmsLoginCodeSchema.model_rebuild()
 WebSocketUserMessageSchema.model_rebuild()
 WebSocketMessageEventSchema.model_rebuild()
 WebSocketAuditLogEventSchema.model_rebuild()
@@ -205,6 +207,7 @@ __all__ = [
     "RoutineDefinitionTaskCreateSchema",
     "RoutineDefinitionTaskUpdateSchema",
     "RoutineDefinitionUpdateSchema",
+    "SmsLoginCodeSchema",
     "RoutineSchema",
     "SendMessageRequestSchema",
     "SendMessageResponseSchema",

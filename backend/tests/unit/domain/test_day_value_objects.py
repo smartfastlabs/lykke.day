@@ -71,7 +71,9 @@ def test_day_context_creation(test_user_id: str) -> None:
     assert context.calendar_entries == []
     assert context.tasks == []
     assert context.routines == []
-    assert context.brain_dump_items == []
+    assert context.brain_dumps == []
+    assert context.push_notifications == []
+    assert context.messages == []
 
 
 def test_day_context_defaults() -> None:
@@ -86,7 +88,9 @@ def test_day_context_defaults() -> None:
     assert context.calendar_entries == []
     assert context.tasks == []
     assert context.routines == []
-    assert context.brain_dump_items == []
+    assert context.brain_dumps == []
+    assert context.push_notifications == []
+    assert context.messages == []
 
 
 @pytest.mark.parametrize(

@@ -7,9 +7,22 @@ import type { DayContext, Task, TaskStatus } from "@/types/api";
 vi.mock("@/utils/api", () => ({
   taskAPI: {
     setTaskStatus: vi.fn(),
+    recordTaskAction: vi.fn(),
+    rescheduleTask: vi.fn(),
+    createAdhocTask: vi.fn(),
+    deleteTask: vi.fn(),
   },
-  notificationAPI: {
-    getToday: vi.fn().mockResolvedValue([]),
+  routineAPI: {
+    setRoutineAction: vi.fn(),
+  },
+  alarmAPI: {
+    addAlarm: vi.fn(),
+    snoozeAlarm: vi.fn(),
+    cancelAlarm: vi.fn(),
+    removeAlarm: vi.fn(),
+  },
+  calendarEntryAPI: {
+    update: vi.fn(),
   },
 }));
 
@@ -87,7 +100,9 @@ describe("StreamingDataProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     ControllableWebSocket.instances = [];
-    (global as unknown as { WebSocket: typeof ControllableWebSocket }).WebSocket = ControllableWebSocket;
+    (
+      global as unknown as { WebSocket: typeof ControllableWebSocket }
+    ).WebSocket = ControllableWebSocket;
     document.cookie = "lykke_auth=test-token";
     vi.useFakeTimers();
   });
@@ -522,13 +537,13 @@ describe("StreamingDataProvider", () => {
         () => {
           const sentMessages = ws._sentData.map((d) => JSON.parse(d));
           const syncRequest = sentMessages.find(
-            (m) => m.type === "sync_request" && m.since_timestamp !== null
+            (m) => m.type === "sync_request" && m.since_timestamp !== null,
           );
           expect(syncRequest).toBeDefined();
           // The timestamp is updated to the audit log's occurred_at before the debounced sync
           expect(syncRequest?.since_timestamp).toBe("2026-01-15T12:01:00Z");
         },
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
     });
 
@@ -643,7 +658,10 @@ describe("StreamingDataProvider", () => {
       });
 
       // Update task status
-      const statusPromise = context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+      const statusPromise = context!.setTaskStatus(
+        mockDayContext.tasks![0],
+        "COMPLETE",
+      );
       // Flush timers and microtasks to ensure promise resolves
       await vi.runAllTimersAsync();
       await statusPromise;
@@ -656,7 +674,7 @@ describe("StreamingDataProvider", () => {
     it("should rollback on failed task status update", async () => {
       const { taskAPI } = await import("@/utils/api");
       vi.mocked(taskAPI.setTaskStatus).mockRejectedValue(
-        new Error("Update failed")
+        new Error("Update failed"),
       );
 
       let context: ReturnType<typeof useStreamingData> | null = null;
@@ -694,7 +712,10 @@ describe("StreamingDataProvider", () => {
       });
 
       // Try to update task status
-      const statusPromise = context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+      const statusPromise = context!.setTaskStatus(
+        mockDayContext.tasks![0],
+        "COMPLETE",
+      );
       // Set up error handler immediately to prevent unhandled rejection
       let caughtError: Error | undefined;
       statusPromise.catch((error) => {
@@ -725,7 +746,7 @@ describe("StreamingDataProvider", () => {
           return <div>Test</div>;
         });
       }).toThrow(
-        "useStreamingData must be used within a StreamingDataProvider"
+        "useStreamingData must be used within a StreamingDataProvider",
       );
     });
   });

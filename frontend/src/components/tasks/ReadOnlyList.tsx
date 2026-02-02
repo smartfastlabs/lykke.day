@@ -29,6 +29,7 @@ const getTimeLabel = (timeWindow?: TimeWindow | null): string | null => {
 
 export interface ReadOnlyTaskListProps {
   tasks: Accessor<Task[]>;
+  onItemClick?: (task: Task) => void;
 }
 
 export const ReadOnlyTaskList: Component<ReadOnlyTaskListProps> = (props) => {
@@ -42,8 +43,14 @@ export const ReadOnlyTaskList: Component<ReadOnlyTaskListProps> = (props) => {
           const icon = () =>
             getCategoryIcon(task.category) || getTypeIcon(task.type);
 
+          const handleClick = () => props.onItemClick?.(task);
           return (
-            <div class="bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm">
+            <div
+              class={`bg-white/70 border border-white/70 shadow shadow-amber-900/5 rounded-2xl px-4 py-3 backdrop-blur-sm ${
+                props.onItemClick ? "cursor-pointer hover:bg-white/90" : ""
+              }`}
+              onClick={handleClick}
+            >
               <div class="flex items-center gap-3">
                 <div class="w-14 flex-shrink-0 text-right">
                   <Show

@@ -125,10 +125,10 @@ async def update_day(
     updated = await update_day_handler.handle(
         UpdateDayCommand(date=day.date, update_data=update_object)
     )
-    brain_dump_items = await ro_repos.brain_dump_ro_repo.search(
+    brain_dumps = await ro_repos.brain_dump_ro_repo.search(
         value_objects.BrainDumpQuery(date=day.date)
     )
-    return map_day_to_schema(updated, brain_dump_items=brain_dump_items)
+    return map_day_to_schema(updated, brain_dumps=brain_dumps)
 
 
 # ============================================================================

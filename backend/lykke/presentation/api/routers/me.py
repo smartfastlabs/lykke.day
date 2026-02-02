@@ -235,7 +235,7 @@ async def ensure_tomorrow_scheduled(
         command_factory=command_factory,
         user_timezone=user.settings.timezone,
     )
-    return map_day_to_schema(context.day, brain_dump_items=context.brain_dump_items)
+    return map_day_to_schema(context.day, brain_dumps=context.brain_dumps)
 
 
 @router.put("/tomorrow/reschedule", response_model=DaySchema)
@@ -247,7 +247,7 @@ async def reschedule_tomorrow(
     tomorrow = get_tomorrows_date(user.settings.timezone)
     handler = command_factory.create(RescheduleDayHandler)
     context = await handler.handle(RescheduleDayCommand(date=tomorrow))
-    return map_day_to_schema(context.day, brain_dump_items=context.brain_dump_items)
+    return map_day_to_schema(context.day, brain_dumps=context.brain_dumps)
 
 
 @router.get("/tomorrow/day", response_model=DaySchema)
@@ -260,7 +260,7 @@ async def get_tomorrow_day(
         query_factory=query_factory,
         user_timezone=user.settings.timezone,
     )
-    return map_day_to_schema(context.day, brain_dump_items=context.brain_dump_items)
+    return map_day_to_schema(context.day, brain_dumps=context.brain_dumps)
 
 
 @router.get("/tomorrow/calendar-entries", response_model=list[CalendarEntrySchema])

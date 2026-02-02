@@ -139,9 +139,9 @@ def serialize_day_context(
 
         calendar_entries.append(entry_data)
 
-    # Serialize brain dump items
-    brain_dump_items = []
-    for item in context.brain_dump_items:
+    # Serialize brain dumps
+    brain_dumps = []
+    for item in context.brain_dumps:
         item_data: dict[str, Any] = {
             "id": str(item.id),
             "text": item.text,
@@ -149,7 +149,35 @@ def serialize_day_context(
         }
         if item.created_at:
             item_data["created_at"] = item.created_at.isoformat()
-        brain_dump_items.append(item_data)
+        brain_dumps.append(item_data)
+
+    # Serialize push notifications
+    push_notifications = []
+    for notification in context.push_notifications:
+        notification_data: dict[str, Any] = {
+            "id": str(notification.id),
+            "status": notification.status,
+            "sent_at": notification.sent_at.isoformat(),
+            "message": notification.message,
+            "priority": notification.priority,
+        }
+        if notification.triggered_by:
+            notification_data["triggered_by"] = notification.triggered_by
+        push_notifications.append(notification_data)
+
+    # Serialize messages
+    messages = [
+        {
+            "id": str(message.id),
+            "user_id": str(message.user_id),
+            "role": message.role.value,
+            "content": message.content,
+            "meta": message.meta,
+            "triggered_by": message.triggered_by,
+            "created_at": message.created_at.isoformat(),
+        }
+        for message in context.messages
+    ]
 
     # Build final context
     result: dict[str, Any] = {
@@ -163,7 +191,9 @@ def serialize_day_context(
         "tasks": tasks,
         "routines": routines,
         "calendar_entries": calendar_entries,
-        "brain_dump_items": brain_dump_items,
+        "brain_dumps": brain_dumps,
+        "push_notifications": push_notifications,
+        "messages": messages,
     }
 
     if day.high_level_plan:
@@ -187,26 +217,14 @@ def serialize_day_context(
             for factoid in context.factoids
         ]
 
-        result["messages"] = [
-            {
-                "id": str(message.id),
-                "user_id": str(message.user_id),
-                "role": message.role.value,
-                "content": message.content,
-                "meta": message.meta,
-                "created_at": message.created_at.isoformat(),
-            }
-            for message in context.messages
-        ]
-
-        push_notifications: list[dict[str, Any]] = []
+        llm_push_notifications: list[dict[str, Any]] = []
         for notification in context.push_notifications:
             try:
                 content = json.loads(notification.content)
             except (TypeError, json.JSONDecodeError):
                 content = notification.content
 
-            notification_data: dict[str, Any] = {
+            llm_notification_data: dict[str, Any] = {
                 "id": str(notification.id),
                 "push_subscription_ids": [
                     str(subscription_id)
@@ -218,20 +236,20 @@ def serialize_day_context(
             }
 
             if notification.error_message:
-                notification_data["error_message"] = notification.error_message
+                llm_notification_data["error_message"] = notification.error_message
             if notification.message:
-                notification_data["message"] = notification.message
+                llm_notification_data["message"] = notification.message
             if notification.priority:
-                notification_data["priority"] = notification.priority
+                llm_notification_data["priority"] = notification.priority
             if notification.triggered_by:
-                notification_data["triggered_by"] = notification.triggered_by
+                llm_notification_data["triggered_by"] = notification.triggered_by
             if notification.llm_snapshot:
-                notification_data["llm_snapshot"] = dataclass_to_json_dict(
+                llm_notification_data["llm_snapshot"] = dataclass_to_json_dict(
                     notification.llm_snapshot
                 )
 
-            push_notifications.append(notification_data)
+            llm_push_notifications.append(llm_notification_data)
 
-        result["push_notifications"] = push_notifications
+        result["push_notifications"] = llm_push_notifications
 
     return result

@@ -2,7 +2,6 @@ import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, type ParentProps } from "solid-js";
 
 import { useAuth } from "@/providers/auth";
-import { StreamingDataProvider } from "@/providers/streamingData";
 
 export function AdminGuard(props: ParentProps) {
   const navigate = useNavigate();
@@ -27,7 +26,7 @@ export function AdminGuard(props: ParentProps) {
         </div>
       }
     >
-      <StreamingDataProvider>{props.children}</StreamingDataProvider>
+      {props.children}
     </Show>
   );
 }

@@ -16,9 +16,7 @@ def build_referenced_entities(
     seen: set[tuple[str, UUID]] = set()
     referenced: list[value_objects.LLMReferencedEntitySnapshot] = []
 
-    def add_entities(
-        entity_type: str, entities: Iterable[object | None]
-    ) -> None:
+    def add_entities(entity_type: str, entities: Iterable[object | None]) -> None:
         for entity in entities:
             if entity is None:
                 continue
@@ -40,7 +38,7 @@ def build_referenced_entities(
     add_entities("calendar_entry", prompt_context.calendar_entries)
     add_entities("task", prompt_context.tasks)
     add_entities("routine", prompt_context.routines)
-    add_entities("brain_dump", prompt_context.brain_dump_items)
+    add_entities("brain_dump", prompt_context.brain_dumps)
     add_entities("factoid", getattr(prompt_context, "factoids", []))
     add_entities("message", getattr(prompt_context, "messages", []))
     add_entities("push_notification", getattr(prompt_context, "push_notifications", []))
