@@ -18,7 +18,9 @@
   name: {{ task.name }}
   status: {{ task.status.value }}
   category: {{ task.category.value }}
+  {% if task.scheduled_date and not is_today(task.scheduled_date) %}
   scheduled_date: {{ fmt_date(task.scheduled_date) }}
+  {% endif %}
   {{- kv_line("  ", "description", task.description) -}}
   {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
   {% set schedule = task.schedule %}
@@ -37,7 +39,7 @@
 {% for reminder in context.tasks if reminder.type == "REMINDER" %}
 - id: {{ reminder.id }}
   name: {{ reminder.name }}
-  status: {{ reminder.status }}
+  status: {{ reminder.status.value }}
   {{- kv_line("  ", "completed_at", reminder.completed_at and fmt_datetime(reminder.completed_at)) -}}
 {% endfor %}
 {% endblock %}

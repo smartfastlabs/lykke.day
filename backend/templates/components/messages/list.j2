@@ -2,5 +2,6 @@
 # Messages:
 {% for message in context.messages %}
 {% include "components/messages/item.j2" %}
+{% if not loop.last %}{{ "\n" }}{% endif %}
 {% endfor %}
 {% endif %}

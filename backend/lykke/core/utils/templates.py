@@ -83,6 +83,34 @@ def fmt_date(context: dict[str, Any], value: Any) -> str:
 
 
 @pass_context
+def fmt_date_no_today(context: dict[str, Any], value: Any) -> str:
+    current_time = context.get("current_time")
+    target_date = value.date() if isinstance(value, datetime) else value
+    if current_time is None:
+        return target_date.isoformat()
+    if isinstance(value, datetime) and current_time.tzinfo and value.tzinfo:
+        value = value.astimezone(current_time.tzinfo)
+        target_date = value.date()
+    if target_date == current_time.date():
+        return target_date.isoformat()
+    delta_days = (target_date - current_time.date()).days
+    label = _relative_days_label(delta_days)
+    return f"{target_date.isoformat()} ({label})"
+
+
+@pass_context
+def is_today(context: dict[str, Any], value: Any) -> bool:
+    current_time = context.get("current_time")
+    if current_time is None:
+        return False
+    target_date = value.date() if isinstance(value, datetime) else value
+    if isinstance(value, datetime) and current_time.tzinfo and value.tzinfo:
+        value = value.astimezone(current_time.tzinfo)
+        target_date = value.date()
+    return target_date == current_time.date()
+
+
+@pass_context
 def fmt_datetime(context: dict[str, Any], value: Any) -> str:
     current_time = context.get("current_time")
     if current_time is not None and value.tzinfo and current_time.tzinfo:
@@ -100,6 +128,14 @@ def fmt_datetime(context: dict[str, Any], value: Any) -> str:
     return f"{value.date().isoformat()} at {_format_time(value)}"
 
 
+@pass_context
+def fmt_datetime_plain(context: dict[str, Any], value: Any) -> str:
+    current_time = context.get("current_time")
+    if current_time is not None and value.tzinfo and current_time.tzinfo:
+        value = value.astimezone(current_time.tzinfo)
+    return f"{value.date().isoformat()} {_format_time(value)}"
+
+
 def kv_line(indent: str, key: str, value: Any) -> str:
     if value is None or value == "" or value == [] or value == {}:
         return ""
@@ -109,7 +145,10 @@ def kv_line(indent: str, key: str, value: Any) -> str:
 def _register_template_helpers(environment: Environment) -> None:
     environment.globals["fmt_time"] = fmt_time
     environment.globals["fmt_date"] = fmt_date
+    environment.globals["fmt_date_no_today"] = fmt_date_no_today
     environment.globals["fmt_datetime"] = fmt_datetime
+    environment.globals["fmt_datetime_plain"] = fmt_datetime_plain
+    environment.globals["is_today"] = is_today
     environment.globals["kv_line"] = kv_line
 
 

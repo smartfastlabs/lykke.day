@@ -3,7 +3,9 @@
   status: {{ task.status.value }}
   type: {{ task.type.value }}
   category: {{ task.category.value }}
+  {% if task.scheduled_date and not is_today(task.scheduled_date) %}
   scheduled_date: {{ fmt_date(task.scheduled_date) }}
+  {% endif %}
   {% if task.description %}
   description: {{ task.description }}
   {% endif %}
@@ -13,6 +15,14 @@
   {% endif %}
   {% if task.completed_at %}
   completed_at: {{ fmt_datetime(task.completed_at) }}
+  {% endif %}
+  {% set time_window = task.time_window %}
+  {% if time_window and (time_window.available_time or time_window.start_time or time_window.end_time or time_window.cutoff_time) %}
+  time_window:
+    {{- kv_line("    ", "available_time", time_window.available_time and fmt_time(time_window.available_time)) }}
+    {{- kv_line("    ", "start_time", time_window.start_time and fmt_time(time_window.start_time)) }}
+    {{- kv_line("    ", "end_time", time_window.end_time and fmt_time(time_window.end_time)) }}
+    {{- kv_line("    ", "cutoff_time", time_window.cutoff_time and fmt_time(time_window.cutoff_time)) }}
   {% endif %}
   {% set schedule = task.schedule %}
   {% if schedule and (schedule.timing_type or schedule.available_time or schedule.start_time or schedule.end_time) %}

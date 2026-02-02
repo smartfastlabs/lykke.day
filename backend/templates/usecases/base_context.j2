@@ -1,5 +1,5 @@
 {% block header %}{% endblock %}
-Current time: {{ fmt_datetime(current_time) }}
+Current time: {{ fmt_datetime_plain(current_time) }}
 # Day
 - date: {{ fmt_date(context.day.date) }}
   status: {{ context.day.status.value }}
