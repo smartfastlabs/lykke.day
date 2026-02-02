@@ -39,4 +39,4 @@ async def send_domain_events(events: list[DomainEvent]) -> None:
                 logger.exception(
                     f"Error in event handler {receiver} for {event_name}: {result}"
                 )
-        logger.debug("Finished dispatch for %s", event_name)
+        logger.debug(f"Finished dispatch for {event_name}")

@@ -140,9 +140,9 @@ async def domain_events_stream(
                         }
                     )
     except WebSocketDisconnect:
-        logger.info("Domain events WebSocket disconnected for user %s", user.id)
+        logger.info(f"Domain events WebSocket disconnected for user {user.id}")
     except Exception as exc:
-        logger.error("Domain events WebSocket error: %s", exc)
+        logger.error(f"Domain events WebSocket error: {exc}")
         try:
             await websocket.send_json(
                 {"type": "error", "message": "An unexpected error occurred"}

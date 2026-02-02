@@ -29,8 +29,6 @@ class WorkersToSchedule:
                 await resolved_worker.kiq(**kwargs)
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    "Failed to schedule worker %s: %s",
-                    getattr(resolved_worker, "task_name", resolved_worker),
-                    exc,
+                    f"Failed to schedule worker {getattr(resolved_worker, 'task_name', resolved_worker)}: {exc}",
                 )
         self._pending.clear()

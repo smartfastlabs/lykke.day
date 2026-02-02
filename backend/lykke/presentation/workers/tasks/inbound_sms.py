@@ -33,7 +33,7 @@ async def process_inbound_sms_message_task(
 ) -> None:
     """Process an inbound SMS message for a specific user."""
     logger.info(
-        "Starting inbound SMS processing for user %s message %s", user_id, message_id
+        f"Starting inbound SMS processing for user {user_id} message {message_id}"
     )
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
@@ -47,15 +47,11 @@ async def process_inbound_sms_message_task(
         try:
             await handler.handle(ProcessInboundSmsCommand(message_id=message_id))
             logger.debug(
-                "Inbound SMS processing completed for user %s message %s",
-                user_id,
-                message_id,
+                f"Inbound SMS processing completed for user {user_id} message {message_id}",
             )
         except Exception:  # pylint: disable=broad-except
             logger.exception(
-                "Error processing inbound SMS for user %s message %s",
-                user_id,
-                message_id,
+                f"Error processing inbound SMS for user {user_id} message {message_id}",
             )
     finally:
         await pubsub_gateway.close()

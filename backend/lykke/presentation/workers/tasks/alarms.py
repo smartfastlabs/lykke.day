@@ -108,10 +108,7 @@ async def trigger_alarms_for_user_task(
                     day = await uow.day_ro_repo.get(day_id)
                 except Exception as exc:
                     logger.debug(
-                        "No day found for user %s on %s (%s)",
-                        user_id,
-                        day_date,
-                        exc,
+                        f"No day found for user {user_id} on {day_date} ({exc})",
                     )
                     continue
 

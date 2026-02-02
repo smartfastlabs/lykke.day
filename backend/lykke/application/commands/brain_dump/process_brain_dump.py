@@ -75,16 +75,12 @@ class ProcessBrainDumpHandler(
             item = await self.brain_dump_ro_repo.get(command.item_id)
         except Exception:
             logger.debug(
-                "Brain dump item %s not found for day %s",
-                command.item_id,
-                command.date,
+                f"Brain dump item {command.item_id} not found for day {command.date}",
             )
             return
         if item.date != command.date:
             logger.debug(
-                "Brain dump item %s not found for day %s",
-                command.item_id,
-                command.date,
+                f"Brain dump item {command.item_id} not found for day {command.date}",
             )
             return
 
@@ -254,9 +250,7 @@ class ProcessBrainDumpHandler(
             """
             if reason:
                 logger.debug(
-                    "Brain dump item %s has no action: %s",
-                    brain_dump_item.id,
-                    reason,
+                    f"Brain dump item {brain_dump_item.id} has no action: {reason}",
                 )
 
         return [
@@ -275,16 +269,12 @@ class ProcessBrainDumpHandler(
                 item = await uow.brain_dump_ro_repo.get(item_id)
             except Exception:
                 logger.debug(
-                    "Brain dump item %s not found for day %s",
-                    item_id,
-                    date,
+                    f"Brain dump item {item_id} not found for day {date}",
                 )
                 return
             if item.date != date:
                 logger.debug(
-                    "Brain dump item %s not found for day %s",
-                    item_id,
-                    date,
+                    f"Brain dump item {item_id} not found for day {date}",
                 )
                 return
             updated = item.update_type(value_objects.BrainDumpType.COMMAND)
@@ -316,16 +306,12 @@ class ProcessBrainDumpHandler(
                 item = await uow.brain_dump_ro_repo.get(item_id)
             except Exception:
                 logger.debug(
-                    "Brain dump item %s not found for day %s",
-                    item_id,
-                    date,
+                    f"Brain dump item {item_id} not found for day {date}",
                 )
                 return
             if item.date != date:
                 logger.debug(
-                    "Brain dump item %s not found for day %s",
-                    item_id,
-                    date,
+                    f"Brain dump item {item_id} not found for day {date}",
                 )
                 return
             updated = item.update_llm_run_result(snapshot)

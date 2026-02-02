@@ -185,8 +185,7 @@ class MorningOverviewHandler(
             """Decide whether to send a morning overview."""
             if not should_notify:
                 logger.debug(
-                    "LLM decided not to send morning overview for user %s",
-                    self.user_id,
+                    f"LLM decided not to send morning overview for user {self.user_id}",
                 )
                 return None
             decision = value_objects.NotificationDecision(
@@ -214,8 +213,7 @@ class MorningOverviewHandler(
                 subscriptions = await self.push_subscription_ro_repo.all()
                 if not subscriptions:
                     logger.debug(
-                        "No push subscriptions found for user %s",
-                        self.user_id,
+                        f"No push subscriptions found for user {self.user_id}",
                     )
                     async with self._uow_factory.create(self.user_id) as uow:
                         notification = PushNotificationEntity(
@@ -246,15 +244,11 @@ class MorningOverviewHandler(
                     )
                 )
                 logger.info(
-                    "Sent morning overview to %s subscription(s) for user %s",
-                    len(subscriptions),
-                    self.user_id,
+                    f"Sent morning overview to {len(subscriptions)} subscription(s) for user {self.user_id}",
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    "Failed to send morning overview for user %s: %s",
-                    self.user_id,
-                    exc,
+                    f"Failed to send morning overview for user {self.user_id}: {exc}",
                 )
                 logger.exception(exc)
             return None

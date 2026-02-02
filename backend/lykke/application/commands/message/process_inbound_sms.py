@@ -87,22 +87,20 @@ class ProcessInboundSmsHandler(
         try:
             message = await self.message_ro_repo.get(command.message_id)
         except Exception:  # pylint: disable=broad-except
-            logger.debug("Inbound message %s not found", command.message_id)
+            logger.debug(f"Inbound message {command.message_id} not found")
             return
 
         # Only process inbound/user messages.
         if message.role != value_objects.MessageRole.USER:
             logger.debug(
-                "Skipping processing for message %s role %s",
-                message.id,
-                message.role.value,
+                f"Skipping processing for message {message.id} role {message.role.value}",
             )
             return
 
         from_number = message.meta.get("from_number")
         if not isinstance(from_number, str) or not from_number.strip():
             logger.debug(
-                "Skipping inbound message %s: missing from_number metadata", message.id
+                f"Skipping inbound message {message.id}: missing from_number metadata"
             )
             return
 
@@ -154,7 +152,7 @@ class ProcessInboundSmsHandler(
                 message = await uow.message_ro_repo.get(message_id)
             except Exception:  # pylint: disable=broad-except
                 logger.debug(
-                    "Message %s not found while recording llm_run_result", message_id
+                    f"Message {message_id} not found while recording llm_run_result"
                 )
                 return
             updated = message.update_llm_run_result(snapshot)
@@ -215,15 +213,14 @@ class ProcessInboundSmsHandler(
             try:
                 await self._sms_gateway.send_message(from_number, body)
             except Exception as exc:  # pylint: disable=broad-except
-                logger.error("Failed sending SMS reply to %s: %s", from_number, exc)
+                logger.error(f"Failed sending SMS reply to {from_number}: {exc}")
 
         async def _maybe_send_acknowledgment(message: str | None) -> None:
             if not self._send_acknowledgment:
                 return
             if message is None or not message.strip():
                 logger.debug(
-                    "Expected acknowledgment message for inbound message %s",
-                    inbound_message.id,
+                    f"Expected acknowledgment message for inbound message {inbound_message.id}",
                 )
                 return
             await _send_sms(message)

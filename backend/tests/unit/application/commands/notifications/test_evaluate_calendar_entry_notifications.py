@@ -14,7 +14,10 @@ from lykke.application.commands.notifications import (
     CalendarEntryNotificationCommand,
     CalendarEntryNotificationHandler,
 )
-from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    MessageRepositoryReadOnlyProtocol,
+    PushNotificationRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     CalendarEntryEntity,
@@ -24,7 +27,6 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     UserEntity,
 )
-from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 from tests.support.dobles import (
     create_calendar_entry_repo_double,
     create_day_repo_double,
@@ -325,4 +327,5 @@ async def test_calendar_entry_kiosk_alarm_adds_alarm() -> None:
     await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
 
     assert uow.added
+    assert uow.added[0].alarms
     assert uow.added[0].alarms

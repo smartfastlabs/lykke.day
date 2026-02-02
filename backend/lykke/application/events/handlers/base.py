@@ -122,9 +122,7 @@ class DomainEventHandler(ABC, BaseHandler):
         event_obj = kwargs.get("event")
         if not isinstance(event_obj, DomainEvent):
             logger.warning(
-                "Received signal without DomainEvent payload; sender=%s kwargs=%s",
-                getattr(sender, "__name__", sender),
-                kwargs,
+                f"Received signal without DomainEvent payload; sender={getattr(sender, '__name__', sender)} kwargs={kwargs}",
             )
             return
 

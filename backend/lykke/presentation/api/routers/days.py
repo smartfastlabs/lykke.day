@@ -460,9 +460,7 @@ async def _handle_realtime_events(
                         current_date = date_state["value"]
                         if next_date != current_date:
                             logger.info(
-                                "New day detected (%s -> %s). Sending full sync.",
-                                current_date,
-                                next_date,
+                                f"New day detected ({current_date} -> {next_date}). Sending full sync.",
                             )
                             date_state["value"] = next_date
                             response = await _build_full_sync_response(
@@ -496,8 +494,7 @@ async def _handle_realtime_events(
                         ),
                     ):
                         logger.debug(
-                            "Filtered out non-auditable domain event %s",
-                            domain_event.__class__.__name__,
+                            f"Filtered out non-auditable domain event {domain_event.__class__.__name__}",
                         )
                         continue
 

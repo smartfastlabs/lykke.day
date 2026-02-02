@@ -34,16 +34,15 @@ async def process_brain_dump_item_task(
     pubsub_gateway: RedisPubSubGateway | None = None,
 ) -> None:
     """Process a brain dump item for a specific user."""
-    logger.info("Starting brain dump processing for user %s item %s", user_id, item_id)
+    logger.info(
+        f"Starting brain dump processing for user {user_id} item {item_id}"
+    )
 
     try:
         date = dt_date.fromisoformat(day_date)
     except ValueError:
         logger.warning(
-            "Invalid brain dump date %s for user %s item %s",
-            day_date,
-            user_id,
-            item_id,
+            f"Invalid brain dump date {day_date} for user {user_id} item {item_id}"
         )
         return
 
@@ -58,15 +57,11 @@ async def process_brain_dump_item_task(
         try:
             await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item_id))
             logger.debug(
-                "Brain dump processing completed for user %s item %s",
-                user_id,
-                item_id,
+                f"Brain dump processing completed for user {user_id} item {item_id}"
             )
         except Exception:  # pylint: disable=broad-except
             logger.exception(
-                "Error processing brain dump for user %s item %s",
-                user_id,
-                item_id,
+                f"Error processing brain dump for user {user_id} item {item_id}"
             )
     finally:
         await pubsub_gateway.close()

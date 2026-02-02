@@ -78,8 +78,6 @@ async def evaluate_smart_notifications_for_all_users_task(
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
 async def evaluate_calendar_entry_notifications_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
-    *,
-    enqueue_task: _EnqueueTask | None = None,
 ) -> None:
     """Evaluate calendar entry reminders for all eligible users."""
     logger.info("Starting calendar entry notification evaluation for all users")
@@ -92,18 +90,16 @@ async def evaluate_calendar_entry_notifications_for_all_users_task(
         and user.settings.calendar_entry_notification_settings.rules
     ]
     logger.info(
-        "Found %s users eligible for calendar entry notifications",
-        len(eligible_users),
+        f"Found {len(eligible_users)} users eligible for calendar entry notifications",
     )
 
-    task = enqueue_task or evaluate_calendar_entry_notifications_task
     for user in eligible_users:
-        await task.kiq(user_id=user.id, triggered_by="scheduled")
-
-    logger.info(
-        "Enqueued calendar entry notification evaluation tasks for %s users",
-        len(eligible_users),
-    )
+        logger.info(
+            f"Enqueued calendar entry notification evaluation task for user {user.id}"
+        )
+        await evaluate_calendar_entry_notifications_task.kiq(
+            user_id=user.id, triggered_by="scheduled"
+        )
 
 
 @broker.task  # type: ignore[untyped-decorator]
@@ -160,41 +156,32 @@ async def evaluate_calendar_entry_notifications_task(
     user_id: UUID,
     triggered_by: str | None = None,
     *,
-    handler: _NotificationHandler[CalendarEntryNotificationCommand] | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     pubsub_gateway: RedisPubSubGateway | None = None,
 ) -> None:
     """Evaluate calendar entry reminders for a specific user."""
-    logger.info(
-        "Starting calendar entry notification evaluation for user %s", user_id
-    )
+    logger.info(f"Starting calendar entry notification evaluation for user {user_id}")
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        resolved_handler: _NotificationHandler[CalendarEntryNotificationCommand]
-        if handler is None:
-            resolved_handler = get_calendar_entry_notification_handler(
-                user_id=user_id,
-                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-            )
-        else:
-            resolved_handler = handler
-
+        handler = get_calendar_entry_notification_handler(
+            user_id=user_id,
+            uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+        )
         try:
-            await resolved_handler.handle(
+            await handler.handle(
                 CalendarEntryNotificationCommand(
                     user_id=user_id,
                     triggered_by=triggered_by,
                 )
             )
             logger.debug(
-                "Calendar entry notification evaluation completed for user %s",
-                user_id,
+                f"Calendar entry notification evaluation completed for user {user_id}",
             )
         except Exception:  # pylint: disable=broad-except
             logger.exception(
-                "Error evaluating calendar entry notifications for user %s", user_id
+                f"Error evaluating calendar entry notifications for user {user_id}"
             )
     finally:
         await pubsub_gateway.close()
@@ -275,16 +262,15 @@ async def evaluate_morning_overviews_for_all_users_task(
 
             if morning_overview_sent_today:
                 logger.debug(
-                    "Morning overview already sent today for user %s, skipping",
-                    user.id,
+                    f"Morning overview already sent today for user {user.id}, skipping",
                 )
                 continue
 
             await task.kiq(user_id=user.id)
-            logger.info("Enqueued morning overview for user %s", user.id)
+            logger.info(f"Enqueued morning overview for user {user.id}")
 
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error checking morning overview for user %s", user.id)
+            logger.exception(f"Error checking morning overview for user {user.id}")
 
     logger.info("Completed morning overview evaluation for all users")
 

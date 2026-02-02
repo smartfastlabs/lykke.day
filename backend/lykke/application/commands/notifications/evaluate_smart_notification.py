@@ -133,8 +133,7 @@ class SmartNotificationHandler(
             """Decide whether to send a smart notification."""
             if not should_notify:
                 logger.debug(
-                    "LLM decided not to send notification for user %s",
-                    self.user_id,
+                    f"LLM decided not to send notification for user {self.user_id}",
                 )
                 return None
             decision = value_objects.NotificationDecision(
@@ -143,9 +142,7 @@ class SmartNotificationHandler(
                 reason=reason,
             )
             logger.debug(
-                "LLM decided to send %s priority notification for user %s",
-                decision.priority,
-                self.user_id,
+                f"LLM decided to send {decision.priority} priority notification for user {self.user_id}",
             )
             if decision.priority not in ["high", "medium"]:
                 return
@@ -160,8 +157,7 @@ class SmartNotificationHandler(
             ]
             if recent_delivered:
                 logger.debug(
-                    "Skipping smart notification for user %s due to cooldown window",
-                    self.user_id,
+                    f"Skipping smart notification for user {self.user_id} due to cooldown window",
                 )
                 return None
 
@@ -183,8 +179,7 @@ class SmartNotificationHandler(
                 subscriptions = await self.push_subscription_ro_repo.all()
                 if not subscriptions:
                     logger.debug(
-                        "No push subscriptions found for user %s",
-                        self.user_id,
+                        f"No push subscriptions found for user {self.user_id}",
                     )
                     content_str = json.dumps(filtered_content)
                     async with self._uow_factory.create(self.user_id) as uow:
@@ -216,15 +211,11 @@ class SmartNotificationHandler(
                     )
                 )
                 logger.info(
-                    "Sent smart notification to %s subscription(s) for user %s",
-                    len(subscriptions),
-                    self.user_id,
+                    f"Sent smart notification to {len(subscriptions)} subscription(s) for user {self.user_id}",
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    "Failed to send push notification for user %s: %s",
-                    self.user_id,
-                    exc,
+                    f"Failed to send push notification for user {self.user_id}: {exc}",
                 )
                 logger.exception(exc)
             return None

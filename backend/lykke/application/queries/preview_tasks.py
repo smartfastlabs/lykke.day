@@ -56,8 +56,7 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
                         )
                     ):
                         logger.debug(
-                            "Skipping task %s - task schedule doesn't match date",
-                            routine_definition_task.name,
+                            f"Skipping task {routine_definition_task.name} - task schedule doesn't match date",
                         )
                         continue
 

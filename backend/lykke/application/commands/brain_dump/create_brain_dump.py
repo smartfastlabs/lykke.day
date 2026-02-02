@@ -44,9 +44,7 @@ class CreateBrainDumpHandler(
             workers_to_schedule = get_current_workers_to_schedule()
             if workers_to_schedule is None:
                 logger.warning(
-                    "No post-commit worker scheduler available for user %s item %s",
-                    self.user_id,
-                    created.id,
+                    f"No post-commit worker scheduler available for user {self.user_id} item {created.id}",
                 )
                 return created
 

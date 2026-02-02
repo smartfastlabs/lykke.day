@@ -82,6 +82,9 @@ class CalendarEntryNotificationHandler(
             if isinstance(rule, value_objects.CalendarEntryNotificationRule)
         ]
         if not rules:
+            logger.debug(
+                f"No calendar entry notification rules found for user {self.user_id}"
+            )
             return
 
         max_minutes = max(rule.minutes_before for rule in rules)
@@ -89,6 +92,13 @@ class CalendarEntryNotificationHandler(
         entries = await self._load_calendar_entries(user, look_ahead)
         upcoming = filter_upcoming_calendar_entries(entries, look_ahead)
         now = get_current_datetime()
+        logger.debug(
+            f"max_minutes: {max_minutes}, look_ahead: {look_ahead}, upcoming: {len(upcoming)} entries: {len(entries)}",
+        )
+        for entry in upcoming:
+            logger.debug(
+                f"Evaluating calendar entry {entry.id} for user {self.user_id}"
+            )
 
         for entry in upcoming:
             await self._maybe_send_for_entry(entry, rules, user, now)
@@ -247,7 +257,7 @@ class CalendarEntryNotificationHandler(
         try:
             await self._sms_gateway.send_message(user.phone_number, message)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.error("Failed sending calendar reminder SMS: %s", exc)
+            logger.error(f"Failed sending calendar reminder SMS: {exc}")
 
     async def _send_kiosk_alarm(
         self,
@@ -268,7 +278,7 @@ class CalendarEntryNotificationHandler(
         try:
             day = await self.day_ro_repo.get(day_id)
         except Exception:  # pylint: disable=broad-except
-            logger.debug("Skipping kiosk alarm; day not found for %s", local_dt.date())
+            logger.debug(f"Skipping kiosk alarm; day not found for {local_dt.date()}")
             return
 
         if any(alarm.id == alarm_id for alarm in day.alarms):
@@ -286,7 +296,9 @@ class CalendarEntryNotificationHandler(
         async with self.new_uow() as uow:
             uow.add(day)
 
-    async def _has_recent_push(self, triggered_by: str, scheduled_for: datetime) -> bool:
+    async def _has_recent_push(
+        self, triggered_by: str, scheduled_for: datetime
+    ) -> bool:
         window_start = scheduled_for - EVALUATION_WINDOW
         existing = await self.push_notification_ro_repo.search(
             value_objects.PushNotificationQuery(
