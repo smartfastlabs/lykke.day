@@ -199,9 +199,16 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         recurring_event_id = event.get("recurringEventId")
         if not recurring_event_id and isinstance(event.get("id"), str):
             recurring_event_id = self._derive_recurring_event_id(event["id"])
+        has_recurrence = bool(recurrence) or bool(recurring_event_id) or bool(
+            event.get("originalStartTime")
+        )
         series_platform_id = recurring_event_id or (
             event.get("id") if recurrence else None
         )
+        if not series_platform_id and has_recurrence:
+            ical_uid = event.get("iCalUID")
+            if isinstance(ical_uid, str) and ical_uid:
+                series_platform_id = ical_uid
         frequency = self._determine_frequency(
             calendar_id=calendar.platform_id,
             recurrence=recurrence,
@@ -232,13 +239,19 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         created_dt = self._parse_event_timestamp(created)
         updated_dt = self._parse_event_timestamp(updated)
 
+        summary = event.get("summary")
+        if isinstance(summary, str):
+            summary = summary.strip()
+        if not summary:
+            summary = "(no title)"
+
         series_entity = None
         if series_id and series_platform_id:
             series_entity = CalendarEntrySeriesEntity(
                 id=series_id,
                 user_id=calendar.user_id,
                 calendar_id=calendar.id,
-                name=event.get("summary", "(no title)"),
+                name=summary,
                 platform_id=series_platform_id,
                 platform="google",
                 frequency=frequency,
@@ -262,7 +275,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             platform_id=event.get("id", "NA"),
             platform="google",
             status=status,
-            name=event.get("summary", "(no title)"),
+            name=summary,
             starts_at=start_dt,
             ends_at=end_dt,
             frequency=frequency,

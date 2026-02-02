@@ -90,3 +90,125 @@ def test_google_event_to_entity_derives_recurring_event_id() -> None:
     assert series.platform_id == "series123"
     assert entry.calendar_entry_series_id == series.id
     assert entry.frequency == TaskFrequency.DAILY
+
+
+def test_google_event_to_entity_uses_ical_uid_for_recurrence() -> None:
+    """Falls back to iCalUID when recurring metadata is incomplete."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "instance-abc123",
+        "iCalUID": "series-ical-uid@google.com",
+        "summary": "Recurring Event",
+        "status": "confirmed",
+        "originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"},
+        "start": {"dateTime": "2026-02-04T08:15:00Z"},
+        "end": {"dateTime": "2026-02-04T08:45:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(
+                execute=lambda: {"recurrence": ["RRULE:FREQ=DAILY"]}
+            )
+        )
+    )
+
+    gateway = GoogleCalendarGateway()
+    entry, series = gateway._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+
+    assert series is not None
+    assert series.platform_id == "series-ical-uid@google.com"
+    assert entry.calendar_entry_series_id == series.id
+
+
+def test_google_event_to_entity_normalizes_empty_summary() -> None:
+    """Empty summaries should fall back to a placeholder name."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "event-no-title",
+        "summary": "   ",
+        "status": "confirmed",
+        "start": {"dateTime": "2026-02-04T08:15:00Z"},
+        "end": {"dateTime": "2026-02-04T08:45:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(execute=lambda: {"recurrence": None})
+        )
+    )
+
+    gateway = GoogleCalendarGateway()
+    entry, series = gateway._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+
+    assert series is None
+    assert entry.name == "(no title)"
+
+
+def test_google_event_to_entity_normalizes_missing_summary() -> None:
+    """Missing summaries should fall back to a placeholder name."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "event-missing-title",
+        "summary": None,
+        "status": "confirmed",
+        "start": {"dateTime": "2026-02-04T08:15:00Z"},
+        "end": {"dateTime": "2026-02-04T08:45:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(execute=lambda: {"recurrence": None})
+        )
+    )
+
+    gateway = GoogleCalendarGateway()
+    entry, series = gateway._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+
+    assert series is None
+    assert entry.name == "(no title)"
