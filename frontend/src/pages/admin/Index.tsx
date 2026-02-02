@@ -31,7 +31,7 @@ const AdminIndexPage: Component = () => {
           label: "Events",
           description: "View and search all domain events in the system.",
           icon: faListCheck,
-          url: "/admin/events",
+          url: "/me/admin/events",
         },
       ],
     },

@@ -325,10 +325,12 @@ export default function App() {
                   <Route path="/calendar" component={CalendarPage} />
                   <Route path="/commands" component={CommandsPage} />
                 </Route>
-                <Route
-                  path="/admin"
-                  component={() => <Navigate href="/admin" />}
-                />
+              <Route path="/admin" component={AdminGuard}>
+                <Route path="/" component={AdminLayout}>
+                  <Route path="/" component={AdminIndexPage} />
+                  <Route path="/events" component={DomainEventsPage} />
+                </Route>
+              </Route>
                 <Route path="/settings" component={SettingsLayout}>
                   <Route path="/" component={SettingsIndexPage} />
                   <Route path="/profile" component={ProfileSettingsPage} />
@@ -416,12 +418,16 @@ export default function App() {
                 </Route>
               </Route>
 
-              <Route path="/admin" component={AdminGuard}>
-                <Route path="/" component={AdminLayout}>
-                  <Route path="/" component={AdminIndexPage} />
-                  <Route path="/events" component={DomainEventsPage} />
-                </Route>
-              </Route>
+              <Route
+                path="/admin"
+                component={() => <Navigate href="/me/admin" />}
+              />
+              <Route
+                path="/admin/*all"
+                component={(props) => (
+                  <Navigate href={`/me/admin/${props.params.all}`} />
+                )}
+              />
 
               <Route path="*" component={NotFound} />
             </Router>
