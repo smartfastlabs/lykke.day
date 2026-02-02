@@ -19,13 +19,13 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
 )
-from lykke.domain.events.calendar_entry_series_events import (
-    CalendarEntrySeriesUpdatedEvent,
-)
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
     CalendarEntryDeletedEvent,
     CalendarEntryUpdatedEvent,
+)
+from lykke.domain.events.calendar_entry_series_events import (
+    CalendarEntrySeriesUpdatedEvent,
 )
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription

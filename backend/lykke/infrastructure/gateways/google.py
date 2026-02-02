@@ -199,8 +199,10 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         recurring_event_id = event.get("recurringEventId")
         if not recurring_event_id and isinstance(event.get("id"), str):
             recurring_event_id = self._derive_recurring_event_id(event["id"])
-        has_recurrence = bool(recurrence) or bool(recurring_event_id) or bool(
-            event.get("originalStartTime")
+        has_recurrence = (
+            bool(recurrence)
+            or bool(recurring_event_id)
+            or bool(event.get("originalStartTime"))
         )
         series_platform_id = recurring_event_id or (
             event.get("id") if recurrence else None
