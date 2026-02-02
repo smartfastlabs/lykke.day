@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Annotated, cast
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from loguru import logger
 
@@ -27,6 +27,7 @@ from lykke.presentation.workers.tasks.calendar import (
     resubscribe_calendar_task,
     sync_single_calendar_task,
 )
+from lykke.presentation.webhook_relay import webhook_relay_manager
 
 from .dependencies.factories import command_handler_factory
 from .dependencies.services import get_read_only_repository_factory
@@ -140,6 +141,7 @@ async def google_login_callback(
 
 @router.post("/webhook/{user_id}/{calendar_id}")
 async def google_webhook(
+    request: Request,
     user_id: UUID,
     calendar_id: UUID,
     ro_repo_factory: Annotated[
@@ -164,6 +166,10 @@ async def google_webhook(
     Returns:
         Empty 200 response to acknowledge receipt.
     """
+    relay_response = await webhook_relay_manager.proxy_request(request)
+    if relay_response is not None:
+        return relay_response
+
     logger.info(
         f"Received Google webhook for user {user_id}, calendar {calendar_id}, "
         f"state={x_goog_resource_state}"

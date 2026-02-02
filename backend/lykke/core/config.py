@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     SMART_NOTIFICATION_RATE_LIMIT_MINUTES: int = 10  # Prevent spam
     SENTRY_DSN: str = ""
     BRAIN_DUMP_ENCRYPTION_KEY: str = ""
+    WEBHOOK_RELAY_ENABLED: bool = False
+    WEBHOOK_RELAY_TOKEN: str = ""
+    WEBHOOK_RELAY_TIMEOUT_SECONDS: int = 25
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

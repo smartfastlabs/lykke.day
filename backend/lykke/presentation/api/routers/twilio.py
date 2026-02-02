@@ -15,6 +15,7 @@ from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
 )
+from lykke.presentation.webhook_relay import webhook_relay_manager
 
 from .dependencies.services import (
     get_read_only_repository_factory,
@@ -40,6 +41,10 @@ async def twilio_sms_webhook(
     ],
 ) -> Response:
     """Webhook endpoint for inbound Twilio SMS messages."""
+    relay_response = await webhook_relay_manager.proxy_request(request)
+    if relay_response is not None:
+        return relay_response
+
     form = await request.form()
     payload = _normalize_twilio_payload(dict(form))
 
