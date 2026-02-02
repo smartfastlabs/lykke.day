@@ -27,6 +27,12 @@ def dataclass_to_json_dict(obj: Any) -> dict[str, Any] | Any:
     if obj is None:
         return None
 
+    if isinstance(obj, list):
+        return [_serialize_value(item) for item in obj]
+
+    if isinstance(obj, dict):
+        return {key: _serialize_value(value) for key, value in obj.items()}
+
     if is_dataclass(obj):
         result_dict: dict[str, Any] = {}
         for field in fields(obj):
