@@ -11,6 +11,7 @@ from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from loguru import logger
 
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -602,6 +603,15 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
 
             # pylint: disable=no-member  # Dynamic API client
             service.channels().stop(body=stop_body).execute()
+        except HttpError as exc:
+            if exc.resp.status == 404:
+                logger.info(
+                    "Calendar channel already stopped or expired",
+                    channel_id=channel_id,
+                    resource_id=resource_id,
+                )
+                return
+            raise
         except RefreshError as exc:
             raise TokenExpiredError("User needs to re-authenticate") from exc
 

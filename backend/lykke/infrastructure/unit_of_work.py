@@ -911,7 +911,9 @@ class SqlAlchemyUnitOfWork:
                 self._pending_entity_changes.append(
                     {
                         "change_type": change_type,
-                        "entity_type": entity_type_from_class_name(type(entity).__name__),
+                        "entity_type": entity_type_from_class_name(
+                            type(entity).__name__
+                        ),
                         "entity_id": str(entity.id),
                         "entity_date": entity_date.isoformat(),
                         "occurred_at": occurred_at.isoformat(),
