@@ -132,7 +132,6 @@ class SendPushNotificationHandler(
                 triggered_by=command.triggered_by,
                 llm_snapshot=command.llm_snapshot,
             )
-            notification.create()
             await uow.create(notification)
             logger.info(
                 f"Created PushNotificationEntity {notification.id} for {len(all_subscription_ids)} "

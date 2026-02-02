@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import uuid
 from collections.abc import Callable
 from contextvars import Token
@@ -12,7 +11,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from loguru import logger
-from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.events import send_domain_events
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
@@ -22,11 +20,6 @@ from lykke.application.worker_schedule import (
     get_current_workers_to_schedule,
     reset_current_workers_to_schedule,
     set_current_workers_to_schedule,
-)
-from lykke.core.config import settings
-from lykke.core.constants import (
-    DOMAIN_EVENT_BACKLOG_KEY_PREFIX,
-    MAX_DOMAIN_EVENT_BACKLOG_SIZE,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
@@ -1013,62 +1006,32 @@ class SqlAlchemyUnitOfWork:
         if not events:
             return
 
-        redis: aioredis.Redis | None = None
-        try:
-            for event in events:
-                try:
-                    # Serialize domain event to JSON-compatible dict
-                    message = serialize_domain_event(event)
-                    event_id = str(uuid.uuid4())
-                    stored_at = datetime.now(UTC).isoformat()
-                    message_with_meta = {
-                        **message,
-                        "id": event_id,
-                        "stored_at": stored_at,
-                    }
+        for event in events:
+            try:
+                # Serialize domain event to JSON-compatible dict
+                message = serialize_domain_event(event)
+                event_id = str(uuid.uuid4())
+                stored_at = datetime.now(UTC).isoformat()
+                message_with_meta = {
+                    **message,
+                    "id": event_id,
+                    "stored_at": stored_at,
+                }
 
-                    # Publish to user-specific domain-events channel
-                    # Note: We publish to the user_id from the UnitOfWork context
-                    await self._pubsub_gateway.publish_to_user_channel(
-                        user_id=self.user_id,
-                        channel_type="domain-events",
-                        message=message_with_meta,
-                    )
+                # Publish to user-specific domain-events channel
+                # Note: We publish to the user_id from the UnitOfWork context
+                await self._pubsub_gateway.publish_to_user_channel(
+                    user_id=self.user_id,
+                    channel_type="domain-events",
+                    message=message_with_meta,
+                )
 
-                    # Store a backlog entry for this user
-                    if redis is None:
-                        redis = await aioredis.from_url(
-                            settings.REDIS_URL,
-                            encoding="utf-8",
-                            decode_responses=True,
-                        )
-
-                    timestamp_ms = int(event.occurred_at.timestamp() * 1000)
-                    log_entry = {
-                        "id": event_id,
-                        "event_type": message["event_type"],
-                        "event_data": message["event_data"],
-                        "stored_at": stored_at,
-                    }
-
-                    await redis.zadd(
-                        f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{self.user_id}",
-                        {json.dumps(log_entry): timestamp_ms},
-                    )
-                    await redis.zremrangebyrank(
-                        f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{self.user_id}",
-                        0,
-                        -(MAX_DOMAIN_EVENT_BACKLOG_SIZE + 1),
-                    )
-                except Exception as e:
-                    # Log error but don't fail the commit
-                    # PubSub/logging failures shouldn't affect the transaction
-                    logger.error(
-                        f"Failed to broadcast DomainEvent {event.__class__.__name__} via PubSub/log: {e}"
-                    )
-        finally:
-            if redis is not None:
-                await redis.close()
+            except Exception as e:
+                # Log error but don't fail the commit
+                # PubSub/logging failures shouldn't affect the transaction
+                logger.error(
+                    f"Failed to broadcast DomainEvent {event.__class__.__name__} via PubSub/log: {e}"
+                )
 
 
 def _extract_entity_date(

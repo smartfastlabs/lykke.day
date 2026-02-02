@@ -2,14 +2,13 @@ import {
   Component,
   For,
   Show,
-  createSignal,
-  createResource,
-  onMount,
-  onCleanup,
   createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
 } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
-import { adminAPI, DomainEventItem, DomainEventFilters } from "@/utils/api";
+import { DomainEventItem } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 function getCookie(name: string): string | undefined {
@@ -52,13 +51,11 @@ function formatTimestamp(isoString: string): string {
   return date.toLocaleString();
 }
 
-const EventsPage: Component = () => {
-  const [filters, setFilters] = createSignal<DomainEventFilters>({
-    limit: 100,
-    offset: 0,
-  });
+const DomainEventsPage: Component = () => {
   const [searchText, setSearchText] = createSignal("");
   const [eventTypeFilter, setEventTypeFilter] = createSignal("");
+  const [appliedSearch, setAppliedSearch] = createSignal("");
+  const [appliedEventType, setAppliedEventType] = createSignal("");
   const [realtimeEvents, setRealtimeEvents] = createSignal<DomainEventItem[]>(
     [],
   );
@@ -71,11 +68,6 @@ const EventsPage: Component = () => {
   const [isConnected, setIsConnected] = createSignal(false);
   const [isStreaming, setIsStreaming] = createSignal(true);
 
-  const [events] = createResource(filters, async (f) => {
-    const result = await adminAPI.getDomainEvents(f);
-    return result;
-  });
-
   let ws: WebSocket | null = null;
 
   const connectWebSocket = () => {
@@ -84,7 +76,7 @@ const EventsPage: Component = () => {
     const token = getCookie("lykke_auth");
 
     // Build WebSocket URL - same pattern as days websocket
-    let wsUrl = `${protocol}//${baseUrl}/me/admin/domain-events/stream`;
+    let wsUrl = `${protocol}//${baseUrl}/me/admin/domain-events`;
     if (token) {
       wsUrl += `?token=${encodeURIComponent(token)}`;
     }
@@ -131,19 +123,7 @@ const EventsPage: Component = () => {
     }
   });
 
-  const allEvents = createMemo(() => {
-    const historical = events()?.items ?? [];
-    const realtime = realtimeEvents();
-    const seen = new Set<string>();
-    const combined: DomainEventItem[] = [];
-    for (const e of [...realtime, ...historical]) {
-      if (!seen.has(e.id)) {
-        seen.add(e.id);
-        combined.push(e);
-      }
-    }
-    return combined;
-  });
+  const allEvents = createMemo(() => realtimeEvents());
 
   const clusterCounts = createMemo(() => {
     const counts: Record<string, number> = {};
@@ -156,10 +136,25 @@ const EventsPage: Component = () => {
 
   const visibleEvents = createMemo(() => {
     const hidden = hiddenClusters();
-    return allEvents().filter(
-      (e) => !hidden.has(getEventCluster(e.event_type)),
-    );
+    const search = appliedSearch().trim().toLowerCase();
+    const eventType = appliedEventType().trim().toLowerCase();
+
+    return allEvents().filter((e) => {
+      if (hidden.has(getEventCluster(e.event_type))) return false;
+      if (eventType && !e.event_type.toLowerCase().includes(eventType))
+        return false;
+      if (!search) return true;
+      try {
+        return JSON.stringify(e).toLowerCase().includes(search);
+      } catch {
+        return false;
+      }
+    });
   });
+
+  const hasTextFilters = createMemo(
+    () => appliedSearch().length > 0 || appliedEventType().length > 0,
+  );
 
   const toggleClusterVisibility = (cluster: string) => {
     setHiddenClusters((prev) => {
@@ -186,24 +181,15 @@ const EventsPage: Component = () => {
   };
 
   const applyFilters = () => {
-    setRealtimeEvents([]);
-    setFilters((f) => ({
-      ...f,
-      search: searchText() || undefined,
-      event_type: eventTypeFilter() || undefined,
-      offset: 0,
-    }));
+    setAppliedSearch(searchText().trim());
+    setAppliedEventType(eventTypeFilter().trim());
   };
 
   const clearFilters = () => {
     setSearchText("");
     setEventTypeFilter("");
-    setRealtimeEvents([]);
-    setFilters({ limit: 100, offset: 0 });
-  };
-
-  const goToPage = (newOffset: number) => {
-    setFilters((f) => ({ ...f, offset: newOffset }));
+    setAppliedSearch("");
+    setAppliedEventType("");
   };
 
   return (
@@ -319,96 +305,55 @@ const EventsPage: Component = () => {
       {/* Events List */}
       <div class="space-y-2">
         <Show
-          when={!events.loading}
+          when={visibleEvents().length > 0}
           fallback={
-            <div class="text-center text-gray-500 py-8">Loading events...</div>
+            <div class="text-center text-gray-500 py-8">
+              {allEvents().length > 0 && hasTextFilters()
+                ? "No events match the current filters"
+                : "No events found"}
+            </div>
           }
         >
-          <Show
-            when={visibleEvents().length > 0}
-            fallback={
-              <div class="text-center text-gray-500 py-8">
-                {allEvents().length > 0
-                  ? "No events match the current filters"
-                  : "No events found"}
-              </div>
-            }
-          >
-            <For each={visibleEvents()}>
-              {(event) => (
-                <div
-                  class="p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
-                  onClick={() => toggleExpanded(event.id)}
-                >
-                  <div class="flex justify-between items-start">
-                    <div class="flex items-center gap-2">
-                      <span class="font-mono text-sm text-amber-600 font-medium">
-                        {formatEventType(event.event_type)}
-                      </span>
-                      <Show when={event.event_data.user_id}>
-                        <span class="text-xs text-gray-400 font-mono">
-                          user:{String(event.event_data.user_id).slice(0, 8)}...
-                        </span>
-                      </Show>
-                    </div>
-                    <span class="text-xs text-gray-500">
-                      {formatTimestamp(event.stored_at)}
+          <For each={visibleEvents()}>
+            {(event) => (
+              <div
+                class="p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
+                onClick={() => toggleExpanded(event.id)}
+              >
+                <div class="flex justify-between items-start">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm text-amber-600 font-medium">
+                      {formatEventType(event.event_type)}
                     </span>
+                    <Show when={event.event_data.user_id}>
+                      <span class="text-xs text-gray-400 font-mono">
+                        user:{String(event.event_data.user_id).slice(0, 8)}...
+                      </span>
+                    </Show>
                   </div>
-                  <Show when={expandedEvents().has(event.id)}>
-                    <div class="mt-3 pt-3 border-t border-gray-100">
-                      <div class="text-xs text-gray-400 mb-1">Full Type:</div>
-                      <div class="text-xs font-mono text-gray-600 mb-3">
-                        {event.event_type}
-                      </div>
-                      <div class="text-xs text-gray-400 mb-1">Event Data:</div>
-                      <pre class="text-xs font-mono text-gray-700 bg-gray-50 p-3 rounded overflow-auto max-h-64">
-                        {JSON.stringify(event.event_data, null, 2)}
-                      </pre>
-                    </div>
-                  </Show>
+                  <span class="text-xs text-gray-500">
+                    {formatTimestamp(event.stored_at)}
+                  </span>
                 </div>
-              )}
-            </For>
-          </Show>
+                <Show when={expandedEvents().has(event.id)}>
+                  <div class="mt-3 pt-3 border-t border-gray-100">
+                    <div class="text-xs text-gray-400 mb-1">Full Type:</div>
+                    <div class="text-xs font-mono text-gray-600 mb-3">
+                      {event.event_type}
+                    </div>
+                    <div class="text-xs text-gray-400 mb-1">Event Data:</div>
+                    <pre class="text-xs font-mono text-gray-700 bg-gray-50 p-3 rounded overflow-auto max-h-64">
+                      {JSON.stringify(event.event_data, null, 2)}
+                    </pre>
+                  </div>
+                </Show>
+              </div>
+            )}
+          </For>
         </Show>
       </div>
-
-      {/* Pagination */}
-      <Show when={events() && events()!.total > (filters().limit ?? 100)}>
-        <div class="mt-6 flex justify-between items-center">
-          <button
-            disabled={!events()?.has_previous}
-            onClick={() =>
-              goToPage(
-                Math.max(0, (filters().offset ?? 0) - (filters().limit ?? 100)),
-              )
-            }
-            class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
-          >
-            Previous
-          </button>
-          <span class="text-sm text-gray-600">
-            Showing {(filters().offset ?? 0) + 1} -{" "}
-            {Math.min(
-              (filters().offset ?? 0) + (filters().limit ?? 100),
-              events()?.total ?? 0,
-            )}{" "}
-            of {events()?.total ?? 0}
-          </span>
-          <button
-            disabled={!events()?.has_next}
-            onClick={() =>
-              goToPage((filters().offset ?? 0) + (filters().limit ?? 100))
-            }
-            class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </Show>
     </SettingsPage>
   );
 };
 
-export default EventsPage;
+export default DomainEventsPage;

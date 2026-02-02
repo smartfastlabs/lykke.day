@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DomainEventSchema(BaseModel):
-    """Schema for a single domain event backlog entry."""
+    """Schema for a single domain event payload."""
 
     id: str
     event_type: str
@@ -38,14 +38,3 @@ class DomainEventSchema(BaseModel):
         return None
 
 
-class DomainEventListResponse(BaseModel):
-    """Schema for paginated domain event backlog list response."""
-
-    items: list[DomainEventSchema]
-    total: int
-    limit: int
-    offset: int
-    has_next: bool
-    has_previous: bool
-
-    model_config = ConfigDict(from_attributes=True)

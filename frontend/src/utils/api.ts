@@ -966,39 +966,3 @@ export interface DomainEventItem {
   event_data: Record<string, unknown>;
   stored_at: string;
 }
-
-export interface DomainEventFilters {
-  search?: string;
-  event_type?: string;
-  start_time?: string;
-  end_time?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface DomainEventListResponse {
-  items: DomainEventItem[];
-  total: number;
-  limit: number;
-  offset: number;
-  has_next: boolean;
-  has_previous: boolean;
-}
-
-export const adminAPI = {
-  getDomainEvents: (
-    filters: DomainEventFilters = {},
-  ): Promise<DomainEventListResponse> => {
-    const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
-    if (filters.event_type) params.set("event_type", filters.event_type);
-    if (filters.start_time) params.set("start_time", filters.start_time);
-    if (filters.end_time) params.set("end_time", filters.end_time);
-    if (filters.limit) params.set("limit", String(filters.limit));
-    if (filters.offset) params.set("offset", String(filters.offset));
-
-    return fetchData<DomainEventListResponse>(
-      `/api/me/admin/domain-events?${params.toString()}`,
-    );
-  },
-};

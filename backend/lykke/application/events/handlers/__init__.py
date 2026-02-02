@@ -8,7 +8,6 @@ from .base import DomainEventHandler
 from .brain_dump_processing_trigger import BrainDumpProcessingTriggerHandler
 from .calendar_entry_push_notifications import CalendarEntryPushNotificationHandler
 from .inbound_sms_processing_trigger import InboundSmsProcessingTriggerHandler
-from .smart_notification_trigger import SmartNotificationTriggerHandler
 from .task_status_logger import TaskStatusLoggerHandler
 from .user_forgot_password_logger import UserForgotPasswordLoggerHandler
 
@@ -17,7 +16,6 @@ __all__ = [
     "CalendarEntryPushNotificationHandler",
     "DomainEventHandler",
     "InboundSmsProcessingTriggerHandler",
-    "SmartNotificationTriggerHandler",
     "TaskStatusLoggerHandler",
     "UserForgotPasswordLoggerHandler",
 ]

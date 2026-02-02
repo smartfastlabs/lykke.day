@@ -91,7 +91,7 @@ import PushSubscriptionsPage from "@/pages/me/settings/push-subscriptions/Index"
 import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/Detail";
 import AdminLayout from "@/pages/admin/Layout";
 import AdminIndexPage from "@/pages/admin/Index";
-import EventsPage from "@/pages/admin/Events";
+import DomainEventsPage from "@/pages/admin/DomainEvents";
 import NotFound from "@/pages/NotFound";
 
 import "@/utils/icons";
@@ -422,7 +422,7 @@ export default function App() {
               <Route path="/admin" component={AdminGuard}>
                 <Route path="/" component={AdminLayout}>
                   <Route path="/" component={AdminIndexPage} />
-                  <Route path="/events" component={EventsPage} />
+                  <Route path="/events" component={DomainEventsPage} />
                 </Route>
               </Route>
 

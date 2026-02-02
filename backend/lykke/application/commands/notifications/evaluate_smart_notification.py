@@ -185,7 +185,6 @@ class SmartNotificationHandler(
                             triggered_by=self._triggered_by,
                             llm_snapshot=llm_snapshot,
                         )
-                        notification.create()
                         await uow.create(notification)
                         await uow.commit()
                     return None

@@ -7,7 +7,6 @@ from datetime import time
 from typing import Any, Literal
 from uuid import UUID
 
-
 from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
 )
@@ -167,9 +166,7 @@ class PreviewLLMSnapshotHandler(
             _ = (should_notify, message, priority, reason)
             return None
 
-        return [
-            LLMTool(callback=decide_notification)
-        ]
+        return [LLMTool(callback=decide_notification)]
 
     @staticmethod
     def _build_morning_overview_tools() -> list[LLMTool]:
@@ -183,13 +180,12 @@ class PreviewLLMSnapshotHandler(
             _ = (should_notify, message, priority, reason)
             return None
 
-        return [
-            LLMTool(callback=decide_morning_overview)
-        ]
+        return [LLMTool(callback=decide_morning_overview)]
 
     @staticmethod
     def _build_inbound_sms_tools(send_acknowledgment: bool) -> list[LLMTool]:
         _ = send_acknowledgment
+
         async def reply(message: str | None = None) -> None:
             """Reply to the user via SMS (optional message for no action).
 

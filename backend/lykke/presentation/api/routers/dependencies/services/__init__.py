@@ -11,21 +11,14 @@ from typing import Annotated
 from fastapi import Depends, Request, WebSocket
 
 from lykke.application.commands import ScheduleDayHandler
-from lykke.application.gateways.domain_event_backlog_protocol import (
-    DomainEventBacklogGatewayProtocol,
-)
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
     GetIncrementalChangesHandler,
-    ListDomainEventsHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.gateways import (
-    RedisDomainEventBacklogGateway,
-    RedisPubSubGateway,
-)
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -96,39 +89,6 @@ async def get_pubsub_gateway_for_request(
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     """Get a ReadOnlyRepositoryFactory instance."""
     return SqlAlchemyReadOnlyRepositoryFactory()
-
-
-async def get_domain_event_backlog_gateway_for_request(
-    request: Request,
-) -> AsyncIterator[DomainEventBacklogGatewayProtocol]:
-    """Get a DomainEventBacklogGateway instance for HTTP requests."""
-    redis_pool = getattr(request.app.state, "redis_pool", None)
-    gateway = RedisDomainEventBacklogGateway(redis_pool=redis_pool)
-    try:
-        yield gateway
-    finally:
-        await gateway.close()
-
-
-async def get_list_domain_events_handler(
-    request: Request,
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> AsyncIterator[ListDomainEventsHandler]:
-    """Get a ListDomainEventsHandler instance with infra gateway wired."""
-    redis_pool = getattr(request.app.state, "redis_pool", None)
-    gateway = RedisDomainEventBacklogGateway(redis_pool=redis_pool)
-    try:
-        ro_repos = ro_repo_factory.create(user.id)
-        yield ListDomainEventsHandler(
-            ro_repos=ro_repos,
-            user_id=user.id,
-            backlog_gateway=gateway,
-        )
-    finally:
-        await gateway.close()
 
 
 async def get_unit_of_work_factory(

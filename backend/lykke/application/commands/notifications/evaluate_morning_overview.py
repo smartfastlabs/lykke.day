@@ -230,7 +230,6 @@ class MorningOverviewHandler(
                             triggered_by="morning_overview",
                             llm_snapshot=llm_snapshot,
                         )
-                        notification.create()
                         await uow.create(notification)
                         await uow.commit()
                     return None
@@ -260,6 +259,4 @@ class MorningOverviewHandler(
                 logger.exception(exc)
             return None
 
-        return [
-            LLMTool(callback=decide_morning_overview)
-        ]
+        return [LLMTool(callback=decide_morning_overview)]

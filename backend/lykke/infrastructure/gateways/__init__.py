@@ -1,6 +1,5 @@
 from . import google, redis_pubsub, sendgrid, stub_pubsub, twilio, web_push
 from .anthropic_llm import AnthropicLLMGateway
-from .domain_event_backlog_redis import RedisDomainEventBacklogGateway
 from .google import GoogleCalendarGateway
 from .openai_llm import OpenAILLMGateway
 from .redis_pubsub import RedisPubSubGateway
@@ -14,7 +13,6 @@ __all__ = [
     "AnthropicLLMGateway",
     "GoogleCalendarGateway",
     "OpenAILLMGateway",
-    "RedisDomainEventBacklogGateway",
     "RedisPubSubGateway",
     "SendGridGateway",
     "StubPubSubGateway",

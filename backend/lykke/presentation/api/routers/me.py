@@ -2,8 +2,7 @@
 
 from datetime import UTC, datetime as dt_datetime, time as dt_time
 from typing import Annotated, Any
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
@@ -32,12 +31,7 @@ from lykke.application.commands.day import (
 )
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import (
-    GetDayContextHandler,
-    GetDayContextQuery,
-    ListDomainEventsHandler,
-    ListDomainEventsQuery,
-)
+from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
 from lykke.application.queries.list_base_personalities import (
     ListBasePersonalitiesHandler,
     ListBasePersonalitiesQuery,
@@ -63,10 +57,7 @@ from lykke.presentation.api.schemas import (
     UserSchema,
     UserUpdateSchema,
 )
-from lykke.presentation.api.schemas.admin import (
-    DomainEventListResponse,
-    DomainEventSchema,
-)
+from lykke.presentation.api.schemas.admin import DomainEventSchema
 from lykke.presentation.api.schemas.mappers import (
     map_alarm_to_schema,
     map_brain_dump_to_schema,
@@ -83,10 +74,7 @@ from lykke.presentation.handler_factory import (
 )
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
-from .dependencies.services import (
-    get_list_domain_events_handler,
-    get_pubsub_gateway,
-)
+from .dependencies.services import get_pubsub_gateway
 from .dependencies.user import get_current_user, get_current_user_from_token
 
 router = APIRouter()
@@ -127,57 +115,7 @@ async def get_current_user_profile(
     return map_user_to_schema(user)
 
 
-@router.get("/admin/domain-events")
-async def list_domain_events(
-    handler: Annotated[
-        ListDomainEventsHandler, Depends(get_list_domain_events_handler)
-    ],
-    search: Annotated[
-        str | None, Query(description="Text search in event data")
-    ] = None,
-    event_type: Annotated[
-        str | None, Query(description="Filter by event type (partial match)")
-    ] = None,
-    start_time: Annotated[
-        dt_datetime | None, Query(description="Filter events after this time")
-    ] = None,
-    end_time: Annotated[
-        dt_datetime | None, Query(description="Filter events before this time")
-    ] = None,
-    limit: Annotated[int, Query(ge=1, le=500)] = 100,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> DomainEventListResponse:
-    """List domain events for the current user from Redis."""
-    result = await handler.handle(
-        ListDomainEventsQuery(
-            search=search,
-            event_type=event_type,
-            start_time=start_time,
-            end_time=end_time,
-            limit=limit,
-            offset=offset,
-        )
-    )
-    items = [
-        DomainEventSchema(
-            id=item.id,
-            event_type=item.event_type,
-            event_data=item.event_data,
-            stored_at=item.stored_at,
-        )
-        for item in result.items
-    ]
-    return DomainEventListResponse(
-        items=items,
-        total=result.total,
-        limit=result.limit,
-        offset=result.offset,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
-    )
-
-
-@router.websocket("/admin/domain-events/stream")
+@router.websocket("/admin/domain-events")
 async def domain_events_stream(
     websocket: WebSocket,
     user: Annotated[UserEntity, Depends(get_current_user_from_token)],
@@ -198,7 +136,10 @@ async def domain_events_stream(
                     if event_payload is None:
                         continue
                     await websocket.send_json(
-                        {"type": "domain_event", "data": event_payload.model_dump()}
+                        {
+                            "type": "domain_event",
+                            "data": event_payload.model_dump(mode="json"),
+                        }
                     )
     except WebSocketDisconnect:
         logger.info("Domain events WebSocket disconnected for user %s", user.id)
