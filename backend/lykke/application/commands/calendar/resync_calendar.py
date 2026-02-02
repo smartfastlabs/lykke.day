@@ -92,10 +92,13 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
                 channel_id=calendar.sync_subscription.subscription_id,
                 resource_id=calendar.sync_subscription.resource_id,
             )
-            calendar.sync_subscription = None
-            calendar.sync_subscription_id = None
-            # Clear last sync timestamp to force fresh lookback
-            calendar.last_sync_at = None
+            update_data = CalendarUpdateObject(
+                sync_subscription=None,
+                sync_subscription_id=None,
+                # Clear last sync timestamp to force fresh lookback
+                last_sync_at=None,
+            )
+            calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
             calendar = uow.add(calendar)
 
         return calendar
