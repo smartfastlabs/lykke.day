@@ -82,6 +82,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],
         list[Any],
+        list[Any],
         str | None,
     ]:
         self.load_events_calls.append(
@@ -93,7 +94,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
             }
         )
         # Return empty events for sync
-        return [], [], [], "next-sync-token"
+        return [], [], [], [], "next-sync-token"
 
     def get_flow(self, flow_name: str) -> Any:  # pragma: no cover - unused
         raise NotImplementedError

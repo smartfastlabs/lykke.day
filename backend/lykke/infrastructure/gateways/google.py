@@ -2,7 +2,9 @@ import asyncio
 import json
 import re
 from datetime import UTC, datetime
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from google.auth.exceptions import RefreshError
@@ -103,6 +105,14 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     """Gateway for interacting with Google Calendar API."""
 
     @staticmethod
+    @lru_cache(maxsize=256)
+    def _log_invalid_event_timestamp(value: str) -> None:
+        logger.warning(
+            "Invalid Google event timestamp received: {value}",
+            value=value,
+        )
+
+    @staticmethod
     def _parse_event_timestamp(value: Any) -> datetime:
         """Parse a Google event timestamp into a safe UTC datetime."""
         if not isinstance(value, str):
@@ -112,16 +122,21 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         try:
             parsed = datetime.fromisoformat(normalized)
         except (TypeError, ValueError):
-            logger.warning(
-                "Invalid Google event timestamp received: {value}",
-                value=value,
-            )
+            GoogleCalendarGateway._log_invalid_event_timestamp(value)
             return datetime.now(UTC)
 
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=UTC)
 
         return parsed.astimezone(UTC)
+
+    @staticmethod
+    def _derive_recurring_event_id(event_id: str) -> str | None:
+        """Derive recurring event id from instance ids when missing."""
+        match = re.search(r"_\d{8}T\d{6}Z?$", event_id)
+        if not match:
+            return None
+        return event_id[: match.start()]
 
     @staticmethod
     def _client_config_from_env() -> dict[str, Any] | None:
@@ -182,6 +197,8 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         status = event.get("status", "confirmed")
         recurrence = event.get("recurrence")
         recurring_event_id = event.get("recurringEventId")
+        if not recurring_event_id and isinstance(event.get("id"), str):
+            recurring_event_id = self._derive_recurring_event_id(event["id"])
         series_platform_id = recurring_event_id or (
             event.get("id") if recurrence else None
         )
@@ -291,6 +308,49 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         frequency_cache[recurring_event_id] = frequency
         return frequency
 
+    def _load_cancelled_series_ids_sync(
+        self,
+        service: Any,
+        calendar: CalendarEntity,
+        lookback: datetime,
+        sync_token: str | None,
+    ) -> set[UUID]:
+        cancelled_series_ids: set[UUID] = set()
+        page_token: str | None = None
+
+        while True:
+            params: dict[str, Any] = {
+                "calendarId": calendar.platform_id,
+                "showDeleted": True,
+                "singleEvents": False,
+                "maxResults": 2500,
+            }
+            if sync_token:
+                params["syncToken"] = sync_token
+            else:
+                params["timeMin"] = lookback.astimezone(UTC).isoformat()
+
+            if page_token:
+                params["pageToken"] = page_token
+
+            response = service.events().list(**params).execute()
+
+            for event in response.get("items", []):
+                if event.get("status") != "cancelled":
+                    continue
+                event_id = event.get("id")
+                if not isinstance(event_id, str):
+                    continue
+                cancelled_series_ids.add(
+                    CalendarEntrySeriesEntity.id_from_platform("google", event_id)
+                )
+
+            page_token = response.get("nextPageToken")
+            if not page_token:
+                break
+
+        return cancelled_series_ids
+
     async def load_calendar_events(
         self,
         calendar: CalendarEntity,
@@ -303,6 +363,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],
         list[CalendarEntrySeriesEntity],
+        list[UUID],
         str | None,
     ]:
         """Load calendar entries and series from Google Calendar (full or incremental).
@@ -338,6 +399,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],
         list[CalendarEntrySeriesEntity],
+        list[UUID],
         str | None,
     ]:
         """Fetch events using Google API with support for sync tokens."""
@@ -396,7 +458,20 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             if not page_token:
                 break
 
-        return events, deleted, list(series_entities.values()), next_sync_token
+        cancelled_series_ids = self._load_cancelled_series_ids_sync(
+            service=service,
+            calendar=calendar,
+            lookback=lookback,
+            sync_token=sync_token,
+        )
+
+        return (
+            events,
+            deleted,
+            list(series_entities.values()),
+            list(cancelled_series_ids),
+            next_sync_token,
+        )
 
     def _subscribe_to_calendar_sync(
         self,

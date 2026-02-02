@@ -12,6 +12,8 @@ from lykke.domain.entities import (
 )
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from google_auth_oauthlib.flow import Flow
 
 
@@ -30,6 +32,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],
         list[CalendarEntrySeriesEntity],
+        list["UUID"],
         str | None,
     ]:
         """Load calendar entries and series from Google Calendar (full or incremental).
@@ -42,7 +45,13 @@ class GoogleCalendarGatewayProtocol(Protocol):
                 only changes since the token will be returned.
 
         Returns:
-            Tuple of (new/updated entries, deleted entries, series, next sync token).
+            Tuple of (
+                new/updated entries,
+                deleted entries,
+                series,
+                cancelled series IDs,
+                next sync token,
+            ).
         """
         ...
 

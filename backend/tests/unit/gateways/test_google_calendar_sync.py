@@ -192,7 +192,7 @@ def test_sync_calendar_changes_with_new_events(
     )
 
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([new_event], [], [], "new-sync-token")
+        ([new_event], [], [], [], "new-sync-token")
     )
     allow(mock_calendar_entry_repo).search_one_or_none.and_return(None)
 
@@ -247,7 +247,7 @@ def test_sync_calendar_changes_with_updated_events(
     )
 
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([updated_event], [], [], "new-sync-token")
+        ([updated_event], [], [], [], "new-sync-token")
     )
     allow(mock_calendar_entry_repo).search_one_or_none.and_return(existing_event)
 
@@ -291,7 +291,7 @@ def test_sync_calendar_changes_with_deleted_events(
     )
 
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([cancelled_event], [], [], "new-sync-token")
+        ([cancelled_event], [], [], [], "new-sync-token")
     )
     allow(mock_calendar_entry_repo).search_one_or_none.and_return(existing_event)
 
@@ -321,7 +321,7 @@ def test_sync_calendar_changes_filters_far_future_events(
     )
 
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([far_future_event], [], [], "new-sync-token")
+        ([far_future_event], [], [], [], "new-sync-token")
     )
 
 
@@ -350,7 +350,7 @@ def test_sync_calendar_changes_handles_missing_deleted_events(
     )
 
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([cancelled_event], [], [], "new-sync-token")
+        ([cancelled_event], [], [], [], "new-sync-token")
     )
     allow(mock_calendar_entry_repo).search_one_or_none.and_return(None)
 
@@ -366,7 +366,7 @@ def test_sync_calendar_changes_updates_sync_token(
 ):
     """Test that sync updates the calendar's sync token."""
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([], [], [], "brand-new-sync-token")
+        ([], [], [], [], "brand-new-sync-token")
     )
 
 
@@ -477,7 +477,7 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
 
     allow(mock_calendar_entry_series_repo).get.and_return(existing_series)
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([], [], [updated_series], "new-sync-token")
+        ([], [], [updated_series], [], "new-sync-token")
     )
 
     async def search_entries(query: object) -> list[CalendarEntryEntity]:
@@ -596,7 +596,7 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
 
     allow(mock_calendar_entry_series_repo).get.and_return(existing_series)
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([], [deleted_stub_one, deleted_stub_two], [], "new-sync-token")
+        ([], [deleted_stub_one, deleted_stub_two], [], [], "new-sync-token")
     )
 
     async def search_entries(query: object) -> list[CalendarEntryEntity]:
@@ -650,6 +650,95 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
 
 
 @pytest.mark.asyncio
+async def test_sync_calendar_series_cancelled_master_ends_series(
+    test_user_id,
+    test_calendar,
+    mock_ro_repos,
+    mock_uow_factory,
+    mock_uow,
+    mock_google_gateway,
+    mock_calendar_entry_series_repo,
+    mock_calendar_entry_repo,
+):
+    """Cancelled series masters should end the series and delete future entries."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-3")
+    existing_series = CalendarEntrySeriesEntity(
+        id=series_id,
+        user_id=test_user_id,
+        calendar_id=test_calendar.id,
+        name="Series To Cancel",
+        platform_id="series-3",
+        platform="google",
+        frequency=TaskFrequency.DAILY,
+    )
+    now = datetime.now(UTC)
+    past_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Series To Cancel",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="entry-20",
+        platform="google",
+        status="confirmed",
+        starts_at=now - timedelta(days=2),
+        ends_at=now - timedelta(days=2),
+        frequency=TaskFrequency.DAILY,
+    )
+    future_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Series To Cancel",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="entry-21",
+        platform="google",
+        status="confirmed",
+        starts_at=now + timedelta(days=1),
+        ends_at=now + timedelta(days=1),
+        frequency=TaskFrequency.DAILY,
+    )
+
+    allow(mock_calendar_entry_series_repo).get.and_return(existing_series)
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([], [], [], [series_id], "new-sync-token")
+    )
+
+    async def search_entries(query: object) -> list[CalendarEntryEntity]:
+        if getattr(query, "calendar_entry_series_id", None) == series_id:
+            return [past_entry, future_entry]
+        return []
+
+    mock_calendar_entry_repo.search = search_entries
+    mock_uow.calendar_entry_ro_repo.search = search_entries
+
+    async def get_user(_: object) -> object:
+        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
+
+    mock_uow.user_ro_repo.get = get_user
+
+    handler = SyncCalendarHandler(
+        ro_repos=mock_ro_repos,
+        uow_factory=mock_uow_factory,
+        user_id=test_user_id,
+        google_gateway=mock_google_gateway,
+    )
+
+    await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
+
+    deleted_entries = [
+        entity for entity in mock_uow.added if isinstance(entity, CalendarEntryEntity)
+    ]
+    assert any(entry.platform_id == "entry-21" for entry in deleted_entries)
+
+    updated_series = [
+        entity
+        for entity in mock_uow.added
+        if isinstance(entity, CalendarEntrySeriesEntity)
+    ]
+    assert updated_series
+    assert updated_series[0].ends_at is not None
+
+
+@pytest.mark.asyncio
 async def test_sync_calendar_series_creation_emits_single_notification(
     test_user_id,
     test_calendar,
@@ -698,7 +787,7 @@ async def test_sync_calendar_series_creation_emits_single_notification(
 
     allow(mock_calendar_entry_series_repo).get.and_raise(NotFoundError("missing"))
     allow(mock_google_gateway).load_calendar_events.and_return(
-        ([entry_one, entry_two], [], [new_series], "new-sync-token")
+        ([entry_one, entry_two], [], [new_series], [], "new-sync-token")
     )
 
     async def search_entries(_: object) -> list[CalendarEntryEntity]:

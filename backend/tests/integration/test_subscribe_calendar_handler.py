@@ -54,8 +54,14 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
         *,
         user_timezone: str | None = None,
         sync_token: str | None = None,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
-        return [], [], "next-token"
+    ) -> tuple[
+        list[CalendarEntryEntity],
+        list[CalendarEntryEntity],
+        list[Any],
+        list[Any],
+        str | None,
+    ]:
+        return [], [], [], [], "next-token"
 
     async def unsubscribe_from_calendar(  # pragma: no cover - unused in this test
         self,

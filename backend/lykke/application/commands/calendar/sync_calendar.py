@@ -114,6 +114,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             fetched_entries,
             fetched_deleted_entries,
             fetched_series,
+            cancelled_series_ids,
             next_sync_token,
         ) = await self._load_calendar_events(
             calendar, lookback, sync_token, token, user_timezone=user_timezone
@@ -297,6 +298,9 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
 
         # Delete entries - use per-entry delete() instead of bulk delete
         # to ensure delete events are emitted
+        deleted_platform_ids: set[str] = set()
+        deleted_entry_ids: set[UUID] = set()
+        series_ids_with_deletions: set[UUID] = set(cancelled_series_ids)
         platform_ids_to_delete = [
             pid
             for pid in (
@@ -313,7 +317,6 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             )
             deleted_platform_ids = {entry.platform_id for entry in entries_to_delete}
             deleted_entry_ids = {entry.id for entry in entries_to_delete}
-            series_ids_with_deletions: set[UUID] = set()
             for entry in entries_to_delete:
                 if entry.starts_at < current_time:
                     continue
@@ -325,61 +328,59 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     entry.delete_silently()
                 uow.add(entry)
 
-            # If an entire series was removed, delete future entries and end the series
-            if series_ids_with_deletions:
-                for series_id in series_ids_with_deletions:
-                    existing_series_entries = (
-                        await uow.calendar_entry_ro_repo.search(
-                            value_objects.CalendarEntryQuery(
-                                calendar_entry_series_id=series_id
-                            )
-                        )
+        # If an entire series was removed, delete future entries and end the series
+        if series_ids_with_deletions:
+            for series_id in series_ids_with_deletions:
+                existing_series_entries = await uow.calendar_entry_ro_repo.search(
+                    value_objects.CalendarEntryQuery(
+                        calendar_entry_series_id=series_id
                     )
-                    future_entries = [
-                        entry
-                        for entry in existing_series_entries
-                        if entry.starts_at >= current_time
-                        and entry.platform_id not in deleted_platform_ids
-                        and entry.platform_id
-                        not in upsert_platform_ids_by_series.get(series_id, set())
-                    ]
+                )
+                future_entries = [
+                    entry
+                    for entry in existing_series_entries
+                    if entry.starts_at >= current_time
+                    and entry.platform_id not in deleted_platform_ids
+                    and entry.platform_id
+                    not in upsert_platform_ids_by_series.get(series_id, set())
+                ]
 
-                    # Delete any future entries for the series not already marked
-                    for entry in future_entries:
-                        if entry.id in deleted_entry_ids:
-                            continue
-                        if should_emit_series_notification(series_id):
-                            entry.delete()
-                        else:
-                            entry.delete_silently()
-                        uow.add(entry)
+                # Delete any future entries for the series not already marked
+                for entry in future_entries:
+                    if entry.id in deleted_entry_ids:
+                        continue
+                    if should_emit_series_notification(series_id):
+                        entry.delete()
+                    else:
+                        entry.delete_silently()
+                    uow.add(entry)
 
-                    # End the series itself to avoid FK violations
-                    series_for_delete = series_by_id.get(series_id)
-                    if series_for_delete is None:
-                        try:
-                            series_for_delete = (
-                                await uow.calendar_entry_series_ro_repo.get(series_id)
-                            )
-                        except NotFoundError:
-                            series_for_delete = None
-                    if series_for_delete is not None:
-                        series_end_update_fields: dict[str, Any] = {}
-                        if series_for_delete.ends_at is None or (
-                            series_for_delete.ends_at > current_time
-                        ):
-                            series_end_update_fields["ends_at"] = current_time
-                        if series_for_delete.recurrence:
-                            series_end_update_fields["recurrence"] = []
+                # End the series itself to avoid FK violations
+                series_for_delete = series_by_id.get(series_id)
+                if series_for_delete is None:
+                    try:
+                        series_for_delete = (
+                            await uow.calendar_entry_series_ro_repo.get(series_id)
+                        )
+                    except NotFoundError:
+                        series_for_delete = None
+                if series_for_delete is not None:
+                    series_end_update_fields: dict[str, Any] = {}
+                    if series_for_delete.ends_at is None or (
+                        series_for_delete.ends_at > current_time
+                    ):
+                        series_end_update_fields["ends_at"] = current_time
+                    if series_for_delete.recurrence:
+                        series_end_update_fields["recurrence"] = []
 
-                        if series_end_update_fields:
-                            series_update_object = CalendarEntrySeriesUpdateObject(
-                                **series_end_update_fields
-                            )
-                            updated_series = series_for_delete.apply_update(
-                                series_update_object, CalendarEntrySeriesUpdatedEvent
-                            )
-                            uow.add(updated_series)
+                    if series_end_update_fields:
+                        series_update_object = CalendarEntrySeriesUpdateObject(
+                            **series_end_update_fields
+                        )
+                        updated_series = series_for_delete.apply_update(
+                            series_update_object, CalendarEntrySeriesUpdatedEvent
+                        )
+                        uow.add(updated_series)
 
         updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
         return uow.add(updated_calendar)
@@ -396,6 +397,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],
         list[CalendarEntrySeriesEntity],
+        list[UUID],
         str | None,
     ]:
         """Load events from the provider, handling sync token expiration."""
