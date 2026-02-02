@@ -14,24 +14,6 @@ const safeStringify = (value: unknown): string => {
   }
 };
 
-const formatPromptValue = (value?: string | null): string => {
-  if (!value) return "(empty)";
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : "(empty)";
-};
-
-const PromptDetailsBlock: Component<{
-  label: string;
-  value?: string | null;
-}> = (props) => (
-  <div>
-    <div class="text-xs font-semibold text-amber-900 mb-2">{props.label}</div>
-    <pre class="rounded-xl bg-stone-900/95 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-      {formatPromptValue(props.value)}
-    </pre>
-  </div>
-);
-
 const hasRequestPayload = (snapshot: LLMRunResultSnapshot): boolean =>
   Boolean(
     snapshot.messages?.length ||
