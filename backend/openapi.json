@@ -558,143 +558,6 @@
         ]
       }
     },
-    "/me/admin/domain-events": {
-      "get": {
-        "tags": [
-          "auth",
-          "user"
-        ],
-        "summary": "List Domain Events",
-        "description": "List domain events for the current user from Redis.",
-        "operationId": "list_domain_events_me_admin_domain_events_get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Text search in event data",
-              "title": "Search"
-            },
-            "description": "Text search in event data"
-          },
-          {
-            "name": "event_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by event type (partial match)",
-              "title": "Event Type"
-            },
-            "description": "Filter by event type (partial match)"
-          },
-          {
-            "name": "start_time",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter events after this time",
-              "title": "Start Time"
-            },
-            "description": "Filter events after this time"
-          },
-          {
-            "name": "end_time",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter events before this time",
-              "title": "End Time"
-            },
-            "description": "Filter events before this time"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 500,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainEventListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/me/base-personalities": {
       "get": {
         "tags": [
@@ -2465,6 +2328,55 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PushNotificationSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push-notifications/{notification_id}/context": {
+      "get": {
+        "tags": [
+          "push-notifications"
+        ],
+        "summary": "Get Push Notification Context",
+        "description": "Get a push notification context by ID.",
+        "operationId": "get_push_notification_context_push_notifications__notification_id__context_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Notification Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushNotificationContextSchema"
                 }
               }
             }
@@ -6257,7 +6169,8 @@
         "type": "string",
         "enum": [
           "URL",
-          "GENERIC"
+          "GENERIC",
+          "KIOSK"
         ],
         "title": "AlarmType",
         "description": "Type of alarm behavior."
@@ -6646,6 +6559,72 @@
         ],
         "title": "CalendarEntryAttendanceStatus",
         "description": "User-controlled attendance status for calendar entries."
+      },
+      "CalendarEntryNotificationChannel": {
+        "type": "string",
+        "enum": [
+          "PUSH",
+          "TEXT",
+          "KIOSK_ALARM"
+        ],
+        "title": "CalendarEntryNotificationChannel",
+        "description": "Notification delivery channel for calendar entry reminders."
+      },
+      "CalendarEntryNotificationRuleSchema": {
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/CalendarEntryNotificationChannel"
+          },
+          "minutes_before": {
+            "type": "integer",
+            "title": "Minutes Before",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel"
+        ],
+        "title": "CalendarEntryNotificationRuleSchema",
+        "description": "Schema for a single calendar entry notification rule."
+      },
+      "CalendarEntryNotificationSettingsSchema-Input": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntryNotificationRuleSchema"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntryNotificationSettingsSchema",
+        "description": "Schema for calendar entry notification settings."
+      },
+      "CalendarEntryNotificationSettingsSchema-Output": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntryNotificationRuleSchema"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntryNotificationSettingsSchema",
+        "description": "Schema for calendar entry notification settings."
       },
       "CalendarEntrySchema": {
         "properties": {
@@ -8063,79 +8042,6 @@
         "title": "DayUpdateSchema",
         "description": "API schema for Day update requests."
       },
-      "DomainEventListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/DomainEventSchema"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "has_next": {
-            "type": "boolean",
-            "title": "Has Next"
-          },
-          "has_previous": {
-            "type": "boolean",
-            "title": "Has Previous"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset",
-          "has_next",
-          "has_previous"
-        ],
-        "title": "DomainEventListResponse",
-        "description": "Schema for paginated domain event backlog list response."
-      },
-      "DomainEventSchema": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "event_type": {
-            "type": "string",
-            "title": "Event Type"
-          },
-          "event_data": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Event Data"
-          },
-          "stored_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Stored At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "event_type",
-          "event_data",
-          "stored_at"
-        ],
-        "title": "DomainEventSchema",
-        "description": "Schema for a single domain event backlog entry."
-      },
       "EarlyAccessRequestSchema": {
         "properties": {
           "email": {
@@ -9071,6 +8977,40 @@
         ],
         "title": "PagedResponseSchema[TriggerSchema]"
       },
+      "PushNotificationContextSchema": {
+        "properties": {
+          "notification": {
+            "$ref": "#/components/schemas/PushNotificationSchema"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskSchema"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineSchema"
+            },
+            "type": "array",
+            "title": "Routines"
+          },
+          "calendar_entries": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntrySchema"
+            },
+            "type": "array",
+            "title": "Calendar Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notification"
+        ],
+        "title": "PushNotificationContextSchema",
+        "description": "API schema for push notification context."
+      },
       "PushNotificationQuery": {
         "properties": {
           "limit": {
@@ -9331,6 +9271,13 @@
               }
             ],
             "title": "Llm Snapshot"
+          },
+          "referenced_entities": {
+            "items": {
+              "$ref": "#/components/schemas/ReferencedEntitySchema"
+            },
+            "type": "array",
+            "title": "Referenced Entities"
           }
         },
         "type": "object",
@@ -9921,6 +9868,26 @@
         ],
         "title": "RecurrenceScheduleSchema",
         "description": "API schema for RecurrenceSchedule value object."
+      },
+      "ReferencedEntitySchema": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entity Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "entity_id"
+        ],
+        "title": "ReferencedEntitySchema",
+        "description": "Schema for a referenced entity snapshot."
       },
       "RequestSmsCodeSchema": {
         "properties": {
@@ -11944,7 +11911,8 @@
           "morning_overview_time": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "time"
               },
               {
                 "type": "null"
@@ -11958,11 +11926,15 @@
             },
             "type": "array",
             "title": "Alarm Presets"
+          },
+          "calendar_entry_notification_settings": {
+            "$ref": "#/components/schemas/CalendarEntryNotificationSettingsSchema-Output"
           }
         },
         "type": "object",
         "required": [
-          "template_defaults"
+          "template_defaults",
+          "calendar_entry_notification_settings"
         ],
         "title": "UserSettingsSchema",
         "description": "Schema for user settings."
@@ -12034,7 +12006,8 @@
           "morning_overview_time": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "time"
               },
               {
                 "type": "null"
@@ -12055,6 +12028,16 @@
               }
             ],
             "title": "Alarm Presets"
+          },
+          "calendar_entry_notification_settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEntryNotificationSettingsSchema-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

@@ -1,4 +1,5 @@
-import type { Event, Routine, Task } from "./api.generated";
+import type { components } from "./api.generated";
+import type { Routine } from "./routine";
 
 export type LLMRunResultSnapshot = {
   current_time?: string;
@@ -12,6 +13,9 @@ export type LLMRunResultSnapshot = {
 };
 
 export type ReferencedEntity = { entity_type: string; entity_id: string };
+
+export type Task = components["schemas"]["TaskSchema"];
+export type Event = components["schemas"]["CalendarEntrySchema"];
 
 export type PushNotification = {
   id?: string | null;
