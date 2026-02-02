@@ -325,6 +325,10 @@ export default function App() {
                   <Route path="/calendar" component={CalendarPage} />
                   <Route path="/commands" component={CommandsPage} />
                 </Route>
+              <Route
+                path="/admin"
+                component={() => <Navigate href="/admin" />}
+              />
                 <Route path="/settings" component={SettingsLayout}>
                   <Route path="/" component={SettingsIndexPage} />
                   <Route path="/profile" component={ProfileSettingsPage} />

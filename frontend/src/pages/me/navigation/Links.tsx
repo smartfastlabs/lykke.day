@@ -7,6 +7,7 @@ import {
   faHouse,
   faCalendarDay,
   faTerminal,
+  faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -52,6 +53,12 @@ const NavPage: Component = () => {
           description: "Explore available commands and shortcuts.",
           icon: faTerminal,
           url: "/me/nav/commands",
+        },
+        {
+          label: "Admin",
+          description: "Open admin tools and diagnostics.",
+          icon: faShieldHalved,
+          url: "/me/admin",
         },
       ],
     },

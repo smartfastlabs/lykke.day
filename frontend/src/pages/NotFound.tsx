@@ -6,7 +6,7 @@ const NotFound: Component = () => {
   const navigate = useNavigate();
 
   return (
-    <Page>
+    <Page hideFloatingButtons>
       <div class="flex-1 flex flex-col items-center justify-center px-5 mb-12">
         <div class="relative mb-8">
           <div class="text-[12rem] font-black leading-none tracking-tighter text-neutral-100 select-none">
