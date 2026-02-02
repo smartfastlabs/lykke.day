@@ -1,6 +1,6 @@
 import type { DayContextWithRoutines, Task } from "@/types/api";
 
-import type { EntityChange } from "./changeApplier";
+import { applyEntityPatch, type EntityChange } from "./changeApplier";
 
 const getEntityLabel = (entityType: string): string => {
   if (entityType === "calendar_entry" || entityType === "calendarentry") {
@@ -60,7 +60,15 @@ export const countCompletedTasksFromChanges = (
   for (const change of changes) {
     if (change.entity_type !== "task") continue;
     if (change.change_type !== "updated") continue;
-    const task = change.entity_data as Task | null;
+    let task = change.entity_data as Task | null;
+    if (!task && change.entity_patch && change.entity_patch.length > 0) {
+      const previous = existingTasks.find(
+        (existing) => existing.id === change.entity_id,
+      );
+      if (previous) {
+        task = applyEntityPatch(previous, change.entity_patch) as Task;
+      }
+    }
     if (!task || !task.id) continue;
     const previous = existingTasks.find((existing) => existing.id === task.id);
     if (previous?.status !== "COMPLETE" && task.status === "COMPLETE") {

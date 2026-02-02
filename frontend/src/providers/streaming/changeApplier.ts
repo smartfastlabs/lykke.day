@@ -11,6 +11,13 @@ export interface EntityChange {
   entity_type: string;
   entity_id: string;
   entity_data: Task | Event | Routine | Day | null;
+  entity_patch?: JsonPatchOp[] | null;
+}
+
+export interface JsonPatchOp {
+  op: "replace" | "add" | "remove";
+  path: string;
+  value?: unknown;
 }
 
 const stableStringify = (value: unknown): string => {
@@ -32,6 +39,82 @@ const stableStringify = (value: unknown): string => {
 
 const areEntitiesEqual = (left: unknown, right: unknown): boolean =>
   stableStringify(left) === stableStringify(right);
+
+const cloneValue = <T>(value: T): T => {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+};
+
+const decodePointer = (path: string): string[] => {
+  if (path === "" || path === "/") return [];
+  const trimmed = path.startsWith("/") ? path.slice(1) : path;
+  if (!trimmed) return [];
+  return trimmed.split("/").map((segment) =>
+    segment.replace(/~1/g, "/").replace(/~0/g, "~"),
+  );
+};
+
+const setValueAtPath = (
+  target: unknown,
+  segments: string[],
+  value: unknown,
+): unknown => {
+  if (segments.length === 0) {
+    return value;
+  }
+  const next = Array.isArray(target) ? [...target] : { ...(target as object) };
+  let cursor: unknown = next;
+  for (let i = 0; i < segments.length - 1; i += 1) {
+    const segment = segments[i];
+    const index =
+      Array.isArray(cursor) && /^\d+$/.test(segment)
+        ? Number(segment)
+        : null;
+    if (Array.isArray(cursor)) {
+      if (index === null) return next;
+      if (cursor[index] === undefined) {
+        cursor[index] = {};
+      }
+      cursor = cursor[index];
+    } else if (typeof cursor === "object" && cursor !== null) {
+      const record = cursor as Record<string, unknown>;
+      if (record[segment] === undefined || record[segment] === null) {
+        record[segment] = {};
+      }
+      cursor = record[segment];
+    } else {
+      return next;
+    }
+  }
+
+  const last = segments[segments.length - 1];
+  const lastIndex =
+    Array.isArray(cursor) && /^\d+$/.test(last) ? Number(last) : null;
+  if (Array.isArray(cursor) && lastIndex !== null) {
+    cursor[lastIndex] = value;
+  } else if (typeof cursor === "object" && cursor !== null) {
+    (cursor as Record<string, unknown>)[last] = value;
+  }
+
+  return next;
+};
+
+export const applyEntityPatch = <T>(
+  current: T,
+  patch: JsonPatchOp[],
+): T => {
+  let next = cloneValue(current);
+  for (const op of patch) {
+    const segments = decodePointer(op.path);
+    if (op.op === "remove") {
+      continue;
+    }
+    next = setValueAtPath(next, segments, op.value) as T;
+  }
+  return next;
+};
 
 export interface ApplyEntityChangesResult {
   didUpdate: boolean;
@@ -59,6 +142,23 @@ export const applyEntityChanges = (
         const index = updatedTasks.findIndex((t) => t.id === change.entity_id);
         if (index >= 0) {
           updatedTasks.splice(index, 1);
+          didUpdate = true;
+        }
+        continue;
+      }
+
+      if (change.entity_patch && change.entity_patch.length > 0) {
+        const index = updatedTasks.findIndex((t) => t.id === change.entity_id);
+        const base = index >= 0 ? updatedTasks[index] : ({} as Task);
+        const patched = applyEntityPatch(base, change.entity_patch) as Task;
+        if (!patched || !patched.id) continue;
+        if (index >= 0) {
+          if (!areEntitiesEqual(updatedTasks[index], patched)) {
+            updatedTasks[index] = patched;
+            didUpdate = true;
+          }
+        } else {
+          updatedTasks.push(patched);
           didUpdate = true;
         }
         continue;
@@ -94,6 +194,23 @@ export const applyEntityChanges = (
         continue;
       }
 
+      if (change.entity_patch && change.entity_patch.length > 0) {
+        const index = updatedEvents.findIndex((e) => e.id === change.entity_id);
+        const base = index >= 0 ? updatedEvents[index] : ({} as Event);
+        const patched = applyEntityPatch(base, change.entity_patch) as Event;
+        if (!patched || !patched.id) continue;
+        if (index >= 0) {
+          if (!areEntitiesEqual(updatedEvents[index], patched)) {
+            updatedEvents[index] = patched;
+            didUpdate = true;
+          }
+        } else {
+          updatedEvents.push(patched);
+          didUpdate = true;
+        }
+        continue;
+      }
+
       const event = change.entity_data as Event | null;
       if (!event) continue;
 
@@ -123,6 +240,23 @@ export const applyEntityChanges = (
         continue;
       }
 
+      if (change.entity_patch && change.entity_patch.length > 0) {
+        const index = updatedRoutines.findIndex((r) => r.id === change.entity_id);
+        const base = index >= 0 ? updatedRoutines[index] : ({} as Routine);
+        const patched = applyEntityPatch(base, change.entity_patch) as Routine;
+        if (!patched || !patched.id) continue;
+        if (index >= 0) {
+          if (!areEntitiesEqual(updatedRoutines[index], patched)) {
+            updatedRoutines[index] = patched;
+            didUpdate = true;
+          }
+        } else {
+          updatedRoutines.push(patched);
+          didUpdate = true;
+        }
+        continue;
+      }
+
       const routine = change.entity_data as Routine | null;
       if (!routine) continue;
 
@@ -141,14 +275,23 @@ export const applyEntityChanges = (
     }
 
     if (change.entity_type === "day") {
-      const updatedDay = change.entity_data as Day | null;
-      if (
-        updatedDay &&
-        (change.change_type === "updated" || change.change_type === "created")
-      ) {
-        if (!areEntitiesEqual(next.day, updatedDay)) {
-          next.day = updatedDay;
+      if (change.entity_patch && change.entity_patch.length > 0) {
+        const base = (next.day ?? ({} as Day)) as Day;
+        const patched = applyEntityPatch(base, change.entity_patch) as Day;
+        if (patched && !areEntitiesEqual(next.day, patched)) {
+          next.day = patched;
           didUpdate = true;
+        }
+      } else {
+        const updatedDay = change.entity_data as Day | null;
+        if (
+          updatedDay &&
+          (change.change_type === "updated" || change.change_type === "created")
+        ) {
+          if (!areEntitiesEqual(next.day, updatedDay)) {
+            next.day = updatedDay;
+            didUpdate = true;
+          }
         }
       }
     }

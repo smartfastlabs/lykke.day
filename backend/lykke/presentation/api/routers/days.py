@@ -5,7 +5,7 @@ import contextlib
 import hashlib
 import json
 from datetime import UTC, date, datetime as dt_datetime
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
@@ -24,7 +24,6 @@ from lykke.application.queries import (
     GetDayContextHandler,
     GetDayContextQuery,
     GetIncrementalChangesHandler,
-    GetIncrementalChangesQuery,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import NotFoundError
@@ -35,12 +34,7 @@ from lykke.core.utils.domain_event_serialization import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain.events.base import AuditableDomainEvent
 from lykke.domain.events.day_events import NewDayEvent
-from lykke.domain.events.timing_status_events import (
-    RoutineTimingStatusChangedEvent,
-    TaskTimingStatusChangedEvent,
-)
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
@@ -167,7 +161,8 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
 async def _build_full_sync_response(
     *,
     get_day_context_handler: GetDayContextHandler,
-    get_incremental_changes_handler: GetIncrementalChangesHandler,
+    pubsub_gateway: PubSubGatewayProtocol,
+    user_id: UUID,
     schedule_day_handler: ScheduleDayHandler,
     date_value: date,
     user_timezone: str | None,
@@ -179,16 +174,19 @@ async def _build_full_sync_response(
     except NotFoundError:
         context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
 
-    audit_logs = await get_incremental_changes_handler.audit_log_ro_repo.search(
-        value_objects.AuditLogQuery()
+    last_change_stream_id: str | None = None
+    last_audit_timestamp: str | None = None
+    latest_entry = await pubsub_gateway.get_latest_user_stream_entry(
+        user_id=user_id, stream_type="entity-changes"
     )
-    last_audit_timestamp: dt_datetime | None = None
-    if audit_logs:
-        sorted_logs = sorted(audit_logs, key=lambda x: x.occurred_at, reverse=True)
-        last_audit_timestamp = sorted_logs[0].occurred_at
-
+    if latest_entry:
+        last_change_stream_id, latest_payload = latest_entry
+        if isinstance(latest_payload, dict):
+            last_audit_timestamp = latest_payload.get(
+                "occurred_at"
+            ) or latest_payload.get("stored_at")
     if last_audit_timestamp is None:
-        last_audit_timestamp = dt_datetime.now(UTC)
+        last_audit_timestamp = dt_datetime.now(UTC).isoformat()
 
     routines = await get_day_context_handler.routine_ro_repo.search(
         value_objects.RoutineQuery(date=date_value)
@@ -206,9 +204,8 @@ async def _build_full_sync_response(
         day_context=map_day_context_to_schema(context, user_timezone=user_timezone),
         changes=None,
         routines=routine_schemas,
-        last_audit_log_timestamp=last_audit_timestamp.isoformat()
-        if last_audit_timestamp
-        else None,
+        last_audit_log_timestamp=last_audit_timestamp,
+        last_change_stream_id=last_change_stream_id,
     )
 
 
@@ -257,6 +254,12 @@ async def days_context_websocket(
         today_date = get_current_date(user_timezone)
         date_state = {"value": today_date}
         subscription_state: dict[str, set[str]] = {"topics": set()}
+        stream_state: dict[str, str] = {"last_id": "0-0"}
+        latest_entry = await pubsub_gateway.get_latest_user_stream_entry(
+            user_id=user_id, stream_type="entity-changes"
+        )
+        if latest_entry:
+            stream_state["last_id"] = latest_entry[0]
 
         async with pubsub_gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="domain-events"
@@ -267,26 +270,40 @@ async def days_context_websocket(
                     day_context_handler,
                     incremental_changes_handler_ws,
                     schedule_day_handler,
+                    pubsub_gateway,
                     date_state,
                     user_timezone,
                     subscription_state,
+                    stream_state,
                 )
             )
-            events_task = asyncio.create_task(
-                _handle_realtime_events(
+            domain_events_task = asyncio.create_task(
+                _handle_realtime_domain_events(
                     websocket,
                     domain_events_subscription,
-                    date_state,
-                    incremental_changes_handler_ws,
                     day_context_handler,
                     schedule_day_handler,
+                    pubsub_gateway,
+                    date_state,
                     user_timezone,
                     subscription_state,
+                    stream_state,
+                )
+            )
+            change_stream_task = asyncio.create_task(
+                _handle_change_stream_events(
+                    websocket,
+                    pubsub_gateway,
+                    incremental_changes_handler_ws,
+                    date_state,
+                    user_timezone,
+                    stream_state,
                 )
             )
 
             done, pending = await asyncio.wait(
-                [message_task, events_task], return_when=asyncio.FIRST_COMPLETED
+                [message_task, domain_events_task, change_stream_task],
+                return_when=asyncio.FIRST_COMPLETED,
             )
 
             for task in pending:
@@ -315,9 +332,11 @@ async def _handle_client_messages(
     get_day_context_handler: GetDayContextHandler,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
     schedule_day_handler: ScheduleDayHandler,
+    pubsub_gateway: PubSubGatewayProtocol,
     date_state: dict[str, date],
     user_timezone: str | None,
     subscription_state: dict[str, set[str]],
+    stream_state: dict[str, str],
 ) -> None:
     """Handle messages from the client (sync requests).
 
@@ -357,31 +376,39 @@ async def _handle_client_messages(
                 await send_error(websocket, "INVALID_REQUEST", f"Invalid request: {e}")
                 continue
 
-            if sync_request.since_timestamp:
+            if sync_request.since_change_stream_id or sync_request.since_timestamp:
                 try:
-                    since_dt = dt_datetime.fromisoformat(
-                        sync_request.since_timestamp.replace("Z", "+00:00")
-                    )
-                    if since_dt.tzinfo is None:
-                        since_dt = since_dt.replace(tzinfo=UTC)
-                    else:
-                        since_dt = since_dt.astimezone(UTC)
+                    since_stream_id = sync_request.since_change_stream_id
+                    if since_stream_id is None and sync_request.since_timestamp:
+                        since_dt = dt_datetime.fromisoformat(
+                            sync_request.since_timestamp.replace("Z", "+00:00")
+                        )
+                        if since_dt.tzinfo is None:
+                            since_dt = since_dt.replace(tzinfo=UTC)
+                        else:
+                            since_dt = since_dt.astimezone(UTC)
+                        since_stream_id = f"{int(since_dt.timestamp() * 1000)}-0"
 
                     (
                         changes,
+                        last_stream_id,
                         last_timestamp,
-                    ) = await get_incremental_changes_handler.handle(
-                        GetIncrementalChangesQuery(
-                            since=since_dt, date=date_state["value"]
-                        )
+                    ) = await _read_change_stream_since(
+                        pubsub_gateway=pubsub_gateway,
+                        get_incremental_changes_handler=get_incremental_changes_handler,
+                        user_id=get_day_context_handler.user_id,
+                        date_value=date_state["value"],
+                        user_timezone=user_timezone,
+                        since_stream_id=since_stream_id or "0-0",
                     )
+                    if last_stream_id:
+                        stream_state["last_id"] = last_stream_id
 
                     response = WebSocketSyncResponseSchema(
                         changes=changes,
                         day_context=None,
-                        last_audit_log_timestamp=last_timestamp.isoformat()
-                        if last_timestamp
-                        else None,
+                        last_audit_log_timestamp=last_timestamp,
+                        last_change_stream_id=last_stream_id,
                     )
                 except Exception as e:
                     logger.error(f"Error getting incremental changes: {e}")
@@ -395,11 +422,14 @@ async def _handle_client_messages(
                 try:
                     response = await _build_full_sync_response(
                         get_day_context_handler=get_day_context_handler,
-                        get_incremental_changes_handler=get_incremental_changes_handler,
                         schedule_day_handler=schedule_day_handler,
+                        pubsub_gateway=pubsub_gateway,
+                        user_id=get_day_context_handler.user_id,
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
                     )
+                    if response.last_change_stream_id:
+                        stream_state["last_id"] = response.last_change_stream_id
                 except Exception as e:
                     logger.error(f"Error getting day context: {e}")
                     await send_error(
@@ -418,192 +448,217 @@ async def _handle_client_messages(
             )
 
 
-async def _handle_realtime_events(
+async def _handle_realtime_domain_events(
     websocket: WebSocket,
     domain_events_subscription: Any,
-    date_state: dict[str, date],
-    incremental_changes_handler: GetIncrementalChangesHandler,
     day_context_handler: GetDayContextHandler,
     schedule_day_handler: ScheduleDayHandler,
+    pubsub_gateway: PubSubGatewayProtocol,
+    date_state: dict[str, date],
     user_timezone: str | None,
     subscription_state: dict[str, set[str]],
+    stream_state: dict[str, str],
 ) -> None:
-    """Handle real-time domain events from pubsub and convert to entity changes.
-
-    Filters to only AuditableDomainEvents and converts them to entity change
-    notifications for today's entities.
-
-    Args:
-        websocket: WebSocket connection
-        domain_events_subscription: PubSub subscription for domain events
-        date_state: Mutable container holding the current date
-        incremental_changes_handler: Handler to access repositories and load entity data
-    """
-
+    """Handle domain events for topic subscriptions and new day signals."""
     while True:
         try:
             domain_event_message = await domain_events_subscription.get_message(
                 timeout=1.0
             )
+            if not domain_event_message:
+                continue
+            try:
+                domain_event = deserialize_domain_event(domain_event_message)
+            except Exception as deserialize_error:
+                logger.error(
+                    f"Failed to process domain event message: {deserialize_error}"
+                )
+                continue
 
-            if domain_event_message:
-                logger.debug("Received message from Redis subscription")
-                try:
-                    logger.debug("Received domain event message from Redis")
-                    domain_event = deserialize_domain_event(domain_event_message)
-                    logger.debug(
-                        f"Deserialized domain event: {domain_event.__class__.__name__}"
-                    )
-
-                    if isinstance(domain_event, NewDayEvent):
-                        next_date = domain_event.date
-                        current_date = date_state["value"]
-                        if next_date != current_date:
-                            logger.info(
-                                f"New day detected ({current_date} -> {next_date}). Sending full sync.",
-                            )
-                            date_state["value"] = next_date
-                            response = await _build_full_sync_response(
-                                get_day_context_handler=day_context_handler,
-                                get_incremental_changes_handler=incremental_changes_handler,
-                                schedule_day_handler=schedule_day_handler,
-                                date_value=next_date,
-                                user_timezone=user_timezone,
-                            )
-                            await send_ws_message(
-                                websocket, response.model_dump(mode="json")
-                            )
-                        continue
-
-                    event_topic = domain_event.__class__.__name__
-                    if event_topic in subscription_state["topics"]:
-                        topic_event = WebSocketTopicEventSchema(
-                            topic=event_topic,
-                            event=serialize_domain_event(domain_event),
-                        )
-                        await send_ws_message(
-                            websocket, topic_event.model_dump(mode="json")
-                        )
-
-                    if not isinstance(
-                        domain_event,
-                        (
-                            AuditableDomainEvent,
-                            TaskTimingStatusChangedEvent,
-                            RoutineTimingStatusChangedEvent,
-                        ),
-                    ):
-                        logger.debug(
-                            f"Filtered out non-auditable domain event {domain_event.__class__.__name__}",
-                        )
-                        continue
-
-                    if not domain_event.entity_id or not domain_event.entity_type:
-                        logger.warning(
-                            f"Domain event {domain_event.__class__.__name__} missing entity_id or entity_type"
-                        )
-                        continue
-
-                    if domain_event.entity_type == "routine_definition":
-                        logger.debug(
-                            "Filtered out routine_definition event from day context stream"
-                        )
-                        continue
-
-                    logger.debug(
-                        f"Processing {domain_event.__class__.__name__} for {domain_event.entity_type} {domain_event.entity_id} on date {domain_event.entity_date}"
-                    )
-
-                    entity_date = domain_event.entity_date
-                    if isinstance(entity_date, dt_datetime):
-                        entity_date = entity_date.date()
-
-                    if entity_date and entity_date != date_state["value"]:
-                        logger.debug(
-                            f"Filtered out {domain_event.__class__.__name__} for entity {domain_event.entity_id} (not for today)"
-                        )
-                        continue
-
-                    activity_type = domain_event.__class__.__name__
-                    change_type: Literal["created", "updated", "deleted"] | None = None
-                    if (
-                        "Created" in activity_type
-                        or activity_type == "EntityCreatedEvent"
-                        or activity_type in {"MessageReceivedEvent", "MessageSentEvent"}
-                    ):
-                        change_type = "created"
-                    elif (
-                        "Deleted" in activity_type
-                        or activity_type == "EntityDeletedEvent"
-                    ):
-                        change_type = "deleted"
-                    elif (
-                        "Updated" in activity_type
-                        or "Added" in activity_type
-                        or "Removed" in activity_type
-                        or "Triggered" in activity_type
-                        or "StatusChanged" in activity_type
-                        or "Completed" in activity_type
-                        or "Scheduled" in activity_type
-                        or "Unscheduled" in activity_type
-                        or "Punted" in activity_type
-                        or activity_type == "EntityUpdatedEvent"
-                        or activity_type == "TaskCompletedEvent"
-                        or activity_type == "TaskPuntedEvent"
-                        or activity_type == "BrainDumpAddedEvent"
-                        or activity_type == "BrainDumpStatusChangedEvent"
-                        or activity_type == "BrainDumpTypeChangedEvent"
-                        or activity_type == "BrainDumpRemovedEvent"
-                    ):
-                        change_type = "updated"
-                    else:
-                        logger.warning(f"Unknown activity type: {activity_type}")
-                        continue
-
-                    entity_data: dict[str, Any] | None = None
-                    if change_type in ("created", "updated"):
-                        try:
-                            entity_id = domain_event.entity_id
-                            if entity_id is not None:
-                                entity_data = (
-                                    await incremental_changes_handler._load_entity_data(
-                                        domain_event.entity_type,
-                                        entity_id,
-                                        activity_type=activity_type,
-                                        user_timezone=user_timezone,
-                                    )
-                                )
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to load entity data for {domain_event.entity_type} {domain_event.entity_id}: {e}"
-                            )
-                    change = EntityChangeSchema(
-                        change_type=change_type,
-                        entity_type=domain_event.entity_type,
-                        entity_id=domain_event.entity_id,
-                        entity_data=entity_data,
-                    )
-
-                    last_audit_log_timestamp = domain_event.occurred_at.isoformat()
-
-                    response = WebSocketSyncResponseSchema(
-                        changes=[change],
-                        day_context=None,
-                        last_audit_log_timestamp=last_audit_log_timestamp,
-                    )
+            if isinstance(domain_event, NewDayEvent):
+                next_date = domain_event.date
+                current_date = date_state["value"]
+                if next_date != current_date:
                     logger.info(
-                        f"Sending real-time update for {activity_type} on {domain_event.entity_type} {domain_event.entity_id}"
+                        f"New day detected ({current_date} -> {next_date}). Sending full sync.",
                     )
+                    date_state["value"] = next_date
+                    response = await _build_full_sync_response(
+                        get_day_context_handler=day_context_handler,
+                        schedule_day_handler=schedule_day_handler,
+                        pubsub_gateway=pubsub_gateway,
+                        user_id=day_context_handler.user_id,
+                        date_value=next_date,
+                        user_timezone=user_timezone,
+                    )
+                    if response.last_change_stream_id:
+                        stream_state["last_id"] = response.last_change_stream_id
                     await send_ws_message(websocket, response.model_dump(mode="json"))
-                    logger.info(
-                        f"Successfully sent real-time update for {activity_type} on {domain_event.entity_type} {domain_event.entity_id}"
-                    )
+                continue
 
-                except Exception as deserialize_error:
-                    logger.error(
-                        f"Failed to process domain event message: {deserialize_error}"
-                    )
-
+            event_topic = domain_event.__class__.__name__
+            if event_topic in subscription_state["topics"]:
+                topic_event = WebSocketTopicEventSchema(
+                    topic=event_topic,
+                    event=serialize_domain_event(domain_event),
+                )
+                await send_ws_message(websocket, topic_event.model_dump(mode="json"))
         except Exception as e:
-            logger.error(f"Error in real-time events handler: {e}")
+            logger.error(f"Error in domain event handler: {e}")
+            break
+
+
+async def _read_change_stream_since(
+    *,
+    pubsub_gateway: PubSubGatewayProtocol,
+    get_incremental_changes_handler: GetIncrementalChangesHandler,
+    user_id: UUID,
+    date_value: date,
+    user_timezone: str | None,
+    since_stream_id: str,
+) -> tuple[list[EntityChangeSchema], str | None, str | None]:
+    """Read change stream entries since a stream id."""
+    changes: list[EntityChangeSchema] = []
+    last_stream_id: str | None = None
+    last_timestamp: str | None = None
+    current_id = since_stream_id
+
+    while True:
+        entries = await pubsub_gateway.read_user_stream(
+            user_id=user_id,
+            stream_type="entity-changes",
+            last_id=current_id,
+            count=200,
+            block_ms=1,
+        )
+        if not entries:
+            break
+
+        for stream_id, payload in entries:
+            current_id = stream_id
+            last_stream_id = stream_id
+            entity_date = payload.get("entity_date")
+            if isinstance(entity_date, str):
+                try:
+                    parsed_date = date.fromisoformat(entity_date)
+                except ValueError:
+                    parsed_date = None
+                if parsed_date is not None and parsed_date != date_value:
+                    continue
+
+            change = await _build_change_from_stream_payload(
+                payload=payload,
+                get_incremental_changes_handler=get_incremental_changes_handler,
+                user_timezone=user_timezone,
+            )
+            if change is None:
+                continue
+            last_timestamp = payload.get("occurred_at") or payload.get("stored_at")
+            changes.append(change)
+
+    return changes, last_stream_id, last_timestamp
+
+
+async def _build_change_from_stream_payload(
+    *,
+    payload: dict[str, Any],
+    get_incremental_changes_handler: GetIncrementalChangesHandler,
+    user_timezone: str | None,
+) -> EntityChangeSchema | None:
+    change_type = payload.get("change_type")
+    entity_type = payload.get("entity_type")
+    entity_id = payload.get("entity_id")
+    if change_type not in ("created", "updated", "deleted"):
+        return None
+    if not isinstance(entity_type, str) or not isinstance(entity_id, str):
+        return None
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        return None
+
+    entity_patch = payload.get("entity_patch")
+    if not isinstance(entity_patch, list) or len(entity_patch) == 0:
+        entity_patch = None
+
+    entity_data: dict[str, Any] | None = None
+    if change_type in ("created", "updated") and entity_patch is None:
+        try:
+            activity_type = (
+                "EntityCreatedEvent"
+                if change_type == "created"
+                else "EntityUpdatedEvent"
+            )
+            entity_data = await get_incremental_changes_handler._load_entity_data(
+                entity_type,
+                entity_uuid,
+                activity_type=activity_type,
+                user_timezone=user_timezone,
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to load entity data for {entity_type} {entity_uuid}: {e}"
+            )
+            entity_data = None
+
+    return EntityChangeSchema(
+        change_type=change_type,
+        entity_type=entity_type,
+        entity_id=entity_uuid,
+        entity_data=entity_data,
+        entity_patch=entity_patch,
+    )
+
+
+async def _handle_change_stream_events(
+    websocket: WebSocket,
+    pubsub_gateway: PubSubGatewayProtocol,
+    get_incremental_changes_handler: GetIncrementalChangesHandler,
+    date_state: dict[str, date],
+    user_timezone: str | None,
+    stream_state: dict[str, str],
+) -> None:
+    """Handle real-time entity change stream events."""
+    user_id = get_incremental_changes_handler.user_id
+    while True:
+        try:
+            entries = await pubsub_gateway.read_user_stream(
+                user_id=user_id,
+                stream_type="entity-changes",
+                last_id=stream_state["last_id"],
+                count=100,
+                block_ms=1000,
+            )
+            if not entries:
+                continue
+
+            for stream_id, payload in entries:
+                stream_state["last_id"] = stream_id
+                entity_date = payload.get("entity_date")
+                if isinstance(entity_date, str):
+                    try:
+                        parsed_date = date.fromisoformat(entity_date)
+                    except ValueError:
+                        parsed_date = None
+                    if parsed_date is not None and parsed_date != date_state["value"]:
+                        continue
+
+                change = await _build_change_from_stream_payload(
+                    payload=payload,
+                    get_incremental_changes_handler=get_incremental_changes_handler,
+                    user_timezone=user_timezone,
+                )
+                if change is None:
+                    continue
+
+                last_timestamp = payload.get("occurred_at") or payload.get("stored_at")
+                response = WebSocketSyncResponseSchema(
+                    changes=[change],
+                    day_context=None,
+                    last_audit_log_timestamp=last_timestamp,
+                    last_change_stream_id=stream_id,
+                )
+                await send_ws_message(websocket, response.model_dump(mode="json"))
+        except Exception as e:
+            logger.error(f"Error in change stream handler: {e}")
             break

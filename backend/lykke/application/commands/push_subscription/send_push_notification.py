@@ -14,6 +14,21 @@ from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity, PushSubscriptionEntity
 
 
+def _is_invalid_subscription_error(error: Exception) -> bool:
+    message = str(error)
+    return any(
+        status in message
+        for status in (
+            " 400 ",
+            " 404 ",
+            " 410 ",
+            "400 Bad Request",
+            "404 Not Found",
+            "410 Gone",
+        )
+    )
+
+
 @dataclass(frozen=True)
 class SendPushNotificationCommand(Command):
     """Command to send a push notification to one or more subscriptions."""
@@ -71,21 +86,6 @@ class SendPushNotificationHandler(
             content_dict = dataclass_to_json_dict(command.content)
             filtered_content = {k: v for k, v in content_dict.items() if v is not None}
             filtered_content["url"] = f"/me/push/{notification_id}"
-            if referenced_entities:
-                data = filtered_content.get("data")
-                if not isinstance(data, dict):
-                    data = {}
-                data = {
-                    **data,
-                    "referenced_entities": [
-                        {
-                            "entity_type": entity.entity_type,
-                            "entity_id": str(entity.entity_id),
-                        }
-                        for entity in referenced_entities
-                    ],
-                }
-                filtered_content["data"] = data
             content_str = json.dumps(filtered_content)
             content_for_push = filtered_content
         elif isinstance(command.content, dict):
@@ -93,21 +93,6 @@ class SendPushNotificationHandler(
                 k: v for k, v in command.content.items() if v is not None
             }
             filtered_content["url"] = f"/me/push/{notification_id}"
-            if referenced_entities:
-                data = filtered_content.get("data")
-                if not isinstance(data, dict):
-                    data = {}
-                data = {
-                    **data,
-                    "referenced_entities": [
-                        {
-                            "entity_type": entity.entity_type,
-                            "entity_id": str(entity.entity_id),
-                        }
-                        for entity in referenced_entities
-                    ],
-                }
-                filtered_content["data"] = data
             content_str = json.dumps(filtered_content)
             content_for_push = filtered_content
         else:
@@ -118,6 +103,7 @@ class SendPushNotificationHandler(
         successful_subscription_ids: list = []
         failed_subscription_ids: list = []
         error_messages: list[str] = []
+        invalid_subscriptions: list[PushSubscriptionEntity] = []
 
         # Send to each subscription
         for subscription in command.subscriptions:
@@ -140,6 +126,8 @@ class SendPushNotificationHandler(
                 logger.error(
                     f"Failed to send push notification to subscription {subscription.id}: {e}"
                 )
+                if _is_invalid_subscription_error(e):
+                    invalid_subscriptions.append(subscription)
 
         # Create PushNotificationEntity to track this send attempt
         # Use the user_id from the first subscription (all should be for the same user)
@@ -163,6 +151,9 @@ class SendPushNotificationHandler(
 
         # Create and save the notification entity
         async with self.new_uow(user_id) as uow:
+            if invalid_subscriptions:
+                for invalid in invalid_subscriptions:
+                    await uow.delete(invalid)
             notification = PushNotificationEntity(
                 id=notification_id,
                 user_id=user_id,

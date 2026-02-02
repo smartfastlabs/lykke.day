@@ -59,6 +59,35 @@ class StubPubSubGateway:
         """Return a stub subscription."""
         return StubPubSubSubscription()
 
+    async def append_to_user_stream(
+        self,
+        user_id: UUID,
+        stream_type: str,
+        message: dict[str, Any],
+        *,
+        maxlen: int | None = None,
+    ) -> str:
+        """Return a dummy stream id."""
+        return "0-0"
+
+    async def read_user_stream(
+        self,
+        user_id: UUID,
+        stream_type: str,
+        last_id: str,
+        *,
+        count: int | None = None,
+        block_ms: int | None = None,
+    ) -> list[tuple[str, dict[str, Any]]]:
+        """Return no messages."""
+        return []
+
+    async def get_latest_user_stream_entry(
+        self, user_id: UUID, stream_type: str
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Return no latest entry."""
+        return None
+
     async def close(self) -> None:
         """Do nothing."""
         pass

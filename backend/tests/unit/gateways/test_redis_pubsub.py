@@ -184,3 +184,57 @@ async def test_json_serialization() -> None:
         assert received == message
 
     await gateway.close()
+
+
+@pytest.mark.asyncio
+async def test_append_and_read_user_stream() -> None:
+    """Test appending to a stream and reading entries."""
+    gateway = RedisPubSubGateway()
+    user_id = uuid4()
+
+    first = {"event": "one", "data": {"value": 1}}
+    second = {"event": "two", "data": {"value": 2}}
+
+    await gateway.append_to_user_stream(
+        user_id=user_id, stream_type="entity-changes", message=first
+    )
+    await gateway.append_to_user_stream(
+        user_id=user_id, stream_type="entity-changes", message=second
+    )
+
+    entries = await gateway.read_user_stream(
+        user_id=user_id,
+        stream_type="entity-changes",
+        last_id="0-0",
+        count=10,
+        block_ms=100,
+    )
+
+    payloads = [payload for _, payload in entries]
+    assert first in payloads
+    assert second in payloads
+
+    await gateway.close()
+
+
+@pytest.mark.asyncio
+async def test_get_latest_user_stream_entry() -> None:
+    """Test retrieving the latest stream entry."""
+    gateway = RedisPubSubGateway()
+    user_id = uuid4()
+
+    await gateway.append_to_user_stream(
+        user_id=user_id, stream_type="entity-changes", message={"event": "old"}
+    )
+    await gateway.append_to_user_stream(
+        user_id=user_id, stream_type="entity-changes", message={"event": "latest"}
+    )
+
+    latest = await gateway.get_latest_user_stream_entry(
+        user_id=user_id, stream_type="entity-changes"
+    )
+    assert latest is not None
+    _, payload = latest
+    assert payload["event"] == "latest"
+
+    await gateway.close()

@@ -54,6 +54,9 @@ class WebSocketSyncRequestSchema(BaseSchema):
     since_timestamp: str | None = (
         None  # ISO format datetime - if provided, only return changes since this time
     )
+    since_change_stream_id: str | None = (
+        None  # Redis stream id for entity change stream incremental sync
+    )
 
 
 class WebSocketSubscriptionSchema(BaseSchema):
@@ -72,6 +75,7 @@ class EntityChangeSchema(BaseSchema):
     entity_data: (
         dict[str, Any] | None
     )  # Full entity data for created/updated, None for deleted
+    entity_patch: list[dict[str, Any]] | None = None
 
 
 class WebSocketSyncResponseSchema(BaseSchema):
@@ -89,6 +93,7 @@ class WebSocketSyncResponseSchema(BaseSchema):
         None  # Routines (included in full sync response)
     )
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
+    last_change_stream_id: str | None = None
 
 
 class WebSocketTopicEventSchema(BaseSchema):

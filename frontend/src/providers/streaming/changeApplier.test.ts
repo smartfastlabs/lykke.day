@@ -77,4 +77,29 @@ describe("applyEntityChanges", () => {
     expect(result.didUpdate).toBe(false);
     expect(result.nextContext).toBe(original);
   });
+
+  it("applies JSON Patch updates for tasks", () => {
+    const original = {
+      day: { id: "day-1" },
+      tasks: [{ id: "t-1", status: "NOT_STARTED", name: "Same" }],
+      calendar_entries: [],
+      routines: [],
+    } as unknown as import("@/types/api").DayContextWithRoutines;
+
+    const changes: EntityChange[] = [
+      {
+        change_type: "updated",
+        entity_type: "task",
+        entity_id: "t-1",
+        entity_data: null,
+        entity_patch: [
+          { op: "replace", path: "/status", value: "COMPLETE" },
+        ],
+      },
+    ];
+
+    const result = applyEntityChanges(original, changes);
+    expect(result.didUpdate).toBe(true);
+    expect(result.nextContext.tasks?.[0]?.status).toBe("COMPLETE");
+  });
 });

@@ -7,7 +7,7 @@ from collections.abc import Callable
 from contextvars import Token
 from dataclasses import replace
 from datetime import UTC, date as dt_date, datetime
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from loguru import logger
@@ -265,6 +265,8 @@ class SqlAlchemyUnitOfWork:
         self._is_nested = False
         # Track entities that need to be saved
         self._added_entities: list[BaseEntityObject] = []
+        # Track entity change events for streaming after commit
+        self._pending_entity_changes: list[dict[str, Any]] = []
         # PubSub gateway for broadcasting domain events
         self._pubsub_gateway = pubsub_gateway
         # Cache user timezone to avoid repeated lookups
@@ -675,6 +677,9 @@ class SqlAlchemyUnitOfWork:
         # This ensures external systems (WebSocket clients) only see committed data
         await self._broadcast_domain_events_to_redis(events)
 
+        # Broadcast entity change events via Redis stream after successful commit
+        await self._broadcast_entity_changes_to_redis()
+
         # Flush workers scheduled during this transaction (only after commit)
         await self.workers_to_schedule.flush()
 
@@ -808,7 +813,9 @@ class SqlAlchemyUnitOfWork:
             # Check for EntityCreatedEvent, EntityDeletedEvent, EntityUpdatedEvent
             has_created_event = any(isinstance(e, EntityCreatedEvent) for e in events)
             has_deleted_event = any(isinstance(e, EntityDeletedEvent) for e in events)
-            any(isinstance(e, EntityUpdatedEvent) for e in events)
+            update_event = next(
+                (e for e in events if isinstance(e, EntityUpdatedEvent)), None
+            )
 
             # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
             if not isinstance(entity, AuditLogEntity):
@@ -878,6 +885,39 @@ class SqlAlchemyUnitOfWork:
             # Put events back so they can be collected later for dispatching
             for event in events:
                 entity._add_event(event)
+
+            if _should_emit_entity_change(entity):
+                occurred_at = datetime.now(UTC)
+                if events:
+                    event_timestamp = getattr(events[0], "occurred_at", None)
+                    if event_timestamp is not None:
+                        occurred_at = event_timestamp
+                if isinstance(entity, CalendarEntryEntity):
+                    entity.user_timezone = user_timezone
+                entity_date = _extract_entity_date(
+                    entity, occurred_at, user_timezone=user_timezone
+                )
+                change_type: Literal["created", "updated", "deleted"]
+                if has_deleted_event:
+                    change_type = "deleted"
+                elif has_created_event:
+                    change_type = "created"
+                else:
+                    change_type = "updated"
+                entity_patch = None
+                if change_type == "updated" and update_event is not None:
+                    patch = _build_update_patch(update_event.update_object)
+                    entity_patch = patch if patch else None
+                self._pending_entity_changes.append(
+                    {
+                        "change_type": change_type,
+                        "entity_type": entity_type_from_class_name(type(entity).__name__),
+                        "entity_id": str(entity.id),
+                        "entity_date": entity_date.isoformat(),
+                        "occurred_at": occurred_at.isoformat(),
+                        "entity_patch": entity_patch,
+                    }
+                )
 
             if has_deleted_event:
                 # Delete the entity
@@ -1033,6 +1073,30 @@ class SqlAlchemyUnitOfWork:
                     f"Failed to broadcast DomainEvent {event.__class__.__name__} via PubSub/log: {e}"
                 )
 
+    async def _broadcast_entity_changes_to_redis(self) -> None:
+        """Broadcast entity change events via Redis stream after commit."""
+        if not self._pending_entity_changes:
+            return
+
+        for change in self._pending_entity_changes:
+            try:
+                change_id = str(uuid.uuid4())
+                stored_at = datetime.now(UTC).isoformat()
+                message_with_meta = {
+                    **change,
+                    "id": change_id,
+                    "stored_at": stored_at,
+                }
+                await self._pubsub_gateway.append_to_user_stream(
+                    user_id=self.user_id,
+                    stream_type="entity-changes",
+                    message=message_with_meta,
+                    maxlen=10000,
+                )
+            except Exception as e:
+                logger.error(f"Failed to broadcast entity change via stream: {e}")
+        self._pending_entity_changes.clear()
+
 
 def _extract_entity_date(
     entity: BaseEntityObject,
@@ -1067,6 +1131,11 @@ def _extract_entity_date(
             tz = UTC
         return entity.starts_at.astimezone(tz).date()
 
+    # For entities with a date attribute, use it directly
+    entity_date = getattr(entity, "date", None)
+    if isinstance(entity_date, dt_date):
+        return entity_date
+
     # For other entities, convert occurred_at to user timezone
     try:
         tz = ZoneInfo(user_timezone) if user_timezone else UTC
@@ -1074,6 +1143,38 @@ def _extract_entity_date(
         # Fallback to UTC if timezone is invalid
         return occurred_at.date()
     return occurred_at.astimezone(tz).date()
+
+
+def _should_emit_entity_change(entity: BaseEntityObject) -> bool:
+    """Return True if entity should emit change stream events."""
+    return isinstance(
+        entity,
+        (TaskEntity, CalendarEntryEntity, RoutineEntity, DayEntity),
+    )
+
+
+def _escape_json_pointer(token: str) -> str:
+    return token.replace("~", "~0").replace("/", "~1")
+
+
+def _build_update_patch(update_object: Any) -> list[dict[str, Any]]:
+    """Build a JSON Patch list from a domain update object."""
+    update_dict = dataclass_to_json_dict(update_object)
+    if not isinstance(update_dict, dict):
+        return []
+
+    patch: list[dict[str, Any]] = []
+    for key, value in update_dict.items():
+        if value is None:
+            continue
+        patch.append(
+            {
+                "op": "replace",
+                "path": f"/{_escape_json_pointer(key)}",
+                "value": value,
+            }
+        )
+    return patch
 
 
 def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:

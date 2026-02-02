@@ -76,6 +76,10 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
         """
         return f"{channel_type}:{user_id}"
 
+    def _get_stream_name(self, user_id: UUID, stream_type: str) -> str:
+        """Generate a stream name for a user and stream type."""
+        return f"{stream_type}:{user_id}"
+
     async def publish_to_user_channel(
         self,
         user_id: UUID,
@@ -121,6 +125,92 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
         except Exception as e:
             logger.error(f"Failed to publish message to channel {channel}: {e}")
             raise
+
+    async def append_to_user_stream(
+        self,
+        user_id: UUID,
+        stream_type: str,
+        message: dict[str, Any],
+        *,
+        maxlen: int | None = None,
+    ) -> str:
+        """Append a message to a user-specific Redis stream."""
+        redis = await self._get_redis()
+        stream = self._get_stream_name(user_id, stream_type)
+
+        try:
+            payload = json.dumps(message)
+            fields: dict[str, Any] = {"payload": payload}
+            stream_id = await redis.xadd(
+                stream, fields, maxlen=maxlen, approximate=True if maxlen else False
+            )
+            return stream_id.decode("utf-8") if isinstance(stream_id, bytes) else stream_id
+        except Exception as e:
+            logger.error(f"Failed to append message to stream {stream}: {e}")
+            raise
+
+    async def read_user_stream(
+        self,
+        user_id: UUID,
+        stream_type: str,
+        last_id: str,
+        *,
+        count: int | None = None,
+        block_ms: int | None = None,
+    ) -> list[tuple[str, dict[str, Any]]]:
+        """Read messages from a user-specific Redis stream."""
+        redis = await self._get_redis()
+        stream = self._get_stream_name(user_id, stream_type)
+
+        results = await redis.xread(
+            {stream: last_id},
+            count=count,
+            block=block_ms,
+        )
+        if not results:
+            return []
+
+        entries: list[tuple[str, dict[str, Any]]] = []
+        for _stream_name, stream_entries in results:
+            for entry_id, fields in stream_entries:
+                payload = fields.get(b"payload") if isinstance(fields, dict) else None
+                if payload is None:
+                    continue
+                if isinstance(payload, bytes):
+                    payload_text = payload.decode("utf-8")
+                else:
+                    payload_text = str(payload)
+                try:
+                    message = json.loads(payload_text)
+                except json.JSONDecodeError:
+                    continue
+                entry_id_text = (
+                    entry_id.decode("utf-8") if isinstance(entry_id, bytes) else entry_id
+                )
+                entries.append((entry_id_text, message))
+        return entries
+
+    async def get_latest_user_stream_entry(
+        self, user_id: UUID, stream_type: str
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Get the latest entry from a user-specific Redis stream."""
+        redis = await self._get_redis()
+        stream = self._get_stream_name(user_id, stream_type)
+
+        entries = await redis.xrevrange(stream, max="+", min="-", count=1)
+        if not entries:
+            return None
+        entry_id, fields = entries[0]
+        payload = fields.get(b"payload") if isinstance(fields, dict) else None
+        if payload is None:
+            return None
+        payload_text = payload.decode("utf-8") if isinstance(payload, bytes) else str(payload)
+        try:
+            message = json.loads(payload_text)
+        except json.JSONDecodeError:
+            return None
+        entry_id_text = entry_id.decode("utf-8") if isinstance(entry_id, bytes) else entry_id
+        return entry_id_text, message
 
     def subscribe_to_user_channel(
         self,

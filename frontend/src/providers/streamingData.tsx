@@ -123,6 +123,7 @@ interface WebSocketMessage {
 interface SyncRequestMessage extends WebSocketMessage {
   type: "sync_request";
   since_timestamp?: string | null;
+  since_change_stream_id?: string | null;
 }
 
 interface SyncResponseMessage extends WebSocketMessage {
@@ -131,6 +132,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   changes?: EntityChange[];
   routines?: Routine[];
   last_audit_log_timestamp?: string | null;
+  last_change_stream_id?: string | null;
 }
 
 // Deprecated: audit_log_event messages are no longer sent by the backend
@@ -177,6 +179,9 @@ export function StreamingDataProvider(props: ParentProps) {
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
+  const [lastChangeStreamId, setLastChangeStreamId] = createSignal<string | null>(
+    null,
+  );
 
   const routines = createMemo(() => {
     const context = dayContextStore.data as DayContextWithRoutines | undefined;
@@ -377,7 +382,8 @@ export function StreamingDataProvider(props: ParentProps) {
   const requestIncrementalSync = (sinceTimestamp: string) => {
     const request: SyncRequestMessage = {
       type: "sync_request",
-      since_timestamp: sinceTimestamp,
+      since_timestamp: sinceTimestamp ?? null,
+      since_change_stream_id: lastChangeStreamId(),
     };
     getOrCreateWsClient()?.sendJson(request);
   };
@@ -393,6 +399,9 @@ export function StreamingDataProvider(props: ParentProps) {
 
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      }
+      if (message.last_change_stream_id) {
+        setLastChangeStreamId(message.last_change_stream_id);
       }
       setIsOutOfSync(false);
 
@@ -429,6 +438,9 @@ export function StreamingDataProvider(props: ParentProps) {
       const didApplyChanges = applyChanges(message.changes);
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      }
+      if (message.last_change_stream_id) {
+        setLastChangeStreamId(message.last_change_stream_id);
       }
       if (didApplyChanges && isOnMeRoute() && currentContext) {
         const completedCount = countCompletedTasksFromChanges(
