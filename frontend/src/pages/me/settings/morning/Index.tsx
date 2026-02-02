@@ -67,7 +67,8 @@ const MorningOverviewConfigPage: Component = () => {
       });
       mutate(updated);
 
-      const timeValue = normalizeTimeValue(morningOverviewTime().trim()) || null;
+      const timeValue =
+        normalizeTimeValue(morningOverviewTime().trim()) || null;
       if (user()) {
         await authAPI.updateProfile({
           settings: {

@@ -41,6 +41,7 @@ class ReceiveSmsMessageHandler(
                     "to_number": command.to_number,
                     "payload": command.payload,
                 },
+                triggered_by="sms_inbound",
             )
             message.create()
             message.add_event(

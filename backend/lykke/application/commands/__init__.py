@@ -40,7 +40,12 @@ from .message import (
     ReceiveSmsMessageCommand,
     ReceiveSmsMessageHandler,
 )
-from .notifications import SmartNotificationCommand, SmartNotificationHandler
+from .notifications import (
+    CalendarEntryNotificationCommand,
+    CalendarEntryNotificationHandler,
+    SmartNotificationCommand,
+    SmartNotificationHandler,
+)
 from .task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
@@ -91,6 +96,8 @@ __all__ = [
     "ScheduleDayHandler",
     "SmartNotificationCommand",
     "SmartNotificationHandler",
+    "CalendarEntryNotificationCommand",
+    "CalendarEntryNotificationHandler",
     "SyncAllCalendarsCommand",
     "SyncAllCalendarsHandler",
     "SyncCalendarCommand",

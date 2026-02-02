@@ -74,6 +74,8 @@ from .usecase_config import (
     UseCaseConfigSchema,
 )
 from .user import (
+    CalendarEntryNotificationRuleSchema,
+    CalendarEntryNotificationSettingsSchema,
     UserSchema,
     UserSettingsSchema,
     UserSettingsUpdateSchema,
@@ -167,6 +169,8 @@ __all__ = [
     "CalendarEntrySeriesSchema",
     "CalendarEntrySeriesUpdateSchema",
     "CalendarEntryUpdateSchema",
+    "CalendarEntryNotificationRuleSchema",
+    "CalendarEntryNotificationSettingsSchema",
     "CalendarSchema",
     "CalendarUpdateSchema",
     "DayContextSchema",

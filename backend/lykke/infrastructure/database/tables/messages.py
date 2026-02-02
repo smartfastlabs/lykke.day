@@ -20,6 +20,7 @@ class Message(Base):
     content = Column(Text, nullable=False)  # Message text
     meta = Column(JSONB)  # Provider-specific data
     llm_run_result = Column(JSONB, nullable=True)  # LLMRunResultSnapshot
+    triggered_by = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (

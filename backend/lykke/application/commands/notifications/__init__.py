@@ -1,5 +1,9 @@
 """Commands for smart notifications."""
 
+from .evaluate_calendar_entry_notifications import (
+    CalendarEntryNotificationCommand,
+    CalendarEntryNotificationHandler,
+)
 from .evaluate_morning_overview import MorningOverviewCommand, MorningOverviewHandler
 from .evaluate_smart_notification import (
     SmartNotificationCommand,
@@ -9,6 +13,8 @@ from .evaluate_smart_notification import (
 __all__ = [
     "MorningOverviewCommand",
     "MorningOverviewHandler",
+    "CalendarEntryNotificationCommand",
+    "CalendarEntryNotificationHandler",
     "SmartNotificationCommand",
     "SmartNotificationHandler",
 ]

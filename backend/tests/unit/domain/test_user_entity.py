@@ -57,3 +57,16 @@ def test_user_id_property_aliases_id() -> None:
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="hash")
 
     assert user.user_id == user_id
+
+
+def test_user_settings_calendar_entry_defaults_and_merge() -> None:
+    settings = value_objects.UserSetting()
+    assert settings.calendar_entry_notification_settings.rules
+
+    update = value_objects.UserSettingUpdate.from_dict(
+        {"calendar_entry_notification_settings": {"enabled": False, "rules": []}}
+    )
+    merged = update.merge(settings)
+
+    assert merged.calendar_entry_notification_settings.enabled is False
+    assert merged.calendar_entry_notification_settings.rules == []

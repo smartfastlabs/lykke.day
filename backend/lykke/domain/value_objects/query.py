@@ -179,6 +179,7 @@ class MessageQuery(BaseQuery):
     """Query class for Message entities."""
 
     role: str | None = None
+    triggered_by: str | None = None
 
 
 @dataclass(kw_only=True)

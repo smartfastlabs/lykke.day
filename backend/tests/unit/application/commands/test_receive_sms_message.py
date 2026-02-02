@@ -59,6 +59,7 @@ async def test_receive_sms_sets_message_type_to_inbound() -> None:
     assert result.type == value_objects.MessageType.SMS_INBOUND
     assert uow.added
     assert uow.added[0].type == value_objects.MessageType.SMS_INBOUND
+    assert uow.added[0].triggered_by == "sms_inbound"
     assert len(workers_to_schedule.calls) == 1
     worker, kwargs = workers_to_schedule.calls[0]
     assert worker is worker_tasks.process_inbound_sms_message_task

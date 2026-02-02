@@ -199,6 +199,7 @@ class ProcessInboundSmsHandler(
                         "to_number": from_number,
                         "in_reply_to_message_id": str(inbound_message.id),
                     },
+                    triggered_by="process_inbound_sms",
                 )
                 outgoing.create()
                 outgoing.add_event(

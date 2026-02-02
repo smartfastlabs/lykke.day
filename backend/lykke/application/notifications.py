@@ -1,6 +1,10 @@
 """Utility functions for building notification payloads."""
 
+import datetime
+import random
 from typing import Any
+
+from lykke.core.utils.dates import resolve_timezone
 
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity, TaskEntity
@@ -109,6 +113,34 @@ def build_notification_payload_for_calendar_entries(
     )
 
 
+def build_notification_payload_for_calendar_entry_reminder(
+    entry: CalendarEntryEntity,
+    message: str,
+    *,
+    minutes_before: int,
+    scheduled_for: datetime.datetime,
+) -> value_objects.NotificationPayload:
+    """Build a notification payload for a calendar entry reminder."""
+    return value_objects.NotificationPayload(
+        title=entry.name,
+        body=message,
+        actions=[
+            value_objects.NotificationAction(
+                action="view",
+                title="View Events",
+                icon="📅",
+            ),
+        ],
+        data={
+            "type": "calendar_entry_reminder",
+            "calendar_entry_id": str(entry.id),
+            "starts_at": entry.starts_at.isoformat(),
+            "minutes_before": minutes_before,
+            "scheduled_for": scheduled_for.isoformat(),
+        },
+    )
+
+
 def build_notification_payload_for_calendar_entry_change(
     change_type: str,
     entry_data: dict[str, Any] | CalendarEntryEntity,
@@ -180,6 +212,62 @@ def build_notification_payload_for_calendar_entry_change(
             "calendar_entry": entry_dict,
         },
     )
+
+
+def format_calendar_entry_time(
+    entry: CalendarEntryEntity, timezone: str | None
+) -> str:
+    """Format calendar entry start time for display."""
+    local_dt = entry.starts_at.astimezone(resolve_timezone(timezone))
+    formatted = local_dt.strftime("%I:%M %p")
+    return formatted.lstrip("0")
+
+
+def format_calendar_entry_when(minutes_before: int) -> str:
+    """Format the relative time string for reminders."""
+    if minutes_before <= 0:
+        return "now"
+    if minutes_before == 1:
+        return "in 1 minute"
+    return f"in {minutes_before} minutes"
+
+
+_PUSH_TEMPLATES = [
+    "{title} starts {when} ({time}).",
+    "Upcoming: {title} at {time} ({when}).",
+    "Calendar reminder: {title} ({when}).",
+    "{title} kicks off {when} at {time}.",
+    "Event alert: {title} {when} ({time}).",
+]
+
+_TEXT_TEMPLATES = [
+    "Reminder: {title} starts {when} ({time}).",
+    "Heads up: {title} at {time} ({when}).",
+    "{title} begins {when} at {time}.",
+    "Calendar: {title} {when} ({time}).",
+    "Upcoming meeting: {title} at {time} ({when}).",
+]
+
+_KIOSK_TEMPLATES = [
+    "{title} starts {when}.",
+    "Meeting time: {title} {when}.",
+    "Event now: {title}.",
+    "{title} is starting {when}.",
+    "Calendar alert: {title} {when}.",
+]
+
+
+def pick_calendar_entry_message_template(
+    channel: value_objects.CalendarEntryNotificationChannel,
+    seed: str,
+) -> str:
+    """Pick a deterministic template for a calendar entry reminder."""
+    rng = random.Random(seed)
+    if channel == value_objects.CalendarEntryNotificationChannel.TEXT:
+        return rng.choice(_TEXT_TEMPLATES)
+    if channel == value_objects.CalendarEntryNotificationChannel.KIOSK_ALARM:
+        return rng.choice(_KIOSK_TEMPLATES)
+    return rng.choice(_PUSH_TEMPLATES)
 
 
 def build_notification_payload_for_smart_notification(

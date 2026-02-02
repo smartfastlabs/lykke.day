@@ -14,6 +14,7 @@ class MessageSchema(BaseEntitySchema):
     role: str
     content: str
     meta: dict[str, Any] | None = None
+    triggered_by: str | None = None
     created_at: datetime
 
 

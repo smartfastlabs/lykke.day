@@ -113,6 +113,12 @@ const settingsSections: SettingsSection[] = [
         url: "/me/settings/notifications",
       },
       {
+        label: "Calendar Reminders",
+        description: "Configure calendar entry reminders.",
+        icon: faCalendar,
+        url: "/me/settings/calendar-notifications",
+      },
+      {
         label: "Morning Overview",
         description: "Configure your daily morning summary.",
         icon: faSun,

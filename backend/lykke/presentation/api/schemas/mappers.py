@@ -542,6 +542,7 @@ def map_message_to_schema(message: MessageEntity) -> MessageSchema:
         role=message.role.value,
         content=message.content,
         meta=message.meta,
+        triggered_by=message.triggered_by,
         created_at=message.created_at,
     )
 

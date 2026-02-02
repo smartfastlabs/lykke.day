@@ -23,6 +23,7 @@ class MessageEntity(BaseEntityObject):
     content: str
     meta: dict[str, Any] = field(default_factory=dict)  # Provider-specific metadata
     llm_run_result: value_objects.LLMRunResultSnapshot | None = None
+    triggered_by: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def get_content_preview(self, max_length: int = 100) -> str:

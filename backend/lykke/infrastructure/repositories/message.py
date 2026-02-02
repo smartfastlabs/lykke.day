@@ -35,6 +35,8 @@ class MessageRepository(
         # Add message-specific filtering
         if query.role is not None:
             stmt = stmt.where(self.table.c.role == query.role)
+        if query.triggered_by is not None:
+            stmt = stmt.where(self.table.c.triggered_by == query.triggered_by)
 
         return stmt
 
@@ -51,6 +53,7 @@ class MessageRepository(
             "llm_run_result": dataclass_to_json_dict(message.llm_run_result)
             if message.llm_run_result
             else None,
+            "triggered_by": message.triggered_by,
             "created_at": message.created_at,
         }
 

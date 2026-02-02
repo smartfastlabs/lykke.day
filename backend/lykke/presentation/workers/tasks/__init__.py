@@ -13,6 +13,7 @@ from .calendar import (
     sync_single_calendar_task,
 )
 from .common import (
+    get_calendar_entry_notification_handler,
     get_google_gateway,
     get_morning_overview_handler,
     get_process_brain_dump_handler,
@@ -33,6 +34,8 @@ from .new_day import (
     emit_new_day_event_for_user_task,
 )
 from .notifications import (
+    evaluate_calendar_entry_notifications_for_all_users_task,
+    evaluate_calendar_entry_notifications_task,
     evaluate_morning_overview_task,
     evaluate_morning_overviews_for_all_users_task,
     evaluate_smart_notification_task,
@@ -61,12 +64,15 @@ __all__ = [
     "clear_worker_overrides",
     "emit_new_day_event_for_all_users_task",
     "emit_new_day_event_for_user_task",
+    "evaluate_calendar_entry_notifications_for_all_users_task",
+    "evaluate_calendar_entry_notifications_task",
     "evaluate_morning_overview_task",
     "evaluate_morning_overviews_for_all_users_task",
     "evaluate_smart_notification_task",
     "evaluate_smart_notifications_for_all_users_task",
     "example_triggered_task",
     "get_google_gateway",
+    "get_calendar_entry_notification_handler",
     "get_morning_overview_handler",
     "get_process_brain_dump_handler",
     "get_process_inbound_sms_handler",

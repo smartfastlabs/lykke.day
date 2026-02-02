@@ -22,6 +22,7 @@ from lykke.application.commands.day.schedule_day import ScheduleDayHandler
 from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
 from lykke.application.commands.message import ProcessInboundSmsHandler
 from lykke.application.commands.notifications import (
+    CalendarEntryNotificationHandler,
     MorningOverviewHandler,
     SmartNotificationHandler,
 )
@@ -311,6 +312,18 @@ def _build_smart_notification_handler(
     )
 
 
+def _build_calendar_entry_notification_handler(
+    factory: CommandHandlerFactory,
+) -> CalendarEntryNotificationHandler:
+    return CalendarEntryNotificationHandler(
+        factory.ro_repos,
+        factory.uow_factory,
+        factory.user_id,
+        factory.create(SendPushNotificationHandler),
+        factory.sms_gateway,
+    )
+
+
 def _build_morning_overview_handler(
     factory: CommandHandlerFactory,
 ) -> MorningOverviewHandler:
@@ -370,6 +383,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     SendPushNotificationHandler: _build_send_push_notification_handler,
     HandleGoogleLoginCallbackHandler: _build_google_login_callback_handler,
     SmartNotificationHandler: _build_smart_notification_handler,
+    CalendarEntryNotificationHandler: _build_calendar_entry_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
     ProcessBrainDumpHandler: _build_process_brain_dump_handler,
     ProcessInboundSmsHandler: _build_process_inbound_sms_handler,

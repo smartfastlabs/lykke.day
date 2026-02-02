@@ -9,6 +9,7 @@ from loguru import logger
 from taskiq_dependencies import Depends
 
 from lykke.application.commands.notifications import (
+    CalendarEntryNotificationCommand,
     MorningOverviewCommand,
     SmartNotificationCommand,
 )
@@ -27,6 +28,7 @@ from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
 from .common import (
+    get_calendar_entry_notification_handler,
     get_morning_overview_handler,
     get_read_only_repository_factory,
     get_smart_notification_handler,
@@ -70,6 +72,37 @@ async def evaluate_smart_notifications_for_all_users_task(
 
     logger.info(
         f"Enqueued smart notification evaluation tasks for {len(users_with_llm)} users"
+    )
+
+
+@broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+async def evaluate_calendar_entry_notifications_for_all_users_task(
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    *,
+    enqueue_task: _EnqueueTask | None = None,
+) -> None:
+    """Evaluate calendar entry reminders for all eligible users."""
+    logger.info("Starting calendar entry notification evaluation for all users")
+    users = await user_repo.all()
+    eligible_users = [
+        user
+        for user in users
+        if user.settings
+        and user.settings.calendar_entry_notification_settings.enabled
+        and user.settings.calendar_entry_notification_settings.rules
+    ]
+    logger.info(
+        "Found %s users eligible for calendar entry notifications",
+        len(eligible_users),
+    )
+
+    task = enqueue_task or evaluate_calendar_entry_notifications_task
+    for user in eligible_users:
+        await task.kiq(user_id=user.id, triggered_by="scheduled")
+
+    logger.info(
+        "Enqueued calendar entry notification evaluation tasks for %s users",
+        len(eligible_users),
     )
 
 
@@ -118,6 +151,51 @@ async def evaluate_smart_notification_task(
         except Exception:  # pylint: disable=broad-except
             logger.exception(f"Error evaluating smart notification for user {user_id}")
 
+    finally:
+        await pubsub_gateway.close()
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def evaluate_calendar_entry_notifications_task(
+    user_id: UUID,
+    triggered_by: str | None = None,
+    *,
+    handler: _NotificationHandler[CalendarEntryNotificationCommand] | None = None,
+    uow_factory: UnitOfWorkFactory | None = None,
+    ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
+    pubsub_gateway: RedisPubSubGateway | None = None,
+) -> None:
+    """Evaluate calendar entry reminders for a specific user."""
+    logger.info(
+        "Starting calendar entry notification evaluation for user %s", user_id
+    )
+    pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
+    try:
+        resolved_handler: _NotificationHandler[CalendarEntryNotificationCommand]
+        if handler is None:
+            resolved_handler = get_calendar_entry_notification_handler(
+                user_id=user_id,
+                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+            )
+        else:
+            resolved_handler = handler
+
+        try:
+            await resolved_handler.handle(
+                CalendarEntryNotificationCommand(
+                    user_id=user_id,
+                    triggered_by=triggered_by,
+                )
+            )
+            logger.debug(
+                "Calendar entry notification evaluation completed for user %s",
+                user_id,
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Error evaluating calendar entry notifications for user %s", user_id
+            )
     finally:
         await pubsub_gateway.close()
 

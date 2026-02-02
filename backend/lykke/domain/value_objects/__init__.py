@@ -99,7 +99,14 @@ from .update import (
     UserUpdateObject,
 )
 from .usecase_config import NotificationUseCaseConfig
-from .user import UserSetting, UserSettingUpdate, UserStatus
+from .user import (
+    CalendarEntryNotificationChannel,
+    CalendarEntryNotificationRule,
+    CalendarEntryNotificationSettings,
+    UserSetting,
+    UserSettingUpdate,
+    UserStatus,
+)
 
 __all__ = [
     "Action",
@@ -127,6 +134,9 @@ __all__ = [
     "CalendarEntryUpdateObject",
     "CalendarQuery",
     "CalendarSubscription",
+    "CalendarEntryNotificationChannel",
+    "CalendarEntryNotificationRule",
+    "CalendarEntryNotificationSettings",
     "CalendarUpdateObject",
     "DateQuery",
     "DayContext",
