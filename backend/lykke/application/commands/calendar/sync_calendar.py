@@ -150,9 +150,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         series_changed_ids: set[UUID] = set()
         for series in fetched_series:
             try:
-                existing_series = await uow.calendar_entry_series_ro_repo.get(
-                    series.id
-                )
+                existing_series = await uow.calendar_entry_series_ro_repo.get(series.id)
             except NotFoundError:
                 series.create()
                 uow.add(series)
@@ -241,9 +239,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     entry_update_object = CalendarEntryUpdateObject(
                         **entry_update_fields
                     )
-                    if should_emit_series_notification(
-                        entry.calendar_entry_series_id
-                    ):
+                    if should_emit_series_notification(entry.calendar_entry_series_id):
                         updated_entry = existing_entry.apply_calendar_entry_update(
                             entry_update_object
                         )
@@ -263,9 +259,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 if series_for_update is None:
                     continue
                 series_entries = await uow.calendar_entry_ro_repo.search(
-                    value_objects.CalendarEntryQuery(
-                        calendar_entry_series_id=series_id
-                    )
+                    value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
                 )
                 for entry in series_entries:
                     cascade_update_fields: dict[str, Any] = {}
@@ -276,23 +270,19 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                             series_for_update.event_category
                         )
                     if entry.frequency != series_for_update.frequency:
-                        cascade_update_fields["frequency"] = (
-                            series_for_update.frequency
-                        )
+                        cascade_update_fields["frequency"] = series_for_update.frequency
 
                     if cascade_update_fields:
                         cascade_update_object = CalendarEntryUpdateObject(
                             **cascade_update_fields
                         )
                         if should_emit_series_notification(series_id):
-                            updated_entry = (
-                                entry.apply_calendar_entry_update(cascade_update_object)
+                            updated_entry = entry.apply_calendar_entry_update(
+                                cascade_update_object
                             )
                         else:
-                            updated_entry = (
-                                entry.apply_calendar_entry_update_silently(
-                                    cascade_update_object
-                                )
+                            updated_entry = entry.apply_calendar_entry_update_silently(
+                                cascade_update_object
                             )
                         uow.add(updated_entry)
 
@@ -301,6 +291,12 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         deleted_platform_ids: set[str] = set()
         deleted_entry_ids: set[UUID] = set()
         series_ids_with_deletions: set[UUID] = set(cancelled_series_ids)
+        deleted_series_ids = {
+            entry.calendar_entry_series_id
+            for entry in fetched_deleted_entries
+            if entry.calendar_entry_series_id
+        }
+        series_ids_with_deletions.update(deleted_series_ids)
         platform_ids_to_delete = [
             pid
             for pid in (
@@ -332,9 +328,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         if series_ids_with_deletions:
             for series_id in series_ids_with_deletions:
                 existing_series_entries = await uow.calendar_entry_ro_repo.search(
-                    value_objects.CalendarEntryQuery(
-                        calendar_entry_series_id=series_id
-                    )
+                    value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
                 )
                 future_entries = [
                     entry
@@ -359,8 +353,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 series_for_delete = series_by_id.get(series_id)
                 if series_for_delete is None:
                     try:
-                        series_for_delete = (
-                            await uow.calendar_entry_series_ro_repo.get(series_id)
+                        series_for_delete = await uow.calendar_entry_series_ro_repo.get(
+                            series_id
                         )
                     except NotFoundError:
                         series_for_delete = None
