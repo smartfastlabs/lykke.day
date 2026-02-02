@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from freezegun import freeze_time
 
-from lykke.domain.entities import CalendarEntity
+from lykke.domain.entities import CalendarEntity, CalendarEntrySeriesEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 
@@ -212,3 +212,23 @@ def test_google_event_to_entity_normalizes_missing_summary() -> None:
 
     assert series is None
     assert entry.name == "(no title)"
+
+
+def test_is_instance_exception_true_when_original_start_time() -> None:
+    """Events with originalStartTime and a series are instance exceptions."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-1")
+    event = {"originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"}}
+    assert GoogleCalendarGateway._is_instance_exception(event, series_id) is True
+
+
+def test_is_instance_exception_false_when_no_original_start_time() -> None:
+    """Events without originalStartTime are not instance exceptions."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-1")
+    event = {"start": {"dateTime": "2026-02-04T08:15:00Z"}}
+    assert GoogleCalendarGateway._is_instance_exception(event, series_id) is False
+
+
+def test_is_instance_exception_false_when_no_series() -> None:
+    """Standalone events (no series_id) are not instance exceptions."""
+    event = {"originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"}}
+    assert GoogleCalendarGateway._is_instance_exception(event, None) is False

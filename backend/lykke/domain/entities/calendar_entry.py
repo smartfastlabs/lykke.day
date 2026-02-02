@@ -42,6 +42,9 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
     actions: list[value_objects.Action] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
     user_timezone: str | None = field(default=None, repr=False)
+    # Set by gateway when Google event has originalStartTime (modified occurrence).
+    # Not persisted; used during sync to classify instance-level vs series-level changes.
+    is_instance_exception: bool = field(default=False, repr=False)
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

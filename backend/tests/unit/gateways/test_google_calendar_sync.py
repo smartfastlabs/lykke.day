@@ -820,3 +820,75 @@ async def test_sync_calendar_series_creation_emits_single_notification(
         if isinstance(event, CalendarEntryCreatedEvent)
     )
     assert created_event_count == 1
+
+
+@pytest.mark.asyncio
+async def test_sync_calendar_instance_level_single_entry_emits_notification(
+    test_user_id,
+    test_calendar,
+    mock_ro_repos,
+    mock_uow_factory,
+    mock_uow,
+    mock_google_gateway,
+    mock_calendar_entry_series_repo,
+    mock_calendar_entry_repo,
+):
+    """Single entry for a series (instance-level) should emit one notification (per-instance)."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-single")
+    new_series = CalendarEntrySeriesEntity(
+        id=series_id,
+        user_id=test_user_id,
+        calendar_id=test_calendar.id,
+        name="Single Instance Series",
+        platform_id="series-single",
+        platform="google",
+        frequency=TaskFrequency.WEEKLY,
+    )
+    single_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Single Instance Series",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="entry-single-1",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 4, 1, 9, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 4, 1, 10, 0, tzinfo=UTC),
+        frequency=TaskFrequency.WEEKLY,
+    )
+
+    allow(mock_calendar_entry_series_repo).get.and_raise(NotFoundError("missing"))
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([single_entry], [], [new_series], [], "new-sync-token")
+    )
+
+    async def search_entries(_: object) -> list[CalendarEntryEntity]:
+        return []
+
+    mock_calendar_entry_repo.search = search_entries
+    mock_uow.calendar_entry_ro_repo.search = search_entries
+
+    async def get_user(_: object) -> object:
+        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
+
+    mock_uow.user_ro_repo.get = get_user
+
+    handler = SyncCalendarHandler(
+        ro_repos=mock_ro_repos,
+        uow_factory=mock_uow_factory,
+        user_id=test_user_id,
+        google_gateway=mock_google_gateway,
+    )
+
+    await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
+
+    created_entries = [
+        entity for entity in mock_uow.added if isinstance(entity, CalendarEntryEntity)
+    ]
+    created_event_count = sum(
+        1
+        for entry in created_entries
+        for event in entry.collect_events()
+        if isinstance(event, CalendarEntryCreatedEvent)
+    )
+    assert created_event_count == 1

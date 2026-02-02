@@ -1,5 +1,6 @@
 """Command to sync calendar entries from external calendar providers."""
 
+from collections import defaultdict
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -135,15 +136,36 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         ]
         current_time = datetime.now(UTC)
 
-        series_notification_sent: set[UUID] = set()
+        # Classify series-level vs instance-level: multiple entries for same series
+        # in this batch = series-level change (notify once); single entry or standalone = instance-level.
+        entries_by_series: dict[UUID | None, list[CalendarEntryEntity]] = (
+            defaultdict(list)
+        )
+        for entry in entries_to_upsert:
+            entries_by_series[entry.calendar_entry_series_id].append(entry)
+        series_level_series_ids: set[UUID] = {
+            sid
+            for sid, entries in entries_by_series.items()
+            if sid is not None and len(entries) > 1
+        }
+        # One representative entry per series-level series (earliest by starts_at) gets the notification.
+        representative_entry_platform_ids: set[str] = set()
+        for sid in series_level_series_ids:
+            group = entries_by_series[sid]
+            if group:
+                rep = min(group, key=lambda e: e.starts_at)
+                representative_entry_platform_ids.add(rep.platform_id)
 
-        def should_emit_series_notification(series_id: UUID | None) -> bool:
-            if series_id is None:
+        def should_emit_entry_notification(entry: CalendarEntryEntity) -> bool:
+            """Emit one notification per series-level change; per-instance for instance-level."""
+            if entry.calendar_entry_series_id is None:
                 return True
-            if series_id in series_notification_sent:
-                return False
-            series_notification_sent.add(series_id)
-            return True
+            if entry.calendar_entry_series_id not in series_level_series_ids:
+                return True
+            return entry.platform_id in representative_entry_platform_ids
+
+        # One notification per series when deleting (used in both delete loops).
+        series_delete_notification_emitted: set[UUID] = set()
 
         # Process series
         series_by_id: dict[UUID, CalendarEntrySeriesEntity] = {}
@@ -205,7 +227,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             existing_entry = existing_entries_map.get(entry.platform_id)
             if existing_entry is None:
                 # New entry - create it
-                if should_emit_series_notification(entry.calendar_entry_series_id):
+                if should_emit_entry_notification(entry):
                     entry.create()
                 else:
                     entry.create_silently()
@@ -239,7 +261,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     entry_update_object = CalendarEntryUpdateObject(
                         **entry_update_fields
                     )
-                    if should_emit_series_notification(entry.calendar_entry_series_id):
+                    if should_emit_entry_notification(entry):
                         updated_entry = existing_entry.apply_calendar_entry_update(
                             entry_update_object
                         )
@@ -252,7 +274,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     uow.add(updated_entry)
                 # If no changes, skip (entry already exists and is up to date)
 
-        # Apply series updates to all associated entries
+        # Apply series updates to all associated entries (one notification per series when cascading).
+        cascade_notification_emitted: set[UUID] = set()
         if series_changed_ids:
             for series_id in series_changed_ids:
                 series_for_update = series_by_id.get(series_id)
@@ -261,7 +284,11 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 series_entries = await uow.calendar_entry_ro_repo.search(
                     value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
                 )
-                for entry in series_entries:
+                # Sort so we have a deterministic representative (earliest by starts_at)
+                series_entries_sorted = sorted(
+                    series_entries, key=lambda e: (e.starts_at, e.platform_id)
+                )
+                for entry in series_entries_sorted:
                     cascade_update_fields: dict[str, Any] = {}
                     if entry.name != series_for_update.name:
                         cascade_update_fields["name"] = series_for_update.name
@@ -276,13 +303,25 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                         cascade_update_object = CalendarEntryUpdateObject(
                             **cascade_update_fields
                         )
-                        if should_emit_series_notification(series_id):
+                        # Emit only when no entries for this series were in the batch (so we did not already emit in Process entries).
+                        had_entries_in_batch = len(
+                            entries_by_series.get(series_id, [])
+                        ) > 0
+                        emit_cascade = (
+                            series_id not in cascade_notification_emitted
+                            and not had_entries_in_batch
+                        )
+                        if emit_cascade:
+                            cascade_notification_emitted.add(series_id)
+                        if emit_cascade:
                             updated_entry = entry.apply_calendar_entry_update(
                                 cascade_update_object
                             )
                         else:
-                            updated_entry = entry.apply_calendar_entry_update_silently(
-                                cascade_update_object
+                            updated_entry = (
+                                entry.apply_calendar_entry_update_silently(
+                                    cascade_update_object
+                                )
                             )
                         uow.add(updated_entry)
 
@@ -316,9 +355,15 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             for entry in entries_to_delete:
                 if entry.starts_at < current_time:
                     continue
-                if entry.calendar_entry_series_id:
-                    series_ids_with_deletions.add(entry.calendar_entry_series_id)
-                if should_emit_series_notification(entry.calendar_entry_series_id):
+                entry_series_id = entry.calendar_entry_series_id
+                if entry_series_id is not None:
+                    series_ids_with_deletions.add(entry_series_id)
+                emit = entry_series_id is None or (
+                    entry_series_id not in series_delete_notification_emitted
+                )
+                if emit and entry_series_id is not None:
+                    series_delete_notification_emitted.add(entry_series_id)
+                if emit:
                     entry.delete()
                 else:
                     entry.delete_silently()
@@ -339,11 +384,14 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     not in upsert_platform_ids_by_series.get(series_id, set())
                 ]
 
-                # Delete any future entries for the series not already marked
+                # Delete any future entries for the series not already marked (one notification per series).
                 for entry in future_entries:
                     if entry.id in deleted_entry_ids:
                         continue
-                    if should_emit_series_notification(series_id):
+                    emit = series_id not in series_delete_notification_emitted
+                    if emit:
+                        series_delete_notification_emitted.add(series_id)
+                    if emit:
                         entry.delete()
                     else:
                         entry.delete_silently()

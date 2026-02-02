@@ -3,7 +3,7 @@ import json
 import re
 from datetime import UTC, datetime
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -23,9 +23,6 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
 )
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -82,7 +79,6 @@ def _parse_recurrence_frequency(
             byday_match = re.search(r"BYDAY=([A-Z,]+)", rule)
             if byday_match:
                 days = set(byday_match.group(1).split(","))
-                print(days)
                 # If more than one day specified, it's a custom weekly schedule
                 if days == {"MO", "TU", "WE", "TH", "FR"}:
                     return value_objects.TaskFrequency.WEEK_DAYS
@@ -270,6 +266,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             if series_entity and series_entity.event_category
             else calendar.default_event_category
         )
+        is_instance_exception = self._is_instance_exception(event, series_id)
         entry = CalendarEntryEntity(
             user_id=calendar.user_id,
             calendar_id=calendar.id,
@@ -286,9 +283,25 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             timezone=event.get("start", {}).get("timeZone") or user_timezone,
             user_timezone=user_timezone,
             category=entry_category,
+            is_instance_exception=is_instance_exception,
         )
 
         return entry, series_entity
+
+    @staticmethod
+    def _is_instance_exception(event: dict[str, Any], series_id: UUID | None) -> bool:
+        """Classify whether this Google event is a single-instance exception.
+
+        Instance exceptions are recurring occurrences that were explicitly modified
+        (e.g. moved or retitled). Google sets originalStartTime when the instance
+        was changed from the default.
+
+        Returns:
+            True if the event represents an instance-level exception; False otherwise.
+        """
+        if series_id is None:
+            return False
+        return bool(event.get("originalStartTime"))
 
     def _determine_frequency(
         self,
