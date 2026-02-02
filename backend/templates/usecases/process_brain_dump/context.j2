@@ -18,7 +18,7 @@
   name: {{ task.name }}
   status: {{ task.status.value }}
   category: {{ task.category.value }}
-  scheduled_date: {{ task.scheduled_date.isoformat() }}
+  scheduled_date: {{ fmt_date(task.scheduled_date) }}
   {{- kv_line("  ", "description", task.description) -}}
   {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
   {% set schedule = task.schedule %}

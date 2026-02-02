@@ -1,7 +1,7 @@
 - name: {{ routine.name }}
   status: {{ routine.status.value }}
   category: {{ routine.category.value }}
-  date: {{ routine.date.isoformat() }}{% if routine.description %}
+  date: {{ fmt_date(routine.date) }}{% if routine.description %}
   description: {{ routine.description }}{% endif %}
   {% if routine.snoozed_until %}snoozed_until: {{ fmt_datetime(routine.snoozed_until) }}{% endif %}
   {% set time_window = routine.time_window %}

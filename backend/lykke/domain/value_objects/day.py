@@ -44,6 +44,7 @@ class AlarmType(str, Enum):
 
     URL = "URL"
     GENERIC = "GENERIC"
+    KIOSK = "KIOSK"
 
 
 class AlarmStatus(str, Enum):

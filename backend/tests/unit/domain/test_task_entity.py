@@ -4,7 +4,6 @@ import datetime
 
 import pytest
 
-from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
@@ -84,12 +83,15 @@ def test_record_action_status_transitions(
 
 
 def test_record_action_complete_already_complete(test_task: TaskEntity) -> None:
-    """Test record_action raises error when completing already complete task."""
+    """Test record_action allows completing an already complete task."""
     test_task.status = value_objects.TaskStatus.COMPLETE
     action = value_objects.Action(type=value_objects.ActionType.COMPLETE)
 
-    with pytest.raises(DomainError, match="already complete"):
-        test_task.record_action(action)
+    old_status = test_task.record_action(action)
+
+    assert old_status == value_objects.TaskStatus.COMPLETE
+    assert test_task.status == value_objects.TaskStatus.COMPLETE
+    assert test_task.completed_at is not None
 
 
 def test_record_action_snooze_sets_snoozed_until(test_task: TaskEntity) -> None:

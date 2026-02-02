@@ -33,15 +33,20 @@ def test_task_snooze_requires_timestamp() -> None:
         task.record_action(action)
 
 
-def test_task_snooze_rejects_completed_task() -> None:
+def test_task_snooze_allows_completed_task() -> None:
     task = _build_task(value_objects.TaskStatus.COMPLETE)
+    completed_at = datetime(2025, 11, 27, 8, 0, tzinfo=UTC)
+    task.completed_at = completed_at
     action = value_objects.Action(
         type=value_objects.ActionType.SNOOZE,
         data={"snoozed_until": datetime(2025, 11, 27, 10, 0, tzinfo=UTC)},
     )
 
-    with pytest.raises(DomainError, match="completed task"):
-        task.record_action(action)
+    task.record_action(action)
+
+    assert task.status == value_objects.TaskStatus.SNOOZE
+    assert task.snoozed_until == action.data["snoozed_until"]
+    assert task.completed_at is None
 
 
 def test_task_records_other_actions_without_status_change() -> None:
@@ -52,4 +57,5 @@ def test_task_records_other_actions_without_status_change() -> None:
 
     assert task.status == value_objects.TaskStatus.READY
     events = task.collect_events()
+    assert any(isinstance(event, TaskStateUpdatedEvent) for event in events)
     assert any(isinstance(event, TaskStateUpdatedEvent) for event in events)

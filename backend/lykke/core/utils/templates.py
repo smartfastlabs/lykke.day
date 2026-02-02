@@ -1,5 +1,6 @@
 import re
 import textwrap
+from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any
 
@@ -10,9 +11,75 @@ BASE_PERSONALITY_DIR = "base_personalities"
 DEFAULT_BASE_PERSONALITY_SLUG = "default"
 
 
+def _coerce_time(value: Any) -> time:
+    if isinstance(value, datetime):
+        return value.time()
+    if isinstance(value, time):
+        return value
+    raise TypeError(f"Expected datetime or time, got {type(value)!r}")
+
+
 @pass_context
 def fmt_time(_context: dict[str, Any], value: Any) -> str:
-    return str(value.strftime("%I:%M%p")).lower()
+    return _format_time(_coerce_time(value))
+
+
+def _format_time(value: time) -> str:
+    return value.strftime("%I:%M%p").lstrip("0").lower()
+
+
+def _pluralize(value: int, unit: str) -> str:
+    suffix = "" if value == 1 else "s"
+    return f"{value} {unit}{suffix}"
+
+
+def _relative_days_label(delta_days: int) -> str:
+    if delta_days == 0:
+        return "today"
+    if delta_days == 1:
+        return "tomorrow"
+    if delta_days == -1:
+        return "yesterday"
+    if delta_days > 1:
+        return f"in {_pluralize(delta_days, 'day')}"
+    return f"{_pluralize(abs(delta_days), 'day')} ago"
+
+
+def _relative_duration_label(delta_seconds: float) -> str:
+    is_future = delta_seconds > 0
+    abs_seconds = abs(delta_seconds)
+
+    if abs_seconds < 30:
+        return "now"
+    if abs_seconds < 60:
+        amount = 1
+        unit = "minute"
+    elif abs_seconds < 60 * 60:
+        amount = max(1, int(round(abs_seconds / 60)))
+        unit = "minute"
+    elif abs_seconds < 60 * 60 * 24:
+        amount = max(1, int(round(abs_seconds / (60 * 60))))
+        unit = "hour"
+    else:
+        amount = max(1, int(round(abs_seconds / (60 * 60 * 24))))
+        unit = "day"
+
+    label = _pluralize(amount, unit)
+    return f"in {label}" if is_future else f"{label} ago"
+
+
+@pass_context
+def fmt_date(context: dict[str, Any], value: Any) -> str:
+    current_time = context.get("current_time")
+    target_date = value.date() if isinstance(value, datetime) else value
+    if current_time is None:
+        return target_date.isoformat()
+    if isinstance(value, datetime) and current_time.tzinfo and value.tzinfo:
+        value = value.astimezone(current_time.tzinfo)
+        target_date = value.date()
+    delta_days = (target_date - current_time.date()).days
+    label = _relative_days_label(delta_days)
+    return f"{target_date.isoformat()} ({label})"
 
 
 @pass_context
@@ -20,7 +87,17 @@ def fmt_datetime(context: dict[str, Any], value: Any) -> str:
     current_time = context.get("current_time")
     if current_time is not None and value.tzinfo and current_time.tzinfo:
         value = value.astimezone(current_time.tzinfo)
-    return f"{value.date().isoformat()} {value.strftime('%I:%M%p').lower()}"
+    if current_time is None:
+        return f"{value.date().isoformat()} at {_format_time(value)}"
+
+    delta_days = (value.date() - current_time.date()).days
+    if delta_days == 0:
+        return f"Today at {_format_time(value)}"
+    if delta_days == 1:
+        return f"Tomorrow at {_format_time(value)}"
+    if delta_days == -1:
+        return f"Yesterday at {_format_time(value)}"
+    return f"{value.date().isoformat()} at {_format_time(value)}"
 
 
 def kv_line(indent: str, key: str, value: Any) -> str:
@@ -31,6 +108,7 @@ def kv_line(indent: str, key: str, value: Any) -> str:
 
 def _register_template_helpers(environment: Environment) -> None:
     environment.globals["fmt_time"] = fmt_time
+    environment.globals["fmt_date"] = fmt_date
     environment.globals["fmt_datetime"] = fmt_datetime
     environment.globals["kv_line"] = kv_line
 

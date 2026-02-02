@@ -101,23 +101,12 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
             get_user_manager,
         )
 
-        logger.debug("get_current_user_from_token: getting session...")
         async for session in get_async_session():
-            logger.debug("get_current_user_from_token: got session, getting user_db...")
             async for user_db in get_user_db(session):
-                logger.debug(
-                    "get_current_user_from_token: got user_db, getting user_manager..."
-                )
                 async for user_manager in get_user_manager(user_db):
-                    logger.debug(
-                        "get_current_user_from_token: got user_manager, reading token..."
-                    )
                     jwt_strategy = get_jwt_strategy()
                     result: Any = await jwt_strategy.read_token(
                         token, user_manager=user_manager
-                    )
-                    logger.debug(
-                        f"get_current_user_from_token: jwt result type={type(result)}"
                     )
 
                     if result is None:

@@ -5,12 +5,12 @@ from uuid import UUID
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
-from lykke.domain.value_objects.update import TaskUpdateObject
 from lykke.domain.events.task_events import (
     TaskCreatedEvent,
     TaskStateUpdatedEvent,
     TaskUpdatedEvent,
 )
+from lykke.domain.value_objects.update import TaskUpdateObject
 
 from .auditable import AuditableEntity
 from .base import BaseEntityObject
@@ -77,20 +77,20 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         self.actions.append(action)
 
         if action.type == value_objects.ActionType.COMPLETE:
-            if self.status == value_objects.TaskStatus.COMPLETE:
-                raise DomainError("Task is already complete")
             self.status = value_objects.TaskStatus.COMPLETE
             self.completed_at = datetime.now(UTC)
+            self.snoozed_until = None
         elif action.type == value_objects.ActionType.PUNT:
             self.status = value_objects.TaskStatus.PUNT
+            self.completed_at = None
+            self.snoozed_until = None
         elif action.type == value_objects.ActionType.SNOOZE:
             snoozed_until = ensure_utc(action.data.get("snoozed_until"))
             if snoozed_until is None:
                 raise DomainError("Snooze action requires snoozed_until")
-            if self.status == value_objects.TaskStatus.COMPLETE:
-                raise DomainError("Cannot snooze a completed task")
             self.status = value_objects.TaskStatus.SNOOZE
             self.snoozed_until = snoozed_until
+            self.completed_at = None
         elif action.type == value_objects.ActionType.NOTIFY:
             pass
         else:
@@ -130,6 +130,8 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
 
         old_status = self.status
         self.status = value_objects.TaskStatus.PENDING
+        self.completed_at = None
+        self.snoozed_until = None
         return old_status
 
     def mark_ready(self) -> value_objects.TaskStatus:
@@ -146,6 +148,8 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
 
         old_status = self.status
         self.status = value_objects.TaskStatus.READY
+        self.completed_at = None
+        self.snoozed_until = None
         return old_status
 
     def is_eligible_for_upcoming(

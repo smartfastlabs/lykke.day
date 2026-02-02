@@ -216,7 +216,11 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         old_status = task.record_action(action)
 
         # Raise domain events on behalf of the aggregate
-        if action.type == value_objects.ActionType.COMPLETE and task.completed_at:
+        if (
+            action.type == value_objects.ActionType.COMPLETE
+            and old_status != value_objects.TaskStatus.COMPLETE
+            and task.completed_at
+        ):
             self._add_event(
                 TaskCompletedEvent(
                     user_id=self.user_id,

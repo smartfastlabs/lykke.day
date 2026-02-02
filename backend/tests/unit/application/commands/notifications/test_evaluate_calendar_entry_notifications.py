@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, date as dt_date, datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
@@ -27,6 +27,7 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     UserEntity,
 )
+from lykke.domain.events.day_events import AlarmTriggeredEvent
 from tests.support.dobles import (
     create_calendar_entry_repo_double,
     create_day_repo_double,
@@ -284,7 +285,7 @@ async def test_calendar_entry_text_creates_message_and_sends_sms() -> None:
 
 @pytest.mark.asyncio
 @freeze_time("2026-02-01 10:00:00")
-async def test_calendar_entry_kiosk_alarm_adds_alarm() -> None:
+async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> None:
     user_id = uuid4()
     now = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
     entry = _build_entry(user_id, now)
@@ -327,5 +328,20 @@ async def test_calendar_entry_kiosk_alarm_adds_alarm() -> None:
     await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
 
     assert uow.added
-    assert uow.added[0].alarms
-    assert uow.added[0].alarms
+    updated_day = uow.added[0]
+    assert updated_day.alarms == []
+
+    events = updated_day.collect_events()
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, AlarmTriggeredEvent)
+    assert event.alarm_type == value_objects.AlarmType.KIOSK
+    assert event.alarm_name == "Calendar reminder: Team Sync"
+
+    expected_alarm_id = uuid5(
+        NAMESPACE_DNS,
+        f"{entry.id}:{entry.starts_at.isoformat()}:0:"
+        f"{value_objects.CalendarEntryNotificationChannel.KIOSK_ALARM.value}",
+    )
+    assert event.alarm_id == expected_alarm_id
+    assert event.alarm_id == expected_alarm_id

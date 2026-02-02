@@ -3,7 +3,7 @@
   status: {{ task.status.value }}
   type: {{ task.type.value }}
   category: {{ task.category.value }}
-  scheduled_date: {{ task.scheduled_date.isoformat() }}
+  scheduled_date: {{ fmt_date(task.scheduled_date) }}
   {% if task.description %}
   description: {{ task.description }}
   {% endif %}

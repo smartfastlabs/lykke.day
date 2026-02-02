@@ -40,6 +40,7 @@ from lykke.domain.entities import (
     UserEntity,
 )
 from lykke.domain.events.ai_chat_events import MessageSentEvent
+from lykke.domain.events.day_events import AlarmTriggeredEvent
 
 EVALUATION_WINDOW = timedelta(minutes=1)
 
@@ -95,10 +96,6 @@ class CalendarEntryNotificationHandler(
         logger.debug(
             f"max_minutes: {max_minutes}, look_ahead: {look_ahead}, upcoming: {len(upcoming)} entries: {len(entries)}",
         )
-        for entry in upcoming:
-            logger.debug(
-                f"Evaluating calendar entry {entry.id} for user {self.user_id}"
-            )
 
         for entry in upcoming:
             await self._maybe_send_for_entry(entry, rules, user, now)
@@ -130,8 +127,14 @@ class CalendarEntryNotificationHandler(
         for rule in rules:
             scheduled_for = entry.starts_at - timedelta(minutes=rule.minutes_before)
             if not self._within_window(now, scheduled_for):
+                logger.debug(
+                    f"Skipping calendar entry `{entry.name}` for user {self.user_id} because it's not within the window: {scheduled_for} is not within {now} + {EVALUATION_WINDOW}"
+                )
                 continue
             triggered_by = self._build_triggered_by(entry, rule)
+            logger.debug(
+                f"Evaluating calendar entry `{entry.name}` for user {self.user_id} with rule {rule.channel.value}: {scheduled_for} is within {now} + {EVALUATION_WINDOW}"
+            )
             await self._handle_rule(entry, rule, user, scheduled_for, triggered_by)
 
     async def _handle_rule(
@@ -284,15 +287,18 @@ class CalendarEntryNotificationHandler(
         if any(alarm.id == alarm_id for alarm in day.alarms):
             return
 
-        alarm = value_objects.Alarm(
-            id=alarm_id,
-            name=f"Calendar reminder: {entry.name}",
-            time=local_dt.time(),
-            datetime=local_dt.astimezone(UTC),
-            type=value_objects.AlarmType.GENERIC,
-            url="",
+        day.add_event(
+            AlarmTriggeredEvent(
+                user_id=self.user_id,
+                day_id=day_id,
+                date=local_dt.date(),
+                alarm_id=alarm_id,
+                alarm_name=f"Calendar reminder: {entry.name}",
+                alarm_time=local_dt.time(),
+                alarm_type=value_objects.AlarmType.KIOSK,
+                alarm_url="",
+            )
         )
-        day.add_alarm(alarm)
         async with self.new_uow() as uow:
             uow.add(day)
 

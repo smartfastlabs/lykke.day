@@ -1,7 +1,7 @@
 {% block header %}{% endblock %}
 Current time: {{ fmt_datetime(current_time) }}
 # Day
-- date: {{ context.day.date.isoformat() }}
+- date: {{ fmt_date(context.day.date) }}
   status: {{ context.day.status.value }}
   {% if context.day.tags %}tags: {{ context.day.tags | map(attribute='value') | list }}{% endif %}
   {% if context.day.high_level_plan %}

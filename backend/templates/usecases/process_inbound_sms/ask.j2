@@ -1,5 +1,5 @@
 # Inbound SMS:
-- received_at: {{ inbound_message.created_at }}
+- received_at: {{ fmt_datetime(inbound_message.created_at) }}
 - content: {{ inbound_message.content }}
 
 # Rules:

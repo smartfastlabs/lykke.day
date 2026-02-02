@@ -4,6 +4,8 @@ from datetime import UTC, date as dt_date, datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from loguru import logger
+
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
@@ -77,21 +79,32 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
         Returns:
             True if the calendar entry should be included, False otherwise
         """
+        logger.debug(f"Checking if calendar entry `{self.name}`:")
         # Exclude cancelled calendar entries
         if self.status == "cancelled":
+            logger.debug(f"Calendar entry `{self.name}` is cancelled")
             return False
 
         # Exclude calendar entries that have already ended
         if self.ends_at and self.ends_at < now:
+            logger.debug(f"Calendar entry `{self.name}` has already ended")
             return False
 
         # Include calendar entries that are ongoing (started but not ended)
         if self.starts_at <= now:
+            logger.debug(f"Calendar entry `{self.name}` is ongoing")
             return True
 
         # Exclude calendar entries that are too far in the future
         # Calendar entry will start within look_ahead window
-        return (self.starts_at - now) <= look_ahead
+        if (self.starts_at - now) <= look_ahead:
+            logger.debug(f"Calendar entry `{self.name}` is within look_ahead window")
+            return True
+
+        logger.debug(
+            f"Calendar entry `{self.name}` is not eligible for upcoming now: {now} starts_at: {self.starts_at} look_ahead: {look_ahead} diff: {self.starts_at - now}"
+        )
+        return False
 
     def create(self) -> "CalendarEntryEntity":
         """Mark this entity as newly created by adding EntityCreatedEvent and CalendarEntryCreatedEvent.

@@ -1,6 +1,6 @@
 {% extends "usecases/base_context.j2" %}
 {% block header %}
-# Morning overview context for {{ context.day.date.isoformat() }}.
+# Morning overview context for {{ fmt_date(context.day.date) }}.
 {% endblock %}
 
 {% block extra_context %}

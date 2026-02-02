@@ -94,6 +94,7 @@ def test_day_context_defaults() -> None:
     [
         (AlarmType.URL, "URL"),
         (AlarmType.GENERIC, "GENERIC"),
+        (AlarmType.KIOSK, "KIOSK"),
     ],
 )
 def test_alarm_type_values(alarm_type: AlarmType, expected_value: str) -> None:
