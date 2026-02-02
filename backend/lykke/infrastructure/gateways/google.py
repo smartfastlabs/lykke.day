@@ -103,6 +103,27 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     """Gateway for interacting with Google Calendar API."""
 
     @staticmethod
+    def _parse_event_timestamp(value: Any) -> datetime:
+        """Parse a Google event timestamp into a safe UTC datetime."""
+        if not isinstance(value, str):
+            return datetime.now(UTC)
+
+        normalized = value.replace("Z", "+00:00")
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except (TypeError, ValueError):
+            logger.warning(
+                "Invalid Google event timestamp received: {value}",
+                value=value,
+            )
+            return datetime.now(UTC)
+
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+
+        return parsed.astimezone(UTC)
+
+    @staticmethod
     def _client_config_from_env() -> dict[str, Any] | None:
         """Return OAuth client config from env if provided."""
         credentials_json = settings.GOOGLE_CREDENTIALS_JSON.strip()
@@ -191,16 +212,8 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
 
         created = event.get("created")
         updated = event.get("updated")
-        created_dt = (
-            datetime.fromisoformat(created.replace("Z", "+00:00")).astimezone(UTC)
-            if isinstance(created, str)
-            else datetime.now(UTC)
-        )
-        updated_dt = (
-            datetime.fromisoformat(updated.replace("Z", "+00:00")).astimezone(UTC)
-            if isinstance(updated, str)
-            else datetime.now(UTC)
-        )
+        created_dt = self._parse_event_timestamp(created)
+        updated_dt = self._parse_event_timestamp(updated)
 
         series_entity = None
         if series_id and series_platform_id:
