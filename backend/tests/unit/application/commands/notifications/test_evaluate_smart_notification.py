@@ -3,22 +3,30 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC, date as dt_date, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
+from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.application.llm.mixin import LLMRunSnapshotContext
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity, PushSubscriptionEntity
+from lykke.domain.entities import (
+    DayEntity,
+    DayTemplateEntity,
+    PushNotificationEntity,
+    PushSubscriptionEntity,
+)
 from tests.support.dobles import (
+    create_repo_double,
     create_push_subscription_repo_double,
     create_read_only_repos_double,
     create_uow_double,
@@ -239,8 +247,12 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
     prompt_context = _build_prompt_context(user_id)
     uow = create_uow_double()
     push_subscription_repo = create_push_subscription_repo_double()
+    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
+        create_read_only_repos_double(
+            push_notification_repo=push_notification_repo,
+            push_subscription_repo=push_subscription_repo,
+        ),
         create_uow_factory_double(uow),
         user_id,
         _LLMGatewayFactory(),
@@ -259,6 +271,7 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
         return []
 
     push_subscription_repo.all = no_subscriptions
+    allow(push_notification_repo).search.and_return([])
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -282,6 +295,7 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
+    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
     subscription = _build_subscription(user_id)
     send_recorder = _Recorder(commands=[])
 
@@ -290,7 +304,10 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
 
     push_subscription_repo.all = return_subscriptions
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
+        create_read_only_repos_double(
+            push_notification_repo=push_notification_repo,
+            push_subscription_repo=push_subscription_repo,
+        ),
         create_uow_factory_double(create_uow_double()),
         user_id,
         _LLMGatewayFactory(),
@@ -303,6 +320,7 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
         prompt_context=prompt_context,
         llm_provider=value_objects.LLMProvider.OPENAI,
     )
+    allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
     await tool.callback(should_notify=True, message="Urgent", priority="high")
@@ -314,10 +332,62 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
 
 
 @pytest.mark.asyncio
+async def test_smart_tool_skips_when_recent_notification_sent() -> None:
+    user_id = uuid4()
+    prompt_context = _build_prompt_context(user_id)
+    push_subscription_repo = create_push_subscription_repo_double()
+    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
+    subscription = _build_subscription(user_id)
+    send_recorder = _Recorder(commands=[])
+    current_time = datetime(2025, 11, 27, 9, 0, tzinfo=UTC)
+    cooldown_start = current_time - timedelta(minutes=15)
+
+    async def return_subscriptions() -> list[PushSubscriptionEntity]:
+        return [subscription]
+
+    push_subscription_repo.all = return_subscriptions
+    allow(push_notification_repo).search.and_return(
+        [
+            PushNotificationEntity(
+                user_id=user_id,
+                push_subscription_ids=[subscription.id],
+                content="{}",
+                status="success",
+                sent_at=current_time - timedelta(minutes=5),
+            )
+        ]
+    )
+
+    handler = SmartNotificationHandler(
+        create_read_only_repos_double(
+            push_notification_repo=push_notification_repo,
+            push_subscription_repo=push_subscription_repo,
+        ),
+        create_uow_factory_double(create_uow_double()),
+        user_id,
+        _LLMGatewayFactory(),
+        _PromptContextHandler(prompt_context=prompt_context),
+        send_recorder,
+    )
+
+    tools = handler.build_tools(
+        current_time=current_time,
+        prompt_context=prompt_context,
+        llm_provider=value_objects.LLMProvider.OPENAI,
+    )
+    tool = tools[0]
+
+    await tool.callback(should_notify=True, message="Time to check in", priority="high")
+
+    assert send_recorder.commands == []
+
+
+@pytest.mark.asyncio
 async def test_smart_tool_handles_send_errors() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
+    push_notification_repo = create_repo_double(PushNotificationRepositoryReadOnlyProtocol)
     subscription = _build_subscription(user_id)
 
     async def return_subscriptions() -> list[PushSubscriptionEntity]:
@@ -333,7 +403,10 @@ async def test_smart_tool_handles_send_errors() -> None:
     send_recorder.handle = raise_send
 
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
+        create_read_only_repos_double(
+            push_notification_repo=push_notification_repo,
+            push_subscription_repo=push_subscription_repo,
+        ),
         create_uow_factory_double(create_uow_double()),
         user_id,
         _LLMGatewayFactory(),
@@ -346,6 +419,7 @@ async def test_smart_tool_handles_send_errors() -> None:
         prompt_context=prompt_context,
         llm_provider=value_objects.LLMProvider.OPENAI,
     )
+    allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
     await tool.callback(should_notify=True, message="Urgent", priority="high")

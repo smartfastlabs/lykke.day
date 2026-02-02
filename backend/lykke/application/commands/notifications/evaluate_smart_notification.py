@@ -3,7 +3,7 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import date as dt_date, datetime
+from datetime import date as dt_date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -149,6 +149,21 @@ class SmartNotificationHandler(
             )
             if decision.priority not in ["high", "medium"]:
                 return
+            cooldown_window = current_time - timedelta(minutes=15)
+            recent_notifications = await self.push_notification_ro_repo.search(
+                value_objects.PushNotificationQuery(sent_after=cooldown_window)
+            )
+            recent_delivered = [
+                notification
+                for notification in recent_notifications
+                if notification.status in {"success", "partial_failure"}
+            ]
+            if recent_delivered:
+                logger.debug(
+                    "Skipping smart notification for user %s due to cooldown window",
+                    self.user_id,
+                )
+                return None
 
             llm_snapshot = build_llm_snapshot(
                 tool_name="decide_notification",
