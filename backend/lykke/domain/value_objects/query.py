@@ -75,6 +75,7 @@ class CalendarEntryQuery(DateQuery):
     """Query class for CalendarEntry entities."""
 
     calendar_id: UUID | None = None
+    calendar_entry_series_id: UUID | None = None
     platform_id: str | None = None
     platform_ids: list[str] | None = None
 

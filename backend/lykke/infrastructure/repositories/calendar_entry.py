@@ -34,6 +34,12 @@ class CalendarEntryRepository(
         if query.calendar_id is not None:
             stmt = stmt.where(self.table.c.calendar_id == query.calendar_id)
 
+        if query.calendar_entry_series_id is not None:
+            stmt = stmt.where(
+                self.table.c.calendar_entry_series_id
+                == query.calendar_entry_series_id
+            )
+
         if query.date is not None:
             stmt = stmt.where(self.table.c.date == query.date)
 

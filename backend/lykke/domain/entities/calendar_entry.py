@@ -10,7 +10,11 @@ from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
-from lykke.domain.events.base import EntityCreatedEvent, EntityDeletedEvent
+from lykke.domain.events.base import (
+    EntityCreatedEvent,
+    EntityDeletedEvent,
+    EntityUpdatedEvent,
+)
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
     CalendarEntryDeletedEvent,
@@ -123,6 +127,11 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
         )
         return self
 
+    def create_silently(self) -> "CalendarEntryEntity":
+        """Mark this entity as created without calendar entry notifications."""
+        super().create()
+        return self
+
     def delete(self) -> "CalendarEntryEntity":
         """Mark this entity for deletion by adding EntityDeletedEvent and CalendarEntryDeletedEvent.
 
@@ -142,6 +151,11 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
                 entry_snapshot=entry_snapshot,
             )
         )
+        return self
+
+    def delete_silently(self) -> "CalendarEntryEntity":
+        """Mark this entity for deletion without calendar entry notifications."""
+        super().delete()
         return self
 
     def apply_calendar_entry_update(
@@ -188,3 +202,9 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
         updated_entity._add_event(update_event)
 
         return updated_entity
+
+    def apply_calendar_entry_update_silently(
+        self, update_object: CalendarEntryUpdateObject
+    ) -> "CalendarEntryEntity":
+        """Apply updates without emitting CalendarEntryUpdatedEvent."""
+        return self.apply_update(update_object, EntityUpdatedEvent)

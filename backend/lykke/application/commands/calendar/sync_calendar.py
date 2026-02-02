@@ -24,9 +24,15 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
 )
+from lykke.domain.events.calendar_entry_series_events import (
+    CalendarEntrySeriesUpdatedEvent,
+)
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
-from lykke.domain.value_objects.update import CalendarEntryUpdateObject
+from lykke.domain.value_objects.update import (
+    CalendarEntrySeriesUpdateObject,
+    CalendarEntryUpdateObject,
+)
 
 # Max lookahead for calendar events (1 year)
 MAX_EVENT_LOOKAHEAD = timedelta(days=365)
@@ -127,13 +133,56 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             entry for entry in filtered_entries if entry.status != "cancelled"
         ]
 
+        series_notification_sent: set[UUID] = set()
+
+        def should_emit_series_notification(series_id: UUID | None) -> bool:
+            if series_id is None:
+                return True
+            if series_id in series_notification_sent:
+                return False
+            series_notification_sent.add(series_id)
+            return True
+
         # Process series
+        series_by_id: dict[UUID, CalendarEntrySeriesEntity] = {}
+        series_changed_ids: set[UUID] = set()
         for series in fetched_series:
             try:
-                await uow.calendar_entry_series_ro_repo.get(series.id)
+                existing_series = await uow.calendar_entry_series_ro_repo.get(
+                    series.id
+                )
             except NotFoundError:
                 series.create()
                 uow.add(series)
+                series_by_id[series.id] = series
+                series_changed_ids.add(series.id)
+            else:
+                series_update_fields: dict[str, Any] = {}
+                if existing_series.name != series.name:
+                    series_update_fields["name"] = series.name
+                if existing_series.event_category != series.event_category:
+                    series_update_fields["event_category"] = series.event_category
+                if existing_series.frequency != series.frequency:
+                    series_update_fields["frequency"] = series.frequency
+                if existing_series.recurrence != series.recurrence:
+                    series_update_fields["recurrence"] = series.recurrence
+                if existing_series.starts_at != series.starts_at:
+                    series_update_fields["starts_at"] = series.starts_at
+                if existing_series.ends_at != series.ends_at:
+                    series_update_fields["ends_at"] = series.ends_at
+
+                if series_update_fields:
+                    series_update_object = CalendarEntrySeriesUpdateObject(
+                        **series_update_fields
+                    )
+                    updated_series = existing_series.apply_update(
+                        series_update_object, CalendarEntrySeriesUpdatedEvent
+                    )
+                    uow.add(updated_series)
+                    series_by_id[series.id] = updated_series
+                    series_changed_ids.add(series.id)
+                else:
+                    series_by_id[series.id] = existing_series
 
         # Preload existing entries to determine create vs update
         platform_ids_to_check = [entry.platform_id for entry in entries_to_upsert]
@@ -147,44 +196,103 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             }
 
         # Process entries - create new or update existing
+        upsert_platform_ids_by_series: dict[UUID, set[str]] = {}
         for entry in entries_to_upsert:
+            if entry.calendar_entry_series_id:
+                upsert_platform_ids_by_series.setdefault(
+                    entry.calendar_entry_series_id, set()
+                ).add(entry.platform_id)
             existing_entry = existing_entries_map.get(entry.platform_id)
             if existing_entry is None:
                 # New entry - create it
-                entry.create()
+                if should_emit_series_notification(entry.calendar_entry_series_id):
+                    entry.create()
+                else:
+                    entry.create_silently()
                 uow.add(entry)
             else:
                 # Existing entry - check if changed and update if needed
                 # Build update object with changed fields
-                update_fields: dict[str, Any] = {}
+                entry_update_fields: dict[str, Any] = {}
                 if existing_entry.name != entry.name:
-                    update_fields["name"] = entry.name
+                    entry_update_fields["name"] = entry.name
                 if existing_entry.status != entry.status:
-                    update_fields["status"] = entry.status
+                    entry_update_fields["status"] = entry.status
                 if existing_entry.starts_at != entry.starts_at:
-                    update_fields["starts_at"] = entry.starts_at
+                    entry_update_fields["starts_at"] = entry.starts_at
                 if existing_entry.ends_at != entry.ends_at:
-                    update_fields["ends_at"] = entry.ends_at
+                    entry_update_fields["ends_at"] = entry.ends_at
                 if existing_entry.frequency != entry.frequency:
-                    update_fields["frequency"] = entry.frequency
+                    entry_update_fields["frequency"] = entry.frequency
                 if existing_entry.category != entry.category:
-                    update_fields["category"] = entry.category
+                    entry_update_fields["category"] = entry.category
                 if (
                     existing_entry.calendar_entry_series_id
                     != entry.calendar_entry_series_id
                 ):
-                    update_fields["calendar_entry_series_id"] = (
+                    entry_update_fields["calendar_entry_series_id"] = (
                         entry.calendar_entry_series_id
                     )
 
                 # Only update if there are changes
-                if update_fields:
-                    update_object = CalendarEntryUpdateObject(**update_fields)
-                    updated_entry = existing_entry.apply_calendar_entry_update(
-                        update_object
+                if entry_update_fields:
+                    entry_update_object = CalendarEntryUpdateObject(
+                        **entry_update_fields
                     )
+                    if should_emit_series_notification(
+                        entry.calendar_entry_series_id
+                    ):
+                        updated_entry = existing_entry.apply_calendar_entry_update(
+                            entry_update_object
+                        )
+                    else:
+                        updated_entry = (
+                            existing_entry.apply_calendar_entry_update_silently(
+                                entry_update_object
+                            )
+                        )
                     uow.add(updated_entry)
                 # If no changes, skip (entry already exists and is up to date)
+
+        # Apply series updates to all associated entries
+        if series_changed_ids:
+            for series_id in series_changed_ids:
+                series_for_update = series_by_id.get(series_id)
+                if series_for_update is None:
+                    continue
+                series_entries = await uow.calendar_entry_ro_repo.search(
+                    value_objects.CalendarEntryQuery(
+                        calendar_entry_series_id=series_id
+                    )
+                )
+                for entry in series_entries:
+                    cascade_update_fields: dict[str, Any] = {}
+                    if entry.name != series_for_update.name:
+                        cascade_update_fields["name"] = series_for_update.name
+                    if entry.category != series_for_update.event_category:
+                        cascade_update_fields["category"] = (
+                            series_for_update.event_category
+                        )
+                    if entry.frequency != series_for_update.frequency:
+                        cascade_update_fields["frequency"] = (
+                            series_for_update.frequency
+                        )
+
+                    if cascade_update_fields:
+                        cascade_update_object = CalendarEntryUpdateObject(
+                            **cascade_update_fields
+                        )
+                        if should_emit_series_notification(series_id):
+                            updated_entry = (
+                                entry.apply_calendar_entry_update(cascade_update_object)
+                            )
+                        else:
+                            updated_entry = (
+                                entry.apply_calendar_entry_update_silently(
+                                    cascade_update_object
+                                )
+                            )
+                        uow.add(updated_entry)
 
         # Delete entries - use per-entry delete() instead of bulk delete
         # to ensure delete events are emitted
@@ -202,8 +310,60 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             entries_to_delete = await uow.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(platform_ids=unique_platform_ids)
             )
+            deleted_platform_ids = {entry.platform_id for entry in entries_to_delete}
+            deleted_entry_ids = {entry.id for entry in entries_to_delete}
+            series_ids_with_deletions: set[UUID] = set()
             for entry in entries_to_delete:
-                await uow.delete(entry)
+                if entry.calendar_entry_series_id:
+                    series_ids_with_deletions.add(entry.calendar_entry_series_id)
+                if should_emit_series_notification(entry.calendar_entry_series_id):
+                    entry.delete()
+                else:
+                    entry.delete_silently()
+                uow.add(entry)
+
+            # If an entire series was removed, delete remaining entries and the series
+            if series_ids_with_deletions:
+                for series_id in series_ids_with_deletions:
+                    existing_series_entries = (
+                        await uow.calendar_entry_ro_repo.search(
+                            value_objects.CalendarEntryQuery(
+                                calendar_entry_series_id=series_id
+                            )
+                        )
+                    )
+                    remaining_entries = [
+                        entry
+                        for entry in existing_series_entries
+                        if entry.platform_id not in deleted_platform_ids
+                        and entry.platform_id
+                        not in upsert_platform_ids_by_series.get(series_id, set())
+                    ]
+                    if remaining_entries:
+                        continue
+
+                    # Delete any entries for the series not already marked
+                    for entry in existing_series_entries:
+                        if entry.id in deleted_entry_ids:
+                            continue
+                        if should_emit_series_notification(series_id):
+                            entry.delete()
+                        else:
+                            entry.delete_silently()
+                        uow.add(entry)
+
+                    # Delete the series itself
+                    series_for_delete = series_by_id.get(series_id)
+                    if series_for_delete is None:
+                        try:
+                            series_for_delete = (
+                                await uow.calendar_entry_series_ro_repo.get(series_id)
+                            )
+                        except NotFoundError:
+                            series_for_delete = None
+                    if series_for_delete is not None:
+                        series_for_delete.delete()
+                        uow.add(series_for_delete)
 
         updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
         return uow.add(updated_calendar)

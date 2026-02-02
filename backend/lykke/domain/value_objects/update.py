@@ -162,6 +162,10 @@ class CalendarEntrySeriesUpdateObject(BaseUpdateObject):
 
     name: str | None = None
     event_category: EventCategory | None = None
+    frequency: TaskFrequency | None = None
+    recurrence: list[str] | None = None
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
 
 
 @dataclass(kw_only=True)
