@@ -211,3 +211,4 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
     ) -> "CalendarEntryEntity":
         """Apply updates without emitting CalendarEntryUpdatedEvent."""
         return self.apply_update(update_object, EntityUpdatedEvent)
+        return self.apply_update(update_object, EntityUpdatedEvent)

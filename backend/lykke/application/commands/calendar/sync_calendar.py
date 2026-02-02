@@ -138,8 +138,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
 
         # Classify series-level vs instance-level: multiple entries for same series
         # in this batch = series-level change (notify once); single entry or standalone = instance-level.
-        entries_by_series: dict[UUID | None, list[CalendarEntryEntity]] = (
-            defaultdict(list)
+        entries_by_series: dict[UUID | None, list[CalendarEntryEntity]] = defaultdict(
+            list
         )
         for entry in entries_to_upsert:
             entries_by_series[entry.calendar_entry_series_id].append(entry)
@@ -304,9 +304,9 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                             **cascade_update_fields
                         )
                         # Emit only when no entries for this series were in the batch (so we did not already emit in Process entries).
-                        had_entries_in_batch = len(
-                            entries_by_series.get(series_id, [])
-                        ) > 0
+                        had_entries_in_batch = (
+                            len(entries_by_series.get(series_id, [])) > 0
+                        )
                         emit_cascade = (
                             series_id not in cascade_notification_emitted
                             and not had_entries_in_batch
@@ -318,10 +318,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                                 cascade_update_object
                             )
                         else:
-                            updated_entry = (
-                                entry.apply_calendar_entry_update_silently(
-                                    cascade_update_object
-                                )
+                            updated_entry = entry.apply_calendar_entry_update_silently(
+                                cascade_update_object
                             )
                         uow.add(updated_entry)
 

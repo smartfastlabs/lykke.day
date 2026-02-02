@@ -14,6 +14,7 @@ from loguru import logger
 
 
 EXCLUDED_HEADERS = {"host", "content-length", "connection"}
+PREVIEW_LIMIT = 500
 
 
 def _build_relay_url(base_url: str, token: str | None, relay_id: str | None) -> str:
@@ -28,6 +29,15 @@ def _build_relay_url(base_url: str, token: str | None, relay_id: str | None) -> 
 
 def _filter_headers(headers: dict[str, str]) -> dict[str, str]:
     return {k: v for k, v in headers.items() if k.lower() not in EXCLUDED_HEADERS}
+
+
+def _preview_body(body: bytes) -> str:
+    if not body:
+        return ""
+    text = body.decode("utf-8", errors="replace")
+    if len(text) > PREVIEW_LIMIT:
+        return f"{text[:PREVIEW_LIMIT]}... (truncated)"
+    return text
 
 
 async def _forward_request(
@@ -47,8 +57,23 @@ async def _forward_request(
         url = f"{url}?{query}"
 
     try:
+        logger.info(
+            "Inbound webhook {} {} (id={}) headers={} body={}",
+            method,
+            url,
+            request_id,
+            headers,
+            _preview_body(body),
+        )
         response = await client.request(method, url, headers=headers, content=body)
         response_headers = _filter_headers(dict(response.headers))
+        logger.info(
+            "Webhook response {} (id={}) headers={} body={}",
+            response.status_code,
+            request_id,
+            response_headers,
+            _preview_body(response.content),
+        )
         return {
             "type": "webhook_response",
             "id": request_id,
