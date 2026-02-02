@@ -10,10 +10,15 @@ from lykke.application.commands.brain_dump import (
     CreateBrainDumpCommand,
     CreateBrainDumpHandler,
 )
+from lykke.application.worker_schedule import (
+    reset_current_workers_to_schedule,
+    set_current_workers_to_schedule,
+)
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
 from lykke.domain.events.day_events import BrainDumpAddedEvent
+from lykke.presentation.workers import tasks as worker_tasks
 from tests.support.dobles import (
     create_day_repo_double,
     create_day_template_repo_double,
@@ -22,6 +27,17 @@ from tests.support.dobles import (
     create_uow_factory_double,
     create_user_repo_double,
 )
+
+
+class _WorkersToSchedule:
+    def __init__(self) -> None:
+        self.calls: list[tuple[object, dict[str, object]]] = []
+
+    def schedule(self, worker: object, **kwargs: object) -> None:
+        self.calls.append((worker, kwargs))
+
+    async def flush(self) -> None:
+        return None
 
 
 @pytest.mark.asyncio
@@ -66,14 +82,25 @@ async def test_create_brain_dump_creates_item():
     uow_factory = create_uow_factory_double(uow)
     handler = CreateBrainDumpHandler(ro_repos, uow_factory, user_id)
 
-    result = await handler.handle(
-        CreateBrainDumpCommand(date=task_date, text="Test brain dump")
-    )
+    workers_to_schedule = _WorkersToSchedule()
+    token = set_current_workers_to_schedule(workers_to_schedule)
+    try:
+        result = await handler.handle(
+            CreateBrainDumpCommand(date=task_date, text="Test brain dump")
+        )
+    finally:
+        reset_current_workers_to_schedule(token)
 
     assert result.text == "Test brain dump"
     assert result.status == value_objects.BrainDumpStatus.ACTIVE
     events = result.collect_events()
     assert any(isinstance(event, BrainDumpAddedEvent) for event in events)
+    assert len(workers_to_schedule.calls) == 1
+    worker, kwargs = workers_to_schedule.calls[0]
+    assert worker is worker_tasks.process_brain_dump_item_task
+    assert kwargs["user_id"] == user_id
+    assert kwargs["day_date"] == task_date.isoformat()
+    assert kwargs["item_id"] == result.id
 
 
 @pytest.mark.asyncio

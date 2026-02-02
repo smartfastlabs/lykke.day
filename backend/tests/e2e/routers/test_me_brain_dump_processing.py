@@ -10,6 +10,8 @@ from tests.e2e.conftest import schedule_day_for_user
 
 
 class _DummyWorker:
+    __name__ = "dummy_worker"
+
     def __init__(self) -> None:
         self.calls: list[dict[str, object]] = []
 

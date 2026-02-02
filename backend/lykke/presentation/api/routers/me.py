@@ -119,9 +119,7 @@ async def get_current_user_profile(
 async def domain_events_stream(
     websocket: WebSocket,
     user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-    pubsub_gateway: Annotated[
-        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
-    ],
+    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
 ) -> None:
     """WebSocket endpoint for real-time domain events for the current user."""
     await websocket.accept()

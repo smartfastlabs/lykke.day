@@ -325,10 +325,10 @@ export default function App() {
                   <Route path="/calendar" component={CalendarPage} />
                   <Route path="/commands" component={CommandsPage} />
                 </Route>
-              <Route
-                path="/admin"
-                component={() => <Navigate href="/admin" />}
-              />
+                <Route
+                  path="/admin"
+                  component={() => <Navigate href="/admin" />}
+                />
                 <Route path="/settings" component={SettingsLayout}>
                   <Route path="/" component={SettingsIndexPage} />
                   <Route path="/profile" component={ProfileSettingsPage} />
@@ -341,10 +341,7 @@ export default function App() {
                     path="/morning"
                     component={MorningOverviewConfigPage}
                   />
-                  <Route
-                    path="/messaging"
-                    component={MessagingConfigPage}
-                  />
+                  <Route path="/messaging" component={MessagingConfigPage} />
                   <Route path="/alarms" component={AlarmPresetsPage} />
                   <Route
                     path="/notifications/push"

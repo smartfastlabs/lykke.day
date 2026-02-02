@@ -3,7 +3,10 @@
 from dataclasses import dataclass
 from typing import Any
 
+from loguru import logger
+
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.worker_schedule import get_current_workers_to_schedule
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
 from lykke.domain.events.ai_chat_events import MessageReceivedEvent
@@ -50,5 +53,21 @@ class ReceiveSmsMessageHandler(
             )
 
             uow.add(message)
+
+            workers_to_schedule = get_current_workers_to_schedule()
+            if workers_to_schedule is None:
+                logger.warning(
+                    "No post-commit worker scheduler available for user %s message %s",
+                    self.user_id,
+                    message.id,
+                )
+                return message
+
+            from lykke.presentation.workers import tasks as worker_tasks
+
+            worker = worker_tasks.get_worker(worker_tasks.process_inbound_sms_message_task)
+            workers_to_schedule.schedule(
+                worker, user_id=self.user_id, message_id=message.id
+            )
 
             return message

@@ -3,7 +3,10 @@
 from dataclasses import dataclass
 from datetime import date as dt_date
 
+from loguru import logger
+
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.worker_schedule import get_current_workers_to_schedule
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity
 
@@ -36,4 +39,25 @@ class CreateBrainDumpHandler(
             )
             item.mark_added()
 
-            return await uow.create(item)
+            created = await uow.create(item)
+
+            workers_to_schedule = get_current_workers_to_schedule()
+            if workers_to_schedule is None:
+                logger.warning(
+                    "No post-commit worker scheduler available for user %s item %s",
+                    self.user_id,
+                    created.id,
+                )
+                return created
+
+            from lykke.presentation.workers import tasks as worker_tasks
+
+            worker = worker_tasks.get_worker(worker_tasks.process_brain_dump_item_task)
+            workers_to_schedule.schedule(
+                worker,
+                user_id=self.user_id,
+                day_date=command.date.isoformat(),
+                item_id=created.id,
+            )
+
+            return created

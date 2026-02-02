@@ -8,12 +8,28 @@ from lykke.application.commands.message import (
     ReceiveSmsMessageCommand,
     ReceiveSmsMessageHandler,
 )
+from lykke.application.worker_schedule import (
+    reset_current_workers_to_schedule,
+    set_current_workers_to_schedule,
+)
 from lykke.domain import value_objects
+from lykke.presentation.workers import tasks as worker_tasks
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _WorkersToSchedule:
+    def __init__(self) -> None:
+        self.calls: list[tuple[object, dict[str, object]]] = []
+
+    def schedule(self, worker: object, **kwargs: object) -> None:
+        self.calls.append((worker, kwargs))
+
+    async def flush(self) -> None:
+        return None
 
 
 @pytest.mark.asyncio
@@ -26,15 +42,25 @@ async def test_receive_sms_sets_message_type_to_inbound() -> None:
 
     handler = ReceiveSmsMessageHandler(ro_repos, uow_factory, user_id)
 
-    result = await handler.handle(
-        ReceiveSmsMessageCommand(
-            from_number="+15551234567",
-            to_number="+15557654321",
-            body="hello",
-            payload={"From": "+15551234567", "Body": "hello"},
+    workers_to_schedule = _WorkersToSchedule()
+    token = set_current_workers_to_schedule(workers_to_schedule)
+    try:
+        result = await handler.handle(
+            ReceiveSmsMessageCommand(
+                from_number="+15551234567",
+                to_number="+15557654321",
+                body="hello",
+                payload={"From": "+15551234567", "Body": "hello"},
+            )
         )
-    )
+    finally:
+        reset_current_workers_to_schedule(token)
 
     assert result.type == value_objects.MessageType.SMS_INBOUND
     assert uow.added
     assert uow.added[0].type == value_objects.MessageType.SMS_INBOUND
+    assert len(workers_to_schedule.calls) == 1
+    worker, kwargs = workers_to_schedule.calls[0]
+    assert worker is worker_tasks.process_inbound_sms_message_task
+    assert kwargs["user_id"] == user_id
+    assert kwargs["message_id"] == result.id
