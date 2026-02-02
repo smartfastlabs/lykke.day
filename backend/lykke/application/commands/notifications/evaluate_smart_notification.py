@@ -194,6 +194,9 @@ class SmartNotificationHandler(
                             message_hash=message_hash,
                             triggered_by=self._triggered_by,
                             llm_snapshot=llm_snapshot,
+                            referenced_entities=(
+                                llm_snapshot.referenced_entities if llm_snapshot else []
+                            ),
                         )
                         await uow.create(notification)
                         await uow.commit()
@@ -208,6 +211,9 @@ class SmartNotificationHandler(
                         message_hash=message_hash,
                         triggered_by=self._triggered_by,
                         llm_snapshot=llm_snapshot,
+                        referenced_entities=(
+                            llm_snapshot.referenced_entities if llm_snapshot else None
+                        ),
                     )
                 )
                 logger.info(

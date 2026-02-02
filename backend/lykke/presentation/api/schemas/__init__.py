@@ -34,6 +34,7 @@ from .high_level_plan import HighLevelPlanSchema
 from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .pagination import PagedResponseSchema
 from .push_notification import PushNotificationSchema
+from .push_notification_context import PushNotificationContextSchema
 from .push_subscription import (
     PushSubscriptionCreateSchema,
     PushSubscriptionKeysSchema,
@@ -134,6 +135,7 @@ PushSubscriptionKeysSchema.model_rebuild()
 PushSubscriptionSchema.model_rebuild()
 PushSubscriptionUpdateSchema.model_rebuild()
 PushNotificationSchema.model_rebuild()
+PushNotificationContextSchema.model_rebuild()
 TimeBlockDefinitionCreateSchema.model_rebuild()
 TimeBlockDefinitionSchema.model_rebuild()
 TimeBlockDefinitionUpdateSchema.model_rebuild()
@@ -192,6 +194,7 @@ __all__ = [
     "NotificationUseCaseConfigSchema",
     "PagedResponseSchema",
     "PushNotificationSchema",
+    "PushNotificationContextSchema",
     "PushSubscriptionCreateSchema",
     "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",

@@ -28,6 +28,7 @@ class PushNotification(Base):
         String, nullable=True
     )  # "scheduled", "task_status_change", etc.
     llm_snapshot = Column(JSONB, nullable=True)
+    referenced_entities = Column(JSONB, nullable=True)
 
     __table_args__ = (
         Index("idx_push_notifications_user_id", "user_id"),

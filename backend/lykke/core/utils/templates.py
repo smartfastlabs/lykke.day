@@ -103,11 +103,15 @@ def is_today(context: dict[str, Any], value: Any) -> bool:
     current_time = context.get("current_time")
     if current_time is None:
         return False
-    target_date = value.date() if isinstance(value, datetime) else value
-    if isinstance(value, datetime) and current_time.tzinfo and value.tzinfo:
-        value = value.astimezone(current_time.tzinfo)
+    if isinstance(value, datetime):
+        if current_time.tzinfo and value.tzinfo:
+            value = value.astimezone(current_time.tzinfo)
         target_date = value.date()
-    return target_date == current_time.date()
+    elif isinstance(value, date):
+        target_date = value
+    else:
+        return False
+    return bool(target_date == current_time.date())
 
 
 @pass_context

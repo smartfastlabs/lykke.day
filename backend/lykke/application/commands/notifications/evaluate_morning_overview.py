@@ -227,6 +227,9 @@ class MorningOverviewHandler(
                             message_hash=message_hash,
                             triggered_by="morning_overview",
                             llm_snapshot=llm_snapshot,
+                            referenced_entities=(
+                                llm_snapshot.referenced_entities if llm_snapshot else []
+                            ),
                         )
                         await uow.create(notification)
                         await uow.commit()
@@ -241,6 +244,9 @@ class MorningOverviewHandler(
                         message_hash=message_hash,
                         triggered_by="morning_overview",
                         llm_snapshot=llm_snapshot,
+                        referenced_entities=(
+                            llm_snapshot.referenced_entities if llm_snapshot else None
+                        ),
                     )
                 )
                 logger.info(

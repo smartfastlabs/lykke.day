@@ -173,6 +173,12 @@ class CalendarEntryNotificationHandler(
             scheduled_for=scheduled_for,
         )
         message_hash = hashlib.sha256(message.encode("utf-8")).hexdigest()
+        referenced_entities = [
+            value_objects.LLMReferencedEntitySnapshot(
+                entity_type="calendar_entry",
+                entity_id=entry.id,
+            )
+        ]
 
         subscriptions = await self.push_subscription_ro_repo.all()
         if not subscriptions:
@@ -181,6 +187,7 @@ class CalendarEntryNotificationHandler(
                 message=message,
                 message_hash=message_hash,
                 triggered_by=triggered_by,
+                referenced_entities=referenced_entities,
             )
             return
 
@@ -191,6 +198,7 @@ class CalendarEntryNotificationHandler(
                 message=message,
                 message_hash=message_hash,
                 triggered_by=triggered_by,
+                referenced_entities=referenced_entities,
             )
         )
 
@@ -201,6 +209,7 @@ class CalendarEntryNotificationHandler(
         message: str,
         message_hash: str,
         triggered_by: str,
+        referenced_entities: list[value_objects.LLMReferencedEntitySnapshot],
     ) -> None:
         content_dict = dataclass_to_json_dict(payload)
         filtered_content = {k: v for k, v in content_dict.items() if v is not None}
@@ -215,6 +224,7 @@ class CalendarEntryNotificationHandler(
                 message=message,
                 message_hash=message_hash,
                 triggered_by=triggered_by,
+                referenced_entities=referenced_entities,
             )
             await uow.create(notification)
 

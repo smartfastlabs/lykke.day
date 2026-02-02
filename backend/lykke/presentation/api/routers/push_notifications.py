@@ -6,21 +6,29 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lykke.application.queries.push_notification import (
+    GetPushNotificationContextHandler,
+    GetPushNotificationContextQuery,
     GetPushNotificationHandler,
     GetPushNotificationQuery,
     SearchPushNotificationsHandler,
     SearchPushNotificationsQuery,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
+    PushNotificationContextSchema,
     PushNotificationSchema,
     QuerySchema,
 )
-from lykke.presentation.api.schemas.mappers import map_push_notification_to_schema
+from lykke.presentation.api.schemas.mappers import (
+    map_push_notification_context_to_schema,
+    map_push_notification_to_schema,
+)
 from lykke.presentation.handler_factory import QueryHandlerFactory
 
 from .dependencies.factories import query_handler_factory
+from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
@@ -49,3 +57,21 @@ async def get_push_notification(
         GetPushNotificationQuery(push_notification_id=notification_id)
     )
     return map_push_notification_to_schema(notification)
+
+
+@router.get(
+    "/{notification_id}/context", response_model=PushNotificationContextSchema
+)
+async def get_push_notification_context(
+    notification_id: UUID,
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> PushNotificationContextSchema:
+    """Get a push notification context by ID."""
+    handler = query_factory.create(GetPushNotificationContextHandler)
+    context = await handler.handle(
+        GetPushNotificationContextQuery(push_notification_id=notification_id)
+    )
+    return map_push_notification_context_to_schema(
+        context, user_timezone=user.settings.timezone
+    )

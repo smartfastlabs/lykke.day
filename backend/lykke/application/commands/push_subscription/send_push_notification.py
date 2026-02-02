@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from loguru import logger
 
@@ -25,6 +25,7 @@ class SendPushNotificationCommand(Command):
     message_hash: str | None = None
     triggered_by: str | None = None
     llm_snapshot: value_objects.LLMRunResultSnapshot | None = None
+    referenced_entities: list[value_objects.LLMReferencedEntitySnapshot] | None = None
 
 
 class SendPushNotificationHandler(
@@ -60,16 +61,60 @@ class SendPushNotificationHandler(
             logger.warning("No subscriptions provided to send push notification")
             return
 
-        # Serialize content to JSON string for storage
+        notification_id = uuid4()
+        referenced_entities = command.referenced_entities or []
+
+        # Serialize content to JSON string for storage and include push URL
         content_str: str
+        content_for_push: str | dict | value_objects.NotificationPayload
         if isinstance(command.content, value_objects.NotificationPayload):
             content_dict = dataclass_to_json_dict(command.content)
-            filtered_content = {k: v for k, v in content_dict.items() if v is not None}
+            filtered_content = {
+                k: v for k, v in content_dict.items() if v is not None
+            }
+            filtered_content["url"] = f"/me/push/{notification_id}"
+            if referenced_entities:
+                data = filtered_content.get("data")
+                if not isinstance(data, dict):
+                    data = {}
+                data = {
+                    **data,
+                    "referenced_entities": [
+                        {
+                            "entity_type": entity.entity_type,
+                            "entity_id": str(entity.entity_id),
+                        }
+                        for entity in referenced_entities
+                    ],
+                }
+                filtered_content["data"] = data
             content_str = json.dumps(filtered_content)
+            content_for_push = filtered_content
         elif isinstance(command.content, dict):
-            content_str = json.dumps(command.content)
+            filtered_content = {
+                k: v for k, v in command.content.items() if v is not None
+            }
+            filtered_content["url"] = f"/me/push/{notification_id}"
+            if referenced_entities:
+                data = filtered_content.get("data")
+                if not isinstance(data, dict):
+                    data = {}
+                data = {
+                    **data,
+                    "referenced_entities": [
+                        {
+                            "entity_type": entity.entity_type,
+                            "entity_id": str(entity.entity_id),
+                        }
+                        for entity in referenced_entities
+                    ],
+                }
+                filtered_content["data"] = data
+            content_str = json.dumps(filtered_content)
+            content_for_push = filtered_content
         else:
             content_str = command.content
+            content_for_push = command.content
 
         # Track results for each subscription
         successful_subscription_ids: list = []
@@ -84,7 +129,7 @@ class SendPushNotificationHandler(
                 )
                 await self._web_push_gateway.send_notification(
                     subscription=subscription,
-                    content=command.content,
+                    content=content_for_push,
                 )
                 successful_subscription_ids.append(subscription.id)
                 logger.info(
@@ -121,6 +166,7 @@ class SendPushNotificationHandler(
         # Create and save the notification entity
         async with self.new_uow(user_id) as uow:
             notification = PushNotificationEntity(
+                id=notification_id,
                 user_id=user_id,
                 push_subscription_ids=all_subscription_ids,
                 content=content_str,
@@ -131,6 +177,7 @@ class SendPushNotificationHandler(
                 message_hash=command.message_hash,
                 triggered_by=command.triggered_by,
                 llm_snapshot=command.llm_snapshot,
+                referenced_entities=referenced_entities,
             )
             await uow.create(notification)
             logger.info(

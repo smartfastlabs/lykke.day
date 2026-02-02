@@ -1,3 +1,5 @@
+import type { Event, Routine, Task } from "./api.generated";
+
 export type LLMRunResultSnapshot = {
   current_time?: string;
   llm_provider?: string;
@@ -8,6 +10,8 @@ export type LLMRunResultSnapshot = {
   tool_choice?: unknown;
   model_params?: Record<string, unknown>;
 };
+
+export type ReferencedEntity = { entity_type: string; entity_id: string };
 
 export type PushNotification = {
   id?: string | null;
@@ -22,4 +26,12 @@ export type PushNotification = {
   message_hash?: string | null;
   triggered_by?: string | null;
   llm_snapshot?: LLMRunResultSnapshot | Record<string, unknown> | null;
+  referenced_entities?: ReferencedEntity[];
+};
+
+export type PushNotificationContext = {
+  notification: PushNotification;
+  tasks: Task[];
+  routines: Routine[];
+  calendar_entries: Event[];
 };

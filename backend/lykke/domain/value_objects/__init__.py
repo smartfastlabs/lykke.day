@@ -28,7 +28,7 @@ from .llm_run import (
     LLMToolCallResultSnapshot,
 )
 from .notification_decision import NotificationDecision
-from .push import NotificationAction, NotificationPayload
+from .push import NotificationAction, NotificationPayload, PushNotificationContext
 from .query import (
     AuditLogQuery,
     AuthTokenQuery,
@@ -169,6 +169,7 @@ __all__ = [
     "NotificationPayload",
     "NotificationUseCaseConfig",
     "PagedQueryResponse",
+    "PushNotificationContext",
     "PushNotificationQuery",
     "PushSubscriptionQuery",
     "PushSubscriptionUpdateObject",

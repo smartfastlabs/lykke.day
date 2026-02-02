@@ -33,3 +33,6 @@ class PushNotificationEntity(BaseEntityObject):
     message_hash: str | None = None  # SHA256 hash for deduplication
     triggered_by: str | None = None  # "scheduled", "task_status_change", etc.
     llm_snapshot: value_objects.LLMRunResultSnapshot | None = None
+    referenced_entities: list[value_objects.LLMReferencedEntitySnapshot] = field(
+        default_factory=list
+    )

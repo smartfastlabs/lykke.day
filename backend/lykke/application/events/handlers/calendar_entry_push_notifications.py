@@ -15,6 +15,7 @@ from lykke.application.notifications import (
     build_notification_payload_for_calendar_entry_change,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.domain import value_objects
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
@@ -136,6 +137,12 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
         command = SendPushNotificationCommand(
             subscriptions=subscriptions,
             content=payload,
+            referenced_entities=[
+                value_objects.LLMReferencedEntitySnapshot(
+                    entity_type="calendar_entry",
+                    entity_id=calendar_entry_id,
+                )
+            ],
         )
         await send_handler.handle(command)
 

@@ -6,7 +6,14 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base import BaseEntitySchema
+from .base import BaseEntitySchema, BaseSchema
+
+
+class ReferencedEntitySchema(BaseSchema):
+    """Schema for a referenced entity snapshot."""
+
+    entity_type: str
+    entity_id: UUID
 
 
 class PushNotificationSchema(BaseEntitySchema):
@@ -23,3 +30,4 @@ class PushNotificationSchema(BaseEntitySchema):
     message_hash: str | None = None
     triggered_by: str | None = None
     llm_snapshot: dict[str, Any] | None = None
+    referenced_entities: list[ReferencedEntitySchema] = Field(default_factory=list)

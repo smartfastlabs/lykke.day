@@ -76,6 +76,11 @@ class PushNotificationRepository(
             "llm_snapshot": dataclass_to_json_dict(push_notification.llm_snapshot)
             if push_notification.llm_snapshot
             else None,
+            "referenced_entities": dataclass_to_json_dict(
+                push_notification.referenced_entities
+            )
+            if push_notification.referenced_entities
+            else None,
         }
 
         return row
@@ -142,6 +147,27 @@ class PushNotificationRepository(
                     llm_snapshot, value_objects.LLMRunResultSnapshot
                 )
             )
+
+        referenced_entities = data.get("referenced_entities")
+        if isinstance(referenced_entities, list):
+            parsed_entities = []
+            for entity in referenced_entities:
+                if isinstance(entity, dict):
+                    entity_id = entity.get("entity_id")
+                    if isinstance(entity_id, str):
+                        entity["entity_id"] = UUID(entity_id)
+                    parsed_entities.append(
+                        value_objects.LLMReferencedEntitySnapshot(
+                            **filter_init_false_fields(
+                                entity, value_objects.LLMReferencedEntitySnapshot
+                            )
+                        )
+                    )
+                else:
+                    parsed_entities.append(entity)
+            data["referenced_entities"] = parsed_entities
+        elif referenced_entities is None:
+            data.pop("referenced_entities", None)
 
         data = filter_init_false_fields(data, PushNotificationEntity)
         data = ensure_datetimes_utc(data, keys=("sent_at",))
