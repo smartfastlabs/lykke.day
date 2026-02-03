@@ -14,20 +14,15 @@ from loguru import logger
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
+from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 
 if TYPE_CHECKING:
     from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-    from lykke.application.unit_of_work import (
-        ReadOnlyRepositories,
-        UnitOfWorkFactory,
-        UnitOfWorkProtocol,
-    )
-
-    from .sync_calendar import SyncCalendarHandler
+    from lykke.application.unit_of_work import UnitOfWorkProtocol
 
 
 @dataclass(frozen=True)
@@ -40,17 +35,8 @@ class ResetCalendarSyncHandler(
 ):
     """Resets calendar sync by unsubscribing, deleting future events, resubscribing, and syncing."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-        sync_calendar_handler: SyncCalendarHandler,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
-        self._sync_calendar_handler = sync_calendar_handler
+    google_gateway: GoogleCalendarGatewayProtocol
+    sync_calendar_handler: SyncCalendarHandler
 
     async def handle(self, command: ResetCalendarSyncCommand) -> list[CalendarEntity]:
         """Reset sync for all calendars with subscriptions enabled.
@@ -113,7 +99,7 @@ class ResetCalendarSyncHandler(
         synced_calendars = []
         for calendar in updated_calendars:
             try:
-                synced = await self._sync_calendar_handler.sync_calendar(calendar.id)
+                synced = await self.sync_calendar_handler.sync_calendar(calendar.id)
                 synced_calendars.append(synced)
                 logger.info(f"Successfully synced calendar {calendar.id}")
             except Exception as e:
@@ -167,7 +153,7 @@ class ResetCalendarSyncHandler(
             )
 
         if calendar.sync_subscription:
-            await self._google_gateway.unsubscribe_from_calendar(
+            await self.google_gateway.unsubscribe_from_calendar(
                 calendar=calendar,
                 token=token,
                 channel_id=calendar.sync_subscription.subscription_id,
@@ -201,7 +187,7 @@ class ResetCalendarSyncHandler(
         base_url = settings.API_BASE_URL.rstrip("/")
         webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
-        subscription = await self._google_gateway.subscribe_to_calendar(
+        subscription = await self.google_gateway.subscribe_to_calendar(
             calendar=calendar,
             token=token,
             webhook_url=webhook_url,

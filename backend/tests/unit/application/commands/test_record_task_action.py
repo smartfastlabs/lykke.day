@@ -28,6 +28,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_record_task_action_adds_task_and_day_to_uow():
     """Verify task and day are added to UoW after recording action."""
@@ -90,9 +99,9 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     # Create action
@@ -181,9 +190,9 @@ async def test_record_task_action_raises_domain_events():
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     action = value_objects.Action(
@@ -267,9 +276,9 @@ async def test_record_task_action_raises_if_day_missing():
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     action = value_objects.Action(
@@ -341,9 +350,9 @@ async def test_record_task_action_punt_updates_status():
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     action = value_objects.Action(

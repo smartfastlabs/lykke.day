@@ -16,7 +16,6 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
-    UserEntity,
 )
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -27,8 +26,6 @@ if TYPE_CHECKING:
 
     from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
     from lykke.application.unit_of_work import (
-        ReadOnlyRepositories,
-        UnitOfWorkFactory,
         UnitOfWorkProtocol,
     )
 
@@ -43,15 +40,7 @@ class ResetCalendarDataHandler(
 ):
     """Delete calendar entries/series and refresh subscriptions for the user."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
+    google_gateway: GoogleCalendarGatewayProtocol
 
     async def handle(self, command: ResetCalendarDataCommand) -> list[CalendarEntity]:
         """Remove all entries/series then refresh subscriptions for subscribed calendars."""
@@ -104,7 +93,7 @@ class ResetCalendarDataHandler(
             )
 
         if calendar.sync_subscription:
-            await self._google_gateway.unsubscribe_from_calendar(
+            await self.google_gateway.unsubscribe_from_calendar(
                 calendar=calendar,
                 token=token,
                 channel_id=calendar.sync_subscription.subscription_id,
@@ -116,7 +105,7 @@ class ResetCalendarDataHandler(
         base_url = settings.API_BASE_URL.rstrip("/")
         webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
-        subscription = await self._google_gateway.subscribe_to_calendar(
+        subscription = await self.google_gateway.subscribe_to_calendar(
             calendar=calendar,
             token=token,
             webhook_url=webhook_url,

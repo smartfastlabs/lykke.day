@@ -28,6 +28,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 def _make_day(user_id: object, task_date: dt_date) -> DayEntity:
     template = DayTemplateEntity(
         user_id=user_id,  # type: ignore[arg-type]
@@ -141,7 +150,11 @@ async def test_record_routine_action_only_updates_tasks_not_punted_or_completed(
     action = value_objects.Action(type=action_type)
 
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    routine_handler = RecordRoutineActionHandler(ro_repos, uow_factory, user)
+    routine_handler = RecordRoutineActionHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
     result = await routine_handler.handle(
         RecordRoutineActionCommand(routine_id=routine.id, action=action)
     )

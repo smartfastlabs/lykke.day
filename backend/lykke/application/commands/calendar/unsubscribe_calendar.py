@@ -5,8 +5,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.domain.entities import CalendarEntity
 
 
 @dataclass(frozen=True)
@@ -21,15 +20,7 @@ class UnsubscribeCalendarHandler(
 ):
     """Removes push subscriptions for a calendar."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
+    google_gateway: GoogleCalendarGatewayProtocol
 
     async def handle(self, command: UnsubscribeCalendarCommand) -> CalendarEntity:
         """Remove the existing sync subscription for a calendar."""
@@ -45,7 +36,7 @@ class UnsubscribeCalendarHandler(
 
             token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
 
-            await self._google_gateway.unsubscribe_from_calendar(
+            await self.google_gateway.unsubscribe_from_calendar(
                 calendar=calendar,
                 token=token,
                 channel_id=calendar.sync_subscription.subscription_id,

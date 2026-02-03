@@ -41,8 +41,6 @@ from lykke.domain.events.ai_chat_events import MessageSentEvent
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
 
-    from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-
 
 @dataclass(frozen=True)
 class ProcessInboundSmsCommand(Command):
@@ -56,31 +54,16 @@ class ProcessInboundSmsHandler(
 ):
     """Process an inbound SMS message into follow-up actions (reply, task, alarm, etc.)."""
 
+    llm_gateway_factory: LLMGatewayFactoryProtocol
+    get_llm_prompt_context_handler: GetLLMPromptContextHandler
+    create_adhoc_task_handler: CreateAdhocTaskHandler
+    record_task_action_handler: RecordTaskActionHandler
+    add_alarm_to_day_handler: AddAlarmToDayHandler
+    sms_gateway: SMSProviderProtocol
     name = "process_inbound_sms"
     template_usecase = "process_inbound_sms"
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        llm_gateway_factory: LLMGatewayFactoryProtocol,
-        get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        create_adhoc_task_handler: CreateAdhocTaskHandler,
-        record_task_action_handler: RecordTaskActionHandler,
-        add_alarm_to_day_handler: AddAlarmToDayHandler,
-        sms_gateway: SMSProviderProtocol,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._llm_gateway_factory = llm_gateway_factory
-        self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
-        self._create_adhoc_task_handler = create_adhoc_task_handler
-        self._record_task_action_handler = record_task_action_handler
-        self._add_alarm_to_day_handler = add_alarm_to_day_handler
-        self._sms_gateway = sms_gateway
-
-        self._inbound_message: MessageEntity | None = None
-        self._send_acknowledgment = True
+    _inbound_message: MessageEntity | None = None
+    _send_acknowledgment = True
 
     async def handle(self, command: ProcessInboundSmsCommand) -> None:
         """Run LLM processing for an inbound message and apply actions."""
@@ -116,7 +99,7 @@ class ProcessInboundSmsHandler(
             raise RuntimeError("Inbound message context was not initialized")
 
         self._send_acknowledgment = await self._get_send_acknowledgment()
-        prompt_context = await self._get_llm_prompt_context_handler.handle(
+        prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=date)
         )
         return UseCasePromptInput(
@@ -211,7 +194,7 @@ class ProcessInboundSmsHandler(
                 uow.add(outgoing)
 
             try:
-                await self._sms_gateway.send_message(from_number, body)
+                await self.sms_gateway.send_message(from_number, body)
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(f"Failed sending SMS reply to {from_number}: {exc}")
 
@@ -272,7 +255,7 @@ class ProcessInboundSmsHandler(
                     cutoff_time=cutoff_time,
                 )
 
-            await self._create_adhoc_task_handler.handle(
+            await self.create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
                     scheduled_date=day_date,
                     name=name,
@@ -291,7 +274,7 @@ class ProcessInboundSmsHandler(
             - Use for simple, quick reminders.
             - Include an acknowledgment message when required.
             """
-            await self._create_adhoc_task_handler.handle(
+            await self.create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
                     scheduled_date=day_date,
                     name=reminder,
@@ -319,7 +302,7 @@ class ProcessInboundSmsHandler(
                 if action == "complete"
                 else value_objects.ActionType.PUNT
             )
-            await self._record_task_action_handler.handle(
+            await self.record_task_action_handler.handle(
                 RecordTaskActionCommand(
                     task_id=task_id,
                     action=value_objects.Action(
@@ -343,7 +326,7 @@ class ProcessInboundSmsHandler(
             - alarm_time should be 24h format HH:MM.
             - Include an acknowledgment message when required.
             """
-            await self._add_alarm_to_day_handler.handle(
+            await self.add_alarm_to_day_handler.handle(
                 AddAlarmToDayCommand(
                     date=day_date,
                     name=name,

@@ -80,7 +80,7 @@ class LLMHandlerMixin(ABC):
     user: UserEntity
     user_ro_repo: UserRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
-    _llm_gateway_factory: LLMGatewayFactoryProtocol
+    llm_gateway_factory: LLMGatewayFactoryProtocol
     _llm_snapshot_context: LLMRunSnapshotContext | None = None
 
     @abstractmethod
@@ -152,7 +152,7 @@ class LLMHandlerMixin(ABC):
         )
 
         try:
-            llm_gateway = self._llm_gateway_factory.create_gateway(llm_provider)
+            llm_gateway = self.llm_gateway_factory.create_gateway(llm_provider)
         except DomainError as exc:
             logger.error(
                 f"Failed to create LLM gateway for provider {llm_provider}: {exc}"

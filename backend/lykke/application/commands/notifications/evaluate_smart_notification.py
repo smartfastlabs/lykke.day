@@ -27,7 +27,6 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextQuery,
 )
 from lykke.application.repositories import PushSubscriptionRepositoryReadOnlyProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -49,32 +48,12 @@ class SmartNotificationHandler(
     """Evaluates day context using LLM and sends notification if warranted."""
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    llm_gateway_factory: LLMGatewayFactoryProtocol
+    get_llm_prompt_context_handler: GetLLMPromptContextHandler
+    send_push_notification_handler: SendPushNotificationHandler
     name = "notification"
     template_usecase = "notification"
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        llm_gateway_factory: LLMGatewayFactoryProtocol,
-        get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        send_push_notification_handler: SendPushNotificationHandler,
-    ) -> None:
-        """Initialize SmartNotificationHandler.
-
-        Args:
-            ro_repos: Read-only repositories
-            uow_factory: Unit of work factory for creating write transactions
-            user: User entity for scoping
-            get_llm_prompt_context_handler: Handler for prompt context
-            send_push_notification_handler: Handler for sending push notifications
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._llm_gateway_factory = llm_gateway_factory
-        self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
-        self._send_push_notification_handler = send_push_notification_handler
-        self._triggered_by: str | None = None
+    _triggered_by: str | None = None
 
     async def handle(self, command: SmartNotificationCommand) -> None:
         """Evaluate day context and send notification if warranted.
@@ -91,7 +70,7 @@ class SmartNotificationHandler(
         await self.run_llm()
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
-        prompt_context = await self._get_llm_prompt_context_handler.handle(
+        prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=date)
         )
         return UseCasePromptInput(prompt_context=prompt_context)
@@ -202,7 +181,7 @@ class SmartNotificationHandler(
                         await uow.commit()
                     return None
 
-                await self._send_push_notification_handler.handle(
+                await self.send_push_notification_handler.handle(
                     SendPushNotificationCommand(
                         subscriptions=subscriptions,
                         content=payload,

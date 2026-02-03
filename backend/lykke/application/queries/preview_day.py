@@ -17,7 +17,6 @@ from lykke.application.repositories import (
     RoutineDefinitionRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, RoutineEntity, UserEntity
@@ -40,10 +39,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
-
-    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
-        super().__init__(ro_repos, user)
-        self._preview_tasks_handler = PreviewTasksHandler(ro_repos, user)
+    preview_tasks_handler: PreviewTasksHandler
 
     async def handle(self, query: PreviewDayQuery) -> value_objects.DayContext:
         """Handle preview day query."""
@@ -73,7 +69,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
 
         # Load preview tasks and existing data in parallel
         tasks, calendar_entries, routines = await asyncio.gather(
-            self._preview_tasks_handler.handle(PreviewTasksQuery(date=target_date)),
+            self.preview_tasks_handler.handle(PreviewTasksQuery(date=target_date)),
             self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=target_date)
             ),

@@ -13,6 +13,7 @@ from lykke.application.commands.google import (
     HandleGoogleLoginCallbackCommand,
     HandleGoogleLoginCallbackHandler,
 )
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
@@ -26,6 +27,27 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
+class _GatewayFactory:
+    def __init__(self, google_gateway: GoogleCalendarGatewayProtocol) -> None:
+        self._google_gateway = google_gateway
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type is GoogleCalendarGatewayProtocol
+
+    def create(self, dependency_type: type[object]) -> object:
+        _ = dependency_type
+        return self._google_gateway
 
 
 @pytest.mark.asyncio
@@ -143,10 +165,10 @@ async def test_handle_google_login_callback_updates_auth_token_and_calendars(
     )
 
     handler = HandleGoogleLoginCallbackHandler(
-        ro_repos=ro_repos,
-        uow_factory=uow_factory,
         user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        google_gateway=gateway,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(gateway),
     )
 
     result = await handler.handle(

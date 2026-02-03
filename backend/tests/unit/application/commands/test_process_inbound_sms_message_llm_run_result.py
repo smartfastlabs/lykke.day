@@ -27,6 +27,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 class _LLMGatewayFactory:
     def create_gateway(self, provider: value_objects.LLMProvider) -> object:
         _ = provider
@@ -74,16 +83,16 @@ async def test_process_inbound_sms_records_llm_run_result_on_message() -> None:
     uow_factory = create_uow_factory_double(uow)
 
     handler = ProcessInboundSmsHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        _LLMGatewayFactory(),
-        object(),
-        object(),
-        object(),
-        object(),
-        object(),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = object()
+    handler.create_adhoc_task_handler = object()
+    handler.record_task_action_handler = object()
+    handler.add_alarm_to_day_handler = object()
+    handler.sms_gateway = object()
 
     # Bypass real LLM run, but still return a fully-formed result so we record snapshot.
     async def run_llm_override() -> LLMRunResult:

@@ -11,14 +11,8 @@ from lykke.application.repositories import (
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.domain import value_objects
-from lykke.domain.entities import (
-    FactoidEntity,
-    MessageEntity,
-    PushNotificationEntity,
-    UserEntity,
-)
+from lykke.domain.entities import FactoidEntity, MessageEntity, PushNotificationEntity
 
 _RECENT_MESSAGES_LIMIT = 20
 _RECENT_PUSH_NOTIFICATIONS_LIMIT = 20
@@ -40,22 +34,7 @@ class GetLLMPromptContextHandler(
     factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        user: UserEntity,
-        get_day_context_handler: GetDayContextHandler,
-    ) -> None:
-        """Initialize the handler.
-
-        Args:
-            ro_repos: Read-only repositories
-            user: The user entity for scoping
-            get_day_context_handler: Handler for base day context
-        """
-        super().__init__(ro_repos, user)
-        self._get_day_context_handler = get_day_context_handler
+    get_day_context_handler: GetDayContextHandler
 
     async def handle(
         self, query: GetLLMPromptContextQuery
@@ -67,7 +46,7 @@ class GetLLMPromptContextHandler(
         self, date: datetime_date
     ) -> value_objects.LLMPromptContext:
         """Load complete LLM prompt context for the given date."""
-        day_context = await self._get_day_context_handler.get_day_context(date)
+        day_context = await self.get_day_context_handler.get_day_context(date)
 
         factoids, messages, push_notifications = await asyncio.gather(
             self._get_factoids(),

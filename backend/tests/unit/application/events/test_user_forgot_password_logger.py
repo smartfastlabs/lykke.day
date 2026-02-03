@@ -14,12 +14,21 @@ from lykke.domain.events.user_events import UserForgotPasswordEvent
 from tests.support.dobles import create_read_only_repos_double
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_user_forgot_password_logger_handles_event() -> None:
     user_id = uuid4()
     handler = UserForgotPasswordLoggerHandler(
-        create_read_only_repos_double(),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
 
     event = UserForgotPasswordEvent(
@@ -37,8 +46,8 @@ async def test_user_forgot_password_logger_handles_event() -> None:
 async def test_user_forgot_password_logger_ignores_unrelated_event() -> None:
     user_id = uuid4()
     handler = UserForgotPasswordLoggerHandler(
-        create_read_only_repos_double(),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
 
     class _OtherEvent:

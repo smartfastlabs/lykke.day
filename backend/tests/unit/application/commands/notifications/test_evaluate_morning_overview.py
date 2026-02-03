@@ -34,6 +34,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 class _LLMGateway:
     async def run_usecase(
         self,
@@ -140,14 +149,18 @@ async def test_morning_overview_skips_when_disabled(
     user_id = uuid4()
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     called = False
 
@@ -176,14 +189,20 @@ async def test_morning_overview_handles_user_lookup_errors(
     user_repo.get = raise_get
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(user_repo=user_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(user_repo=user_repo)
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
     await handler.handle(MorningOverviewCommand(user=handler_user))
@@ -203,14 +222,20 @@ async def test_morning_overview_skips_without_llm_provider(
     user_repo.get = return_user
     handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(user_repo=user_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(user_repo=user_repo)
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
     await handler.handle(MorningOverviewCommand(user=handler_user))
@@ -237,14 +262,20 @@ async def test_morning_overview_skips_without_time(
     user_repo.get = return_user
     handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(user_repo=user_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(user_repo=user_repo)
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     called = False
 
@@ -282,14 +313,20 @@ async def test_morning_overview_runs_llm_when_configured(
     user_repo.get = return_user
     handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(user_repo=user_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(user_repo=user_repo)
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     called = False
 
@@ -339,14 +376,16 @@ async def test_morning_overview_build_prompt_input_includes_risk_data() -> None:
     )
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(result=risk_result),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(result=risk_result)
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     result = await handler.build_prompt_input(day.date)
 
@@ -381,14 +420,18 @@ async def test_morning_overview_build_prompt_input_skips_unrated_tasks() -> None
 
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        _Recorder(commands=[]),
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     result = await handler.build_prompt_input(day.date)
 
@@ -404,14 +447,22 @@ async def test_morning_overview_tool_creates_skipped_notification() -> None:
     send_recorder = _Recorder(commands=[])
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
-        create_uow_factory_double(uow),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        send_recorder,
+        user=handler_user,
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_subscription_repo=push_subscription_repo
+            )
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = send_recorder
     handler._llm_snapshot_context = LLMRunSnapshotContext(
         prompt_context=prompt_context,
         current_time=datetime(2025, 11, 27, 9, 0, tzinfo=UTC),
@@ -451,14 +502,22 @@ async def test_morning_overview_tool_skips_when_llm_declines() -> None:
     send_recorder = _Recorder(commands=[])
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
-        create_uow_factory_double(uow),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        send_recorder,
+        user=handler_user,
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_subscription_repo=push_subscription_repo
+            )
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -487,14 +546,22 @@ async def test_morning_overview_tool_sends_notification() -> None:
     push_subscription_repo.all = return_subscriptions
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        send_recorder,
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_subscription_repo=push_subscription_repo
+            )
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -532,14 +599,22 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
 
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
-        create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
-        create_uow_factory_double(create_uow_double()),
-        handler_user,
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
-        send_recorder,
+        user=handler_user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_subscription_repo=push_subscription_repo
+            )
+        ),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.compute_task_risk_handler = _TaskRiskHandler(
+        TaskRiskResult(high_risk_tasks=[])
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),

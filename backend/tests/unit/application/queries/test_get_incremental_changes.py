@@ -27,6 +27,15 @@ from lykke.domain.entities import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 def _make_audit_log(
     entity_type: str,
     activity_type: str,
@@ -107,7 +116,10 @@ class TestGetIncrementalChangesHandlerInit:
         mock_ro_repos.day_ro_repo = MagicMock()
 
         user = UserEntity(email="test@example.com", hashed_password="!")
-        handler = GetIncrementalChangesHandler(mock_ro_repos, user=user)
+        handler = GetIncrementalChangesHandler(
+            user=user,
+            repository_factory=_RepositoryFactory(mock_ro_repos),
+        )
 
         # Verify day_ro_repo is available
         assert hasattr(handler, "day_ro_repo")
@@ -118,7 +130,10 @@ class TestGetIncrementalChangesHandlerInit:
         mock_ro_repos = MagicMock()
 
         user = UserEntity(email="test@example.com", hashed_password="!")
-        handler = GetIncrementalChangesHandler(mock_ro_repos, user=user)
+        handler = GetIncrementalChangesHandler(
+            user=user,
+            repository_factory=_RepositoryFactory(mock_ro_repos),
+        )
 
         # Verify all repos are available
         assert hasattr(handler, "audit_log_ro_repo")
@@ -143,7 +158,10 @@ class TestLoadEntityData:
         mock_ro_repos.brain_dump_ro_repo = AsyncMock()
 
         user = UserEntity(email="test@example.com", hashed_password="!")
-        return GetIncrementalChangesHandler(mock_ro_repos, user=user)
+        return GetIncrementalChangesHandler(
+            user=user,
+            repository_factory=_RepositoryFactory(mock_ro_repos),
+        )
 
     @pytest.mark.asyncio
     async def test_load_task_entity_data(self, handler_with_mocks):

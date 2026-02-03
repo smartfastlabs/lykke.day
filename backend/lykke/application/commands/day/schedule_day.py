@@ -8,11 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.queries.preview_day import PreviewDayHandler
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
+from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -21,7 +17,6 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
-    UserEntity,
 )
 from lykke.domain.events.day_events import DayUpdatedEvent
 
@@ -38,6 +33,8 @@ class ScheduleDayHandler(
     BaseCommandHandler[ScheduleDayCommand, value_objects.DayContext]
 ):
     """Schedules a day with tasks from routines."""
+
+    preview_day_handler: PreviewDayHandler
 
     @staticmethod
     def _time_to_local_datetime(
@@ -171,16 +168,6 @@ class ScheduleDayHandler(
         start_utc = day_start_dt.astimezone(UTC) if day_start_dt else None
         end_utc = day_end_dt.astimezone(UTC) if day_end_dt else None
         return start_utc, end_utc
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        preview_day_handler: PreviewDayHandler,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self.preview_day_handler = preview_day_handler
 
     async def handle(self, command: ScheduleDayCommand) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.

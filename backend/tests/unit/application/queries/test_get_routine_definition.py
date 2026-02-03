@@ -18,6 +18,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_get_routine_definition_returns_routine_definition_by_id():
     """Verify get_routine_definition returns the correct routine definition."""
@@ -42,7 +51,10 @@ async def test_get_routine_definition_returns_routine_definition_by_id():
     )
     ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = GetRoutineDefinitionHandler(ro_repos, user)
+    handler = GetRoutineDefinitionHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act
     result = await handler.handle(
@@ -68,7 +80,10 @@ async def test_get_routine_definition_raises_not_found_for_invalid_id():
     )
     ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = GetRoutineDefinitionHandler(ro_repos, user)
+    handler = GetRoutineDefinitionHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act & Assert
     with pytest.raises(NotFoundError):

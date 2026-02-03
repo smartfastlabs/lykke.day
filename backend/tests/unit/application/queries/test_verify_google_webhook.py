@@ -19,6 +19,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_verify_google_webhook_returns_true_for_valid_token():
     user_id = uuid4()
@@ -42,7 +51,10 @@ async def test_verify_google_webhook_returns_true_for_valid_token():
 
     ro_repos = create_read_only_repos_double(calendar_repo=calendar_repo)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user=user)
+    handler = VerifyGoogleWebhookHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     result = await handler.handle(
         VerifyGoogleWebhookQuery(
@@ -78,7 +90,10 @@ async def test_verify_google_webhook_returns_false_for_missing_token():
 
     ro_repos = create_read_only_repos_double(calendar_repo=calendar_repo)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user=user)
+    handler = VerifyGoogleWebhookHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     result = await handler.handle(
         VerifyGoogleWebhookQuery(

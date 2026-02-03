@@ -35,18 +35,13 @@ class GetIncrementalChangesHandler(
     ]
 ):
     """Gets incremental changes since a timestamp, filtered to entities for a specific date."""
-
-    def __init__(self, ro_repos: Any, user: UserEntity) -> None:
-        """Initialize the handler with read-only repositories."""
-        super().__init__(ro_repos, user)
-        # Access audit_log_ro_repo from ro_repos (not exposed by BaseQueryHandler)
-        self.audit_log_ro_repo = ro_repos.audit_log_ro_repo
-        self.task_ro_repo = ro_repos.task_ro_repo
-        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
-        self.routine_ro_repo = ro_repos.routine_ro_repo
-        self.routine_definition_ro_repo = ro_repos.routine_definition_ro_repo
-        self.day_ro_repo = ro_repos.day_ro_repo
-        self.brain_dump_ro_repo = ro_repos.brain_dump_ro_repo
+    audit_log_ro_repo: Any
+    task_ro_repo: Any
+    calendar_entry_ro_repo: Any
+    routine_ro_repo: Any
+    routine_definition_ro_repo: Any
+    day_ro_repo: Any
+    brain_dump_ro_repo: Any
 
     async def handle(
         self, query: GetIncrementalChangesQuery

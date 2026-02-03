@@ -8,10 +8,9 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.exceptions import AuthenticationError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects.update import (
@@ -43,21 +42,13 @@ class HandleGoogleLoginCallbackHandler(
 ):
     """Handle Google OAuth callback and update auth tokens/calendars."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
+    google_gateway: GoogleCalendarGatewayProtocol
 
     async def handle(
         self, command: HandleGoogleLoginCallbackCommand
     ) -> HandleGoogleLoginCallbackResult:
         """Handle OAuth callback, updating tokens/calendars in a transaction."""
-        flow = self._google_gateway.get_flow("login")
+        flow = self.google_gateway.get_flow("login")
         flow.fetch_token(code=command.code)
 
         service = build("calendar", "v3", credentials=flow.credentials)

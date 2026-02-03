@@ -11,7 +11,6 @@ from passlib.context import CryptContext
 
 from lykke.app import app
 from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
-from lykke.application.queries import PreviewDayHandler
 from lykke.domain.entities import AuditLogEntity, UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.user import UserSetting
@@ -29,6 +28,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
+from lykke.presentation.handler_factory import CommandHandlerFactory
 from lykke.presentation.api.routers.dependencies.user import (
     get_current_user,
     get_current_user_from_token,
@@ -82,9 +82,11 @@ async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
     user = await user_repo.get(user_id)
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    ro_repos = ro_repo_factory.create(user)
-    preview_handler = PreviewDayHandler(ro_repos, user)
-    schedule_handler = ScheduleDayHandler(ro_repos, uow_factory, user, preview_handler)
+    schedule_handler = CommandHandlerFactory(
+        user=user,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    ).create(ScheduleDayHandler)
     await schedule_handler.handle(ScheduleDayCommand(date=date))
 
 

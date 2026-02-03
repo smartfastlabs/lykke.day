@@ -22,6 +22,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_preview_day_uses_provided_template():
     """Verify preview_day uses provided template_id."""
@@ -71,7 +80,14 @@ async def test_preview_day_uses_provided_template():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user)
+    handler = PreviewDayHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.preview_tasks_handler = PreviewTasksHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act
     result = await handler.handle(
@@ -135,7 +151,14 @@ async def test_preview_day_falls_back_to_user_default_template():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user)
+    handler = PreviewDayHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.preview_tasks_handler = PreviewTasksHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act - no template_id provided
     result = await handler.handle(PreviewDayQuery(date=task_date))
@@ -195,7 +218,14 @@ async def test_preview_day_uses_existing_day_template_if_available():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user)
+    handler = PreviewDayHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.preview_tasks_handler = PreviewTasksHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act - no template_id provided
     result = await handler.handle(PreviewDayQuery(date=task_date))
@@ -257,7 +287,14 @@ async def test_preview_day_returns_calendar_entries():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user)
+    handler = PreviewDayHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.preview_tasks_handler = PreviewTasksHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     # Act
     result = await handler.handle(

@@ -22,7 +22,6 @@ from lykke.application.notifications import (
     format_calendar_entry_when,
     pick_calendar_entry_message_template,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.application.utils.filters import filter_upcoming_calendar_entries
 from lykke.core.utils.dates import (
     get_current_date,
@@ -58,17 +57,8 @@ class CalendarEntryNotificationHandler(
 ):
     """Deterministically sends calendar entry reminders."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        send_push_notification_handler: SendPushNotificationHandler,
-        sms_gateway: SMSProviderProtocol,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._send_push_notification_handler = send_push_notification_handler
-        self._sms_gateway = sms_gateway
+    send_push_notification_handler: SendPushNotificationHandler
+    sms_gateway: SMSProviderProtocol
 
     async def handle(self, command: CalendarEntryNotificationCommand) -> None:
         _ = command.triggered_by
@@ -191,7 +181,7 @@ class CalendarEntryNotificationHandler(
             )
             return
 
-        await self._send_push_notification_handler.handle(
+        await self.send_push_notification_handler.handle(
             SendPushNotificationCommand(
                 subscriptions=subscriptions,
                 content=payload,
@@ -268,7 +258,7 @@ class CalendarEntryNotificationHandler(
             uow.add(outgoing)
 
         try:
-            await self._sms_gateway.send_message(user.phone_number, message)
+            await self.sms_gateway.send_message(user.phone_number, message)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(f"Failed sending calendar reminder SMS: {exc}")
 

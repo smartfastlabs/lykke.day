@@ -12,6 +12,7 @@ import pytest
 from lykke.application.events.handlers.calendar_entry_push_notifications import (
     CalendarEntryPushNotificationHandler,
 )
+from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -32,6 +33,27 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
+class _GatewayFactory:
+    def __init__(self, web_push_gateway: WebPushGatewayProtocol) -> None:
+        self._web_push_gateway = web_push_gateway
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type is WebPushGatewayProtocol
+
+    def create(self, dependency_type: type[object]) -> object:
+        _ = dependency_type
+        return self._web_push_gateway
 
 
 def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
@@ -74,14 +96,22 @@ async def test_calendar_entry_handler_skips_without_subscriptions() -> None:
 
     calendar_entry_repo.get = get_entry
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryCreatedEvent(
@@ -107,14 +137,21 @@ async def test_calendar_entry_handler_returns_without_uow_factory() -> None:
 
     calendar_entry_repo.get = get_entry
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
         uow_factory=None,
-        web_push_gateway=web_push_gateway,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryCreatedEvent(
@@ -152,14 +189,22 @@ async def test_calendar_entry_handler_loads_entry_and_sends() -> None:
             send_calls.append(subscription)
 
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryUpdatedEvent(
@@ -188,14 +233,22 @@ async def test_calendar_entry_handler_uses_snapshot_on_delete() -> None:
 
     calendar_entry_repo.get = get_entry
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryDeletedEvent(
@@ -231,14 +284,22 @@ async def test_calendar_entry_handler_handles_missing_entry() -> None:
 
     calendar_entry_repo.get = raise_get
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryCreatedEvent(user_id=user_id, calendar_entry_id=uuid4())
@@ -254,14 +315,22 @@ async def test_calendar_entry_handler_ignores_unknown_event() -> None:
         pass
 
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=create_push_subscription_repo_double(),
+        calendar_entry_repo=create_calendar_entry_repo_double(),
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=create_push_subscription_repo_double(),
-            calendar_entry_repo=create_calendar_entry_repo_double(),
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     await handler.handle(_OtherEvent(user_id=user_id))
@@ -283,14 +352,22 @@ async def test_calendar_entry_handler_logs_when_entry_data_missing() -> None:
 
     calendar_entry_repo.get = return_none
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     event = CalendarEntryUpdatedEvent(
@@ -321,14 +398,22 @@ async def test_calendar_entry_handler_handles_payload_errors(
 
     calendar_entry_repo.get = get_entry
     web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
     handler = CalendarEntryPushNotificationHandler(
-        create_read_only_repos_double(
-            push_subscription_repo=push_subscription_repo,
-            calendar_entry_repo=calendar_entry_repo,
-        ),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        uow_factory=create_uow_factory_double(create_uow_double()),
-        web_push_gateway=web_push_gateway,
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     def raise_payload(*_: Any, **__: Any) -> None:

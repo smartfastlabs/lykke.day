@@ -21,6 +21,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_delete_brain_dump_removes_item():
     user_id = uuid4()
@@ -38,7 +47,11 @@ async def test_delete_brain_dump_removes_item():
     uow = create_uow_double(brain_dump_repo=brain_dump_repo)
     uow_factory = create_uow_factory_double(uow)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = DeleteBrainDumpHandler(ro_repos, uow_factory, user)
+    handler = DeleteBrainDumpHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     await handler.handle(DeleteBrainDumpCommand(date=item_date, item_id=item.id))
 
@@ -63,7 +76,11 @@ async def test_delete_brain_dump_wrong_date():
     uow = create_uow_double(brain_dump_repo=brain_dump_repo)
     uow_factory = create_uow_factory_double(uow)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = DeleteBrainDumpHandler(ro_repos, uow_factory, user)
+    handler = DeleteBrainDumpHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     with pytest.raises(DomainError, match="not found"):
         await handler.handle(

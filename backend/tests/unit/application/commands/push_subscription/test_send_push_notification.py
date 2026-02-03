@@ -11,6 +11,7 @@ from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,
     SendPushNotificationHandler,
 )
+from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import PushSubscriptionEntity, UserEntity
 from tests.support.dobles import (
@@ -19,6 +20,27 @@ from tests.support.dobles import (
     create_uow_factory_double,
     create_web_push_gateway_double,
 )
+
+
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
+class _GatewayFactory:
+    def __init__(self, web_push_gateway: WebPushGatewayProtocol) -> None:
+        self._web_push_gateway = web_push_gateway
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type is WebPushGatewayProtocol
+
+    def create(self, dependency_type: type[object]) -> object:
+        _ = dependency_type
+        return self._web_push_gateway
 
 
 def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
@@ -34,10 +56,10 @@ def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
 async def test_send_push_notification_skips_without_subscriptions() -> None:
     user_id = uuid4()
     handler = SendPushNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        create_web_push_gateway_double(),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(create_web_push_gateway_double()),
     )
 
     await handler.handle(SendPushNotificationCommand(subscriptions=[], content="hi"))
@@ -58,10 +80,10 @@ async def test_send_push_notification_tracks_success() -> None:
     web_push_gateway.send_notification = send_notification
     subscription = _build_subscription(user_id)
     handler = SendPushNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        web_push_gateway,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     payload = value_objects.NotificationPayload(
@@ -97,10 +119,10 @@ async def test_send_push_notification_tracks_partial_failures() -> None:
 
     web_push_gateway.send_notification = send_notification
     handler = SendPushNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        web_push_gateway,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     await handler.handle(
@@ -129,10 +151,10 @@ async def test_send_push_notification_tracks_all_failures() -> None:
     web_push_gateway.send_notification = send_notification
     subscription = _build_subscription(user_id)
     handler = SendPushNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        web_push_gateway,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(web_push_gateway),
     )
 
     await handler.handle(

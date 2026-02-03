@@ -13,9 +13,10 @@ from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntryEntity
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositories,
+    SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
 
 class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
@@ -104,12 +105,14 @@ async def test_subscribe_calendar_persists_subscription(
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
 
-    handler = SubscribeCalendarHandler(
-        ro_repos=SqlAlchemyReadOnlyRepositories(user=test_user),
-        uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
+    handler = CommandHandlerFactory(
         user=test_user,
-        google_gateway=google_gateway,
-    )
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    ).create(SubscribeCalendarHandler)
 
     updated_calendar = await handler.handle(SubscribeCalendarCommand(calendar=calendar))
 

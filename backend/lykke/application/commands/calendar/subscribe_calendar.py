@@ -7,9 +7,8 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
-from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.domain.entities import CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
@@ -27,23 +26,7 @@ class SubscribeCalendarHandler(
 ):
     """Subscribes a calendar to push notifications for changes."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-    ) -> None:
-        """Initialize SubscribeCalendarHandler.
-
-        Args:
-            ro_repos: Read-only repositories (from BaseCommandHandler)
-            uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user: User entity (from BaseCommandHandler)
-            google_gateway: Google Calendar gateway
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
+    google_gateway: GoogleCalendarGatewayProtocol
 
     async def handle(self, command: SubscribeCalendarCommand) -> CalendarEntity:
         """Subscribe a calendar to push notifications.
@@ -78,7 +61,7 @@ class SubscribeCalendarHandler(
                 webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
                 # Subscribe to calendar changes via Google API
-                subscription = await self._google_gateway.subscribe_to_calendar(
+                subscription = await self.google_gateway.subscribe_to_calendar(
                     calendar=calendar,
                     token=token,
                     webhook_url=webhook_url,

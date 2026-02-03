@@ -40,6 +40,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @dataclass
 class _Recorder:
     commands: list[object]
@@ -161,12 +170,12 @@ async def test_calendar_entry_push_sends_notification() -> None:
 
     recorder = _Recorder(commands=[])
     handler = CalendarEntryNotificationHandler(
-        ro_repos,
-        uow_factory,
-        user,
-        recorder,
-        _SmsGateway(),
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.send_push_notification_handler = recorder
+    handler.sms_gateway = _SmsGateway()
 
     await handler.handle(CalendarEntryNotificationCommand(user=user))
 
@@ -222,12 +231,12 @@ async def test_calendar_entry_push_dedupes_on_triggered_by() -> None:
 
     recorder = _Recorder(commands=[])
     handler = CalendarEntryNotificationHandler(
-        ro_repos,
-        uow_factory,
-        user,
-        recorder,
-        _SmsGateway(),
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.send_push_notification_handler = recorder
+    handler.sms_gateway = _SmsGateway()
 
     await handler.handle(CalendarEntryNotificationCommand(user=user))
 
@@ -267,12 +276,12 @@ async def test_calendar_entry_text_creates_message_and_sends_sms() -> None:
     sms_gateway = _SmsGateway()
 
     handler = CalendarEntryNotificationHandler(
-        ro_repos,
-        uow_factory,
-        user,
-        _Recorder(commands=[]),
-        sms_gateway,
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+    handler.sms_gateway = sms_gateway
 
     await handler.handle(CalendarEntryNotificationCommand(user=user))
 
@@ -318,12 +327,12 @@ async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> No
     uow_factory = create_uow_factory_double(uow)
 
     handler = CalendarEntryNotificationHandler(
-        ro_repos,
-        uow_factory,
-        user,
-        _Recorder(commands=[]),
-        _SmsGateway(),
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+    handler.sms_gateway = _SmsGateway()
 
     await handler.handle(CalendarEntryNotificationCommand(user=user))
 

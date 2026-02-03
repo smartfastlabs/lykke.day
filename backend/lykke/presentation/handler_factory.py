@@ -55,6 +55,7 @@ from lykke.infrastructure.gateways import (
 
 if TYPE_CHECKING:
     from lykke.application.events.handlers import DomainEventHandler
+    from lykke.application.handler_factory_protocols import GatewayFactoryProtocol
     from lykke.application.unit_of_work import (
         ReadOnlyRepositories,
         ReadOnlyRepositoryFactory,
@@ -86,27 +87,25 @@ def _default_llm_gateway_factory() -> LLMGatewayFactoryProtocol:
 
 def build_domain_event_handler(
     handler_class: type[DomainEventHandler],
-    ro_repos: ReadOnlyRepositories,
     user: UserEntity,
+    repository_factory: ReadOnlyRepositoryFactory,
     uow_factory: UnitOfWorkFactory | None,
 ) -> DomainEventHandler:
     """Construct a domain event handler with outer-layer dependencies."""
-    from lykke.application.events.handlers.calendar_entry_push_notifications import (
-        CalendarEntryPushNotificationHandler,
-    )
-
-    if handler_class is CalendarEntryPushNotificationHandler:
-        return CalendarEntryPushNotificationHandler(
-            ro_repos=ro_repos,
+    command_factory = None
+    if uow_factory is not None:
+        command_factory = CommandHandlerFactory(
             user=user,
+            ro_repo_factory=repository_factory,
             uow_factory=uow_factory,
-            web_push_gateway=_default_web_push_gateway(),
         )
 
     return handler_class(
-        ro_repos=ro_repos,
         user=user,
+        repository_factory=repository_factory,
         uow_factory=uow_factory,
+        command_factory=command_factory,
+        gateway_factory=command_factory,
     )
 
 
@@ -118,9 +117,10 @@ def _build_get_llm_prompt_context_handler(
     factory: QueryHandlerFactory,
 ) -> GetLLMPromptContextHandler:
     return GetLLMPromptContextHandler(
-        factory.ro_repos,
-        factory.user,
-        factory.create(GetDayContextHandler),
+        user=factory.user,
+        command_factory=factory,
+        gateway_factory=factory.gateway_factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -128,10 +128,10 @@ def _build_preview_llm_snapshot_handler(
     factory: QueryHandlerFactory,
 ) -> PreviewLLMSnapshotHandler:
     return PreviewLLMSnapshotHandler(
-        factory.ro_repos,
-        factory.user,
-        factory.create(GetLLMPromptContextHandler),
-        _default_llm_gateway_factory(),
+        user=factory.user,
+        command_factory=factory,
+        gateway_factory=factory.gateway_factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -150,15 +150,26 @@ class QueryHandlerFactory:
         user: UserEntity,
         ro_repo_factory: ReadOnlyRepositoryFactory,
         ro_repos: ReadOnlyRepositories | None = None,
+        gateway_factory: GatewayFactoryProtocol | None = None,
         registry: dict[type[BaseQueryHandler], QueryHandlerProvider] | None = None,
     ) -> None:
         self.user = user
+        self._ro_repo_factory = ro_repo_factory
         self._ro_repos = ro_repos or ro_repo_factory.create(user)
+        self._gateway_factory = gateway_factory
         self._registry = registry or DEFAULT_QUERY_HANDLER_REGISTRY
 
     @property
     def ro_repos(self) -> ReadOnlyRepositories:
         return self._ro_repos
+
+    @property
+    def ro_repo_factory(self) -> ReadOnlyRepositoryFactory:
+        return self._ro_repo_factory
+
+    @property
+    def gateway_factory(self) -> GatewayFactoryProtocol | None:
+        return self._gateway_factory
 
     @overload
     def create(
@@ -168,10 +179,19 @@ class QueryHandlerFactory:
     @overload
     def create(self, handler_class: type[QueryHandlerT]) -> QueryHandlerT: ...
 
-    def create(self, handler_class: type[BaseQueryHandler]) -> BaseQueryHandler:
-        provider = self._registry.get(handler_class)
+    @overload
+    def create(self, handler_class: type[object]) -> object: ...
+
+    def create(self, handler_class: type[object]) -> object:
+        handler_type = cast(type[BaseQueryHandler], handler_class)
+        provider = self._registry.get(handler_type)
         if provider is None:
-            return handler_class(self._ro_repos, self.user)
+            return handler_type(
+                user=self.user,
+                command_factory=self,
+                gateway_factory=self._gateway_factory,
+                repository_factory=self._ro_repo_factory,
+            )
         return provider(self)
 
     def can_create(self, handler_class: type[object]) -> bool:
@@ -182,10 +202,11 @@ def _build_schedule_day_handler(
     factory: CommandHandlerFactory,
 ) -> ScheduleDayHandler:
     return ScheduleDayHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.query_factory.create(PreviewDayHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -193,10 +214,11 @@ def _build_reschedule_day_handler(
     factory: CommandHandlerFactory,
 ) -> RescheduleDayHandler:
     return RescheduleDayHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.create(ScheduleDayHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -216,10 +238,11 @@ def _build_sync_calendar_handler(
     factory: CommandHandlerFactory,
 ) -> SyncCalendarHandler:
     return SyncCalendarHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -227,10 +250,11 @@ def _build_sync_all_calendars_handler(
     factory: CommandHandlerFactory,
 ) -> SyncAllCalendarsHandler:
     return SyncAllCalendarsHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.create(SyncCalendarHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -238,10 +262,11 @@ def _build_subscribe_calendar_handler(
     factory: CommandHandlerFactory,
 ) -> SubscribeCalendarHandler:
     return SubscribeCalendarHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -249,10 +274,11 @@ def _build_unsubscribe_calendar_handler(
     factory: CommandHandlerFactory,
 ) -> UnsubscribeCalendarHandler:
     return UnsubscribeCalendarHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -260,11 +286,11 @@ def _build_resync_calendar_handler(
     factory: CommandHandlerFactory,
 ) -> ResyncCalendarHandler:
     return ResyncCalendarHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
-        factory.create(SyncCalendarHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -272,10 +298,11 @@ def _build_reset_calendar_data_handler(
     factory: CommandHandlerFactory,
 ) -> ResetCalendarDataHandler:
     return ResetCalendarDataHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -283,11 +310,11 @@ def _build_reset_calendar_sync_handler(
     factory: CommandHandlerFactory,
 ) -> ResetCalendarSyncHandler:
     return ResetCalendarSyncHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
-        factory.create(SyncCalendarHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -295,10 +322,11 @@ def _build_send_push_notification_handler(
     factory: CommandHandlerFactory,
 ) -> SendPushNotificationHandler:
     return SendPushNotificationHandler(
-        ro_repos=factory.ro_repos,
-        uow_factory=factory.uow_factory,
         user=factory.user,
-        web_push_gateway=factory.web_push_gateway,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -306,10 +334,11 @@ def _build_google_login_callback_handler(
     factory: CommandHandlerFactory,
 ) -> HandleGoogleLoginCallbackHandler:
     return HandleGoogleLoginCallbackHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.google_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -317,12 +346,11 @@ def _build_smart_notification_handler(
     factory: CommandHandlerFactory,
 ) -> SmartNotificationHandler:
     return SmartNotificationHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.llm_gateway_factory,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.create(SendPushNotificationHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -330,11 +358,11 @@ def _build_calendar_entry_notification_handler(
     factory: CommandHandlerFactory,
 ) -> CalendarEntryNotificationHandler:
     return CalendarEntryNotificationHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.create(SendPushNotificationHandler),
-        factory.sms_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -342,13 +370,11 @@ def _build_morning_overview_handler(
     factory: CommandHandlerFactory,
 ) -> MorningOverviewHandler:
     return MorningOverviewHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.llm_gateway_factory,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.query_factory.create(ComputeTaskRiskHandler),
-        factory.create(SendPushNotificationHandler),
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -368,15 +394,11 @@ def _build_process_inbound_sms_handler(
     factory: CommandHandlerFactory,
 ) -> ProcessInboundSmsHandler:
     return ProcessInboundSmsHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.llm_gateway_factory,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.create(CreateAdhocTaskHandler),
-        factory.create(RecordTaskActionHandler),
-        factory.create(AddAlarmToDayHandler),
-        factory.sms_gateway,
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -430,6 +452,7 @@ class CommandHandlerFactory:
             user=user,
             ro_repo_factory=ro_repo_factory,
             ro_repos=self._ro_repos,
+            gateway_factory=self,
         )
         self._registry = registry or DEFAULT_COMMAND_HANDLER_REGISTRY
         self._google_gateway_provider = (
@@ -565,7 +588,13 @@ class CommandHandlerFactory:
         handler_type = cast(type[BaseCommandHandler], handler_class)
         provider = self._registry.get(handler_type)
         if provider is None:
-            return handler_type(self._ro_repos, self.uow_factory, self.user)
+            return handler_type(
+                user=self.user,
+                uow_factory=self.uow_factory,
+                command_factory=self,
+                gateway_factory=self,
+                repository_factory=self._ro_repo_factory,
+            )
         return provider(self)
 
     def can_create(self, handler_class: type[object]) -> bool:

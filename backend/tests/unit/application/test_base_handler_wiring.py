@@ -97,7 +97,6 @@ def test_base_handler_wires_dependencies() -> None:
     llm_gateway_factory_sentinel = object()
 
     handler = _DummyHandler(
-        ro_repos=None,
         user=user,
         command_factory=_CommandFactory(
             handlers={_DummyCommandHandler: command_handler_sentinel},

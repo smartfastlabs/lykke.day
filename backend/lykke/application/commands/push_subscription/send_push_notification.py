@@ -8,14 +8,9 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import (
-    PushNotificationEntity,
-    PushSubscriptionEntity,
-    UserEntity,
-)
+from lykke.domain.entities import PushNotificationEntity, PushSubscriptionEntity
 
 
 def _is_invalid_subscription_error(error: Exception) -> bool:
@@ -52,23 +47,7 @@ class SendPushNotificationHandler(
 ):
     """Sends push notifications to subscriptions and tracks them."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        web_push_gateway: WebPushGatewayProtocol,
-    ) -> None:
-        """Initialize SendPushNotificationHandler.
-
-        Args:
-            ro_repos: Read-only repositories
-            uow_factory: Unit of work factory
-            user: User entity for scoping
-            web_push_gateway: Web push notification gateway
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._web_push_gateway = web_push_gateway
+    web_push_gateway: WebPushGatewayProtocol
 
     async def handle(self, command: SendPushNotificationCommand) -> None:
         """Send push notifications to all subscriptions and track the results.
@@ -113,7 +92,7 @@ class SendPushNotificationHandler(
                 logger.info(
                     f"Sending push notification to subscription {subscription.id}"
                 )
-                await self._web_push_gateway.send_notification(
+                await self.web_push_gateway.send_notification(
                     subscription=subscription,
                     content=content_for_push,
                 )

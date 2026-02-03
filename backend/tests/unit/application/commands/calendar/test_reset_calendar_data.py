@@ -12,6 +12,7 @@ from lykke.application.commands.calendar import (
     ResetCalendarDataCommand,
     ResetCalendarDataHandler,
 )
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuthTokenEntity,
@@ -31,6 +32,27 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
+class _GatewayFactory:
+    def __init__(self, google_gateway: GoogleCalendarGatewayProtocol) -> None:
+        self._google_gateway = google_gateway
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type is GoogleCalendarGatewayProtocol
+
+    def create(self, dependency_type: type[object]) -> object:
+        _ = dependency_type
+        return self._google_gateway
 
 
 def _build_calendar(user_id: Any, *, subscribed: bool) -> CalendarEntity:
@@ -84,10 +106,10 @@ async def test_reset_calendar_data_skips_unsubscribed_calendars() -> None:
     google_gateway = create_google_gateway_double()
 
     handler = ResetCalendarDataHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        google_gateway,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(google_gateway),
     )
 
     result = await handler.handle(ResetCalendarDataCommand())
@@ -162,10 +184,10 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
     google_gateway.subscribe_to_calendar = subscribe_to_calendar
 
     handler = ResetCalendarDataHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        google_gateway,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(google_gateway),
     )
 
     result = await handler.handle(ResetCalendarDataCommand())
@@ -195,10 +217,10 @@ async def test_reset_calendar_data_rejects_unknown_platform() -> None:
     )
 
     handler = ResetCalendarDataHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        create_google_gateway_double(),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(create_google_gateway_double()),
     )
 
     with pytest.raises(NotImplementedError):

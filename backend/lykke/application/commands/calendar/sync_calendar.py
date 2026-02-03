@@ -11,11 +11,7 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
+from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import NotFoundError, TokenExpiredError
 from lykke.domain import value_objects
@@ -24,7 +20,6 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
-    UserEntity,
 )
 from lykke.domain.events.calendar_entry_series_events import (
     CalendarEntrySeriesUpdatedEvent,
@@ -51,23 +46,7 @@ class SyncCalendarCommand(Command):
 class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity]):
     """Syncs calendar entries from external provider."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        google_gateway: GoogleCalendarGatewayProtocol,
-    ) -> None:
-        """Initialize SyncCalendarHandler.
-
-        Args:
-            ro_repos: Read-only repositories (from BaseCommandHandler)
-            uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user: User entity (from BaseCommandHandler)
-            google_gateway: Google Calendar gateway
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._google_gateway = google_gateway
+    google_gateway: GoogleCalendarGatewayProtocol
 
     async def handle(self, command: SyncCalendarCommand) -> CalendarEntity:
         """Handle sync calendar command."""
@@ -447,7 +426,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             )
 
         try:
-            return await self._google_gateway.load_calendar_events(
+            return await self.google_gateway.load_calendar_events(
                 calendar=calendar,
                 lookback=lookback,
                 token=token,
@@ -457,7 +436,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         except HttpError as exc:
             if exc.resp.status == 410:
                 logger.info("Sync token expired, performing full sync")
-                return await self._google_gateway.load_calendar_events(
+                return await self.google_gateway.load_calendar_events(
                     calendar=calendar,
                     lookback=lookback,
                     token=token,
@@ -491,23 +470,7 @@ class SyncAllCalendarsCommand(Command):
 class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None]):
     """Syncs all calendars for a user."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        sync_calendar_handler: SyncCalendarHandler,
-    ) -> None:
-        """Initialize SyncAllCalendarsHandler.
-
-        Args:
-            ro_repos: Read-only repositories (from BaseCommandHandler)
-            uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user: User entity (from BaseCommandHandler)
-            sync_calendar_handler: Handler for syncing a single calendar
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._sync_calendar_handler = sync_calendar_handler
+    sync_calendar_handler: SyncCalendarHandler
 
     async def handle(self, command: SyncAllCalendarsCommand) -> None:
         """Handle sync all calendars command."""
@@ -521,7 +484,7 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
             for calendar in calendars:
                 try:
                     token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
-                    await self._sync_calendar_handler.sync_calendar_with_uow(
+                    await self.sync_calendar_handler.sync_calendar_with_uow(
                         calendar, token, uow
                     )
                 except TokenExpiredError:

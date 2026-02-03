@@ -11,6 +11,7 @@ from lykke.application.commands.calendar.sync_calendar import (
     SyncCalendarCommand,
     SyncCalendarHandler,
 )
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -40,6 +41,27 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
+class _GatewayFactory:
+    def __init__(self, google_gateway: GoogleCalendarGatewayProtocol) -> None:
+        self._google_gateway = google_gateway
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type is GoogleCalendarGatewayProtocol
+
+    def create(self, dependency_type: type[object]) -> object:
+        _ = dependency_type
+        return self._google_gateway
 
 
 @pytest.fixture
@@ -199,10 +221,10 @@ def test_sync_calendar_changes_with_new_events(
 
     # Create handler and sync
     SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     # Note: This is a unit test, so we're testing the logic, not actual async execution
@@ -501,10 +523,10 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
     mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
@@ -624,10 +646,10 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
     mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
@@ -725,10 +747,10 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
     mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
@@ -812,10 +834,10 @@ async def test_sync_calendar_series_creation_emits_single_notification(
     mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
@@ -885,10 +907,10 @@ async def test_sync_calendar_instance_level_single_entry_emits_notification(
     mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
-        ro_repos=mock_ro_repos,
-        uow_factory=mock_uow_factory,
         user=test_user,
-        google_gateway=mock_google_gateway,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
     )
 
     await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))

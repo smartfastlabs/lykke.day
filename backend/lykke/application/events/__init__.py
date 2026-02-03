@@ -9,11 +9,10 @@ This module provides:
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
+from lykke.application.handler_factory_protocols import (
+    ReadOnlyRepositoryFactoryProtocol,
 )
+from lykke.application.unit_of_work import UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 
 from .handlers import (
@@ -25,14 +24,14 @@ from .signals import domain_event_signal, send_domain_events
 
 
 def register_all_handlers(
-    ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
+    ro_repo_factory: ReadOnlyRepositoryFactoryProtocol | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
     user_loader: Callable[[UUID], Awaitable[UserEntity | None]] | None = None,
     handler_factory: Callable[
         [
             type[DomainEventHandler],
-            ReadOnlyRepositories,
             UserEntity,
+            ReadOnlyRepositoryFactoryProtocol,
             UnitOfWorkFactory | None,
         ],
         DomainEventHandler,

@@ -11,9 +11,8 @@ from lykke.application.commands.day.schedule_day import (
     ScheduleDayCommand,
     ScheduleDayHandler,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, UserEntity
+from lykke.domain.entities import DayEntity
 
 
 @dataclass(frozen=True)
@@ -29,15 +28,7 @@ class RescheduleDayHandler(
 ):
     """Reschedules a day by cleaning up existing tasks and audit logs, then creating fresh tasks."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        schedule_day_handler: ScheduleDayHandler,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self.schedule_day_handler = schedule_day_handler
+    schedule_day_handler: ScheduleDayHandler
 
     async def handle(self, command: RescheduleDayCommand) -> value_objects.DayContext:
         """Reschedule a day by cleaning up and recreating all tasks.

@@ -32,6 +32,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 def _make_user(user_id):
     return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
 
@@ -114,8 +123,11 @@ async def test_schedule_day_creates_day_and_tasks():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act
     result = await handler.handle(
@@ -209,8 +221,11 @@ async def test_schedule_day_returns_existing_day_without_creating():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     result = await handler.handle(
         ScheduleDayCommand(date=task_date, template_id=template.id)
@@ -282,8 +297,11 @@ async def test_schedule_day_deletes_existing_tasks():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act
     await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
@@ -358,8 +376,11 @@ async def test_schedule_day_raises_error_if_no_template():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act & Assert
     with pytest.raises(ValueError, match="Day template is required to schedule"):
@@ -426,8 +447,11 @@ async def test_schedule_day_uses_template_id_if_provided():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act
     result = await handler.handle(
@@ -529,8 +553,11 @@ async def test_schedule_day_copies_timeblocks_from_template():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act
     result = await handler.handle(
@@ -628,8 +655,11 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     # Act
     result = await handler.handle(
@@ -718,8 +748,11 @@ async def test_schedule_day_copies_alarms_from_template():
     allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(
-        ro_repos, uow_factory, _make_user(user_id), preview_handler
+        user=_make_user(user_id),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
+    handler.preview_day_handler = preview_handler
 
     result = await handler.handle(
         ScheduleDayCommand(date=task_date, template_id=template.id)

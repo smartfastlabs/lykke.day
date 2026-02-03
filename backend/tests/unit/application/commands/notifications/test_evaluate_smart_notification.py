@@ -35,6 +35,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 class _LLMGateway:
     async def run_usecase(
         self,
@@ -123,13 +132,15 @@ async def test_smart_handle_skips_when_disabled(
 ) -> None:
     user_id = uuid4()
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _Recorder(commands=[]),
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     called = False
 
@@ -151,13 +162,15 @@ async def test_smart_handle_runs_llm_when_enabled(
 ) -> None:
     user_id = uuid4()
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
-        _Recorder(commands=[]),
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     called = False
 
@@ -181,13 +194,15 @@ async def test_smart_build_prompt_input() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _Recorder(commands=[]),
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
 
     result = await handler.build_prompt_input(dt_date(2025, 11, 27))
 
@@ -200,13 +215,15 @@ async def test_smart_tool_skips_low_priority() -> None:
     prompt_context = _build_prompt_context(user_id)
     send_recorder = _Recorder(commands=[])
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        send_recorder,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -226,13 +243,15 @@ async def test_smart_tool_skips_when_llm_declines() -> None:
     prompt_context = _build_prompt_context(user_id)
     send_recorder = _Recorder(commands=[])
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        send_recorder,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -256,16 +275,20 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
         PushNotificationRepositoryReadOnlyProtocol
     )
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(
-            push_notification_repo=push_notification_repo,
-            push_subscription_repo=push_subscription_repo,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_notification_repo=push_notification_repo,
+                push_subscription_repo=push_subscription_repo,
+            )
         ),
-        create_uow_factory_double(uow),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        _Recorder(commands=[]),
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
     handler._triggered_by = "scheduled"
     handler._llm_snapshot_context = LLMRunSnapshotContext(
         prompt_context=prompt_context,
@@ -313,16 +336,20 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
 
     push_subscription_repo.all = return_subscriptions
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(
-            push_notification_repo=push_notification_repo,
-            push_subscription_repo=push_subscription_repo,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_notification_repo=push_notification_repo,
+                push_subscription_repo=push_subscription_repo,
+            )
         ),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        send_recorder,
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),
@@ -370,16 +397,20 @@ async def test_smart_tool_skips_when_recent_notification_sent() -> None:
     )
 
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(
-            push_notification_repo=push_notification_repo,
-            push_subscription_repo=push_subscription_repo,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_notification_repo=push_notification_repo,
+                push_subscription_repo=push_subscription_repo,
+            )
         ),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        send_recorder,
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=current_time,
@@ -416,16 +447,20 @@ async def test_smart_tool_handles_send_errors() -> None:
     send_recorder.handle = raise_send
 
     handler = SmartNotificationHandler(
-        create_read_only_repos_double(
-            push_notification_repo=push_notification_repo,
-            push_subscription_repo=push_subscription_repo,
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(
+            create_read_only_repos_double(
+                push_notification_repo=push_notification_repo,
+                push_subscription_repo=push_subscription_repo,
+            )
         ),
-        create_uow_factory_double(create_uow_double()),
-        _build_user(user_id),
-        _LLMGatewayFactory(),
-        _PromptContextHandler(prompt_context=prompt_context),
-        send_recorder,
     )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
 
     tools = handler.build_tools(
         current_time=datetime.now(UTC),

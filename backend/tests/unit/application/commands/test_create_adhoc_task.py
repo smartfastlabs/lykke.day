@@ -23,6 +23,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_create_adhoc_task_sets_adhoc_fields():
     """Verify adhoc task uses ADHOC type and ONCE frequency."""
@@ -64,7 +73,11 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     )
     uow_factory = create_uow_factory_double(uow)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user)
+    handler = CreateAdhocTaskHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     time_window = value_objects.TimeWindow(
         available_time=dt_time(9, 0),
@@ -130,7 +143,11 @@ async def test_create_adhoc_task_with_reminder_type():
     )
     uow_factory = create_uow_factory_double(uow)
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user)
+    handler = CreateAdhocTaskHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     result = await handler.handle(
         CreateAdhocTaskCommand(

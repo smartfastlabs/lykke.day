@@ -34,7 +34,6 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -56,34 +55,12 @@ class MorningOverviewHandler(
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
+    llm_gateway_factory: LLMGatewayFactoryProtocol
+    get_llm_prompt_context_handler: GetLLMPromptContextHandler
+    compute_task_risk_handler: ComputeTaskRiskHandler
+    send_push_notification_handler: SendPushNotificationHandler
     name = "morning_overview"
     template_usecase = "morning_overview"
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user: UserEntity,
-        llm_gateway_factory: LLMGatewayFactoryProtocol,
-        get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        compute_task_risk_handler: ComputeTaskRiskHandler,
-        send_push_notification_handler: SendPushNotificationHandler,
-    ) -> None:
-        """Initialize MorningOverviewHandler.
-
-        Args:
-            ro_repos: Read-only repositories
-            uow_factory: Unit of work factory for creating write transactions
-            user: User entity for scoping
-            get_llm_prompt_context_handler: Handler for prompt context
-            compute_task_risk_handler: Handler for task risk scoring
-            send_push_notification_handler: Handler for sending push notifications
-        """
-        super().__init__(ro_repos, uow_factory, user)
-        self._llm_gateway_factory = llm_gateway_factory
-        self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
-        self._compute_task_risk_handler = compute_task_risk_handler
-        self._send_push_notification_handler = send_push_notification_handler
 
     async def handle(self, command: MorningOverviewCommand) -> None:
         """Evaluate day context and send morning overview if warranted.
@@ -116,10 +93,10 @@ class MorningOverviewHandler(
         await self.run_llm()
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
-        prompt_context = await self._get_llm_prompt_context_handler.handle(
+        prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=date)
         )
-        risk_result = await self._compute_task_risk_handler.handle(
+        risk_result = await self.compute_task_risk_handler.handle(
             ComputeTaskRiskQuery(tasks=prompt_context.tasks)
         )
         high_risk_tasks: list[dict[str, Any]] = []
@@ -231,7 +208,7 @@ class MorningOverviewHandler(
                         await uow.commit()
                     return None
 
-                await self._send_push_notification_handler.handle(
+                await self.send_push_notification_handler.handle(
                     SendPushNotificationCommand(
                         subscriptions=subscriptions,
                         content=payload,

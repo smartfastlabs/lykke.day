@@ -15,7 +15,11 @@ from lykke.application.commands.auth import (
 )
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.application.repositories import SmsLoginCodeRepositoryReadWriteProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    ReadWriteRepositoryFactory,
+    UnitOfWorkFactory,
+)
 from lykke.core.exceptions import AuthenticationError
 from lykke.infrastructure.auth import auth_backend, get_jwt_strategy
 from lykke.infrastructure.database.tables import User
@@ -29,6 +33,7 @@ from lykke.presentation.api.schemas.auth_sms import (
 
 from .dependencies.services import (
     get_read_only_repository_factory,
+    get_read_write_repository_factory,
     get_unit_of_work_factory,
 )
 from .dependencies.user import get_system_user
@@ -65,16 +70,17 @@ def _get_verify_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
+    rw_repo_factory: Annotated[
+        ReadWriteRepositoryFactory, Depends(get_read_write_repository_factory)
+    ],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> VerifySmsLoginCodeHandler:
     system_user = get_system_user()
-    ro_repos = ro_repo_factory.create(system_user)
-    sms_repo = _get_sms_login_code_repo()
     return VerifySmsLoginCodeHandler(
-        ro_repos=ro_repos,
-        uow_factory=uow_factory,
         user=system_user,
-        sms_login_code_repo=cast("SmsLoginCodeRepositoryReadWriteProtocol", sms_repo),
+        uow_factory=uow_factory,
+        repository_factory=ro_repo_factory,
+        readwrite_repository_factory=rw_repo_factory,
     )
 
 

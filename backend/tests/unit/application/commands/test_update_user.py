@@ -19,6 +19,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_update_user_updates_fields_and_settings():
     user = UserEntity(
@@ -32,7 +41,11 @@ async def test_update_user_updates_fields_and_settings():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     uow = create_uow_double(user_repo=user_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateUserHandler(ro_repos, uow_factory, user)
+    handler = UpdateUserHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     update_data = UserUpdateObject(
         phone_number="(978) 844-4177",
@@ -63,7 +76,11 @@ async def test_update_user_skips_none_fields():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     uow = create_uow_double(user_repo=user_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateUserHandler(ro_repos, uow_factory, user)
+    handler = UpdateUserHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     update_data = UserUpdateObject(
         phone_number=None,

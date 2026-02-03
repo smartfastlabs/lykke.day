@@ -10,11 +10,12 @@ from loguru import logger
 # Import signal here to avoid circular imports
 from lykke.application.base_handler import BaseHandler
 from lykke.application.events.signals import domain_event_signal
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
+from lykke.application.handler_factory_protocols import (
+    CommandHandlerFactoryProtocol,
+    GatewayFactoryProtocol,
+    ReadOnlyRepositoryFactoryProtocol,
 )
+from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import DomainEvent
 
@@ -55,14 +56,14 @@ class DomainEventHandler(ABC, BaseHandler):
     _handler_classes: ClassVar[list[type["DomainEventHandler"]]] = []
 
     # Factory references for creating handler instances per user (class variables)
-    _class_ro_repo_factory: ClassVar[ReadOnlyRepositoryFactory | None] = None
+    _class_ro_repo_factory: ClassVar[ReadOnlyRepositoryFactoryProtocol | None] = None
     _class_uow_factory: ClassVar[UnitOfWorkFactory | None] = None
     _class_handler_factory: ClassVar[
         Callable[
             [
                 type["DomainEventHandler"],
-                ReadOnlyRepositories,
                 UserEntity,
+                ReadOnlyRepositoryFactoryProtocol,
                 UnitOfWorkFactory | None,
             ],
             "DomainEventHandler",
@@ -82,12 +83,21 @@ class DomainEventHandler(ABC, BaseHandler):
 
     def __init__(
         self,
-        ro_repos: ReadOnlyRepositories,
+        *,
         user: UserEntity,
+        repository_factory: ReadOnlyRepositoryFactoryProtocol,
         uow_factory: UnitOfWorkFactory | None = None,
+        command_factory: CommandHandlerFactoryProtocol | None = None,
+        gateway_factory: GatewayFactoryProtocol | None = None,
     ) -> None:
         """Initialize the event handler with explicit dependencies."""
-        super().__init__(ro_repos, user, uow_factory=uow_factory)
+        super().__init__(
+            user,
+            command_factory=command_factory,
+            gateway_factory=gateway_factory,
+            uow_factory=uow_factory,
+            repository_factory=repository_factory,
+        )
         self._uow_factory = uow_factory
 
     @classmethod
@@ -157,18 +167,17 @@ class DomainEventHandler(ABC, BaseHandler):
                     )
                     continue  # Skip if factories not set up
 
-                ro_repos = cls._class_ro_repo_factory.create(user)
                 if cls._class_handler_factory is not None:
                     handler_instance = cls._class_handler_factory(
                         handler_class,
-                        ro_repos,
                         user,
+                        cls._class_ro_repo_factory,
                         cls._class_uow_factory,
                     )
                 else:
                     handler_instance = handler_class(
-                        ro_repos=ro_repos,
                         user=user,
+                        repository_factory=cls._class_ro_repo_factory,
                         uow_factory=cls._class_uow_factory,
                     )
                 await handler_instance.handle(event_obj)
@@ -176,14 +185,14 @@ class DomainEventHandler(ABC, BaseHandler):
     @classmethod
     def register_all_handlers(
         cls,
-        ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
+        ro_repo_factory: ReadOnlyRepositoryFactoryProtocol | None = None,
         uow_factory: UnitOfWorkFactory | None = None,
         user_loader: Callable[[UUID], Awaitable[UserEntity | None]] | None = None,
         handler_factory: Callable[
             [
                 type["DomainEventHandler"],
-                ReadOnlyRepositories,
                 UserEntity,
+                ReadOnlyRepositoryFactoryProtocol,
                 UnitOfWorkFactory | None,
             ],
             "DomainEventHandler",

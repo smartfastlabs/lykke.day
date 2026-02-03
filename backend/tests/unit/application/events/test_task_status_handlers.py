@@ -13,11 +13,23 @@ from lykke.domain.events.task_events import TaskCompletedEvent, TaskStatusChange
 from tests.support.dobles import create_read_only_repos_double
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_task_status_logger_handles_events() -> None:
     user_id = uuid4()
     user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = TaskStatusLoggerHandler(create_read_only_repos_double(), user)
+    handler = TaskStatusLoggerHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
 
     await handler.handle(
         TaskStatusChangedEvent(

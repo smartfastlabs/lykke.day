@@ -23,12 +23,11 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity, UserEntity
+from lykke.domain.entities import MessageEntity
 
 
 @dataclass(frozen=True)
@@ -42,17 +41,8 @@ class PreviewLLMSnapshotHandler(
     BaseQueryHandler[PreviewLLMSnapshotQuery, value_objects.LLMRunResultSnapshot | None]
 ):
     """Builds a synthetic LLM snapshot for a given usecase."""
-
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        user: UserEntity,
-        get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        llm_gateway_factory: LLMGatewayFactoryProtocol,
-    ) -> None:
-        super().__init__(ro_repos, user)
-        self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
-        self._llm_gateway_factory = llm_gateway_factory
+    get_llm_prompt_context_handler: GetLLMPromptContextHandler
+    llm_gateway_factory: LLMGatewayFactoryProtocol
 
     async def handle(
         self, query: PreviewLLMSnapshotQuery
@@ -71,7 +61,7 @@ class PreviewLLMSnapshotHandler(
 
         current_time = get_current_datetime_in_timezone(user.settings.timezone)
         current_date = get_current_date(user.settings.timezone)
-        prompt_context = await self._get_llm_prompt_context_handler.handle(
+        prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=current_date)
         )
 
@@ -121,7 +111,7 @@ class PreviewLLMSnapshotHandler(
         )
 
         try:
-            llm_gateway = self._llm_gateway_factory.create_gateway(
+            llm_gateway = self.llm_gateway_factory.create_gateway(
                 user.settings.llm_provider
             )
         except DomainError:

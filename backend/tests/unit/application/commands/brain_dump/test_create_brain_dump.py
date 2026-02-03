@@ -29,6 +29,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 class _WorkersToSchedule:
     def __init__(self) -> None:
         self.calls: list[tuple[object, dict[str, object]]] = []
@@ -80,7 +89,11 @@ async def test_create_brain_dump_creates_item():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user)
+    handler = CreateBrainDumpHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     workers_to_schedule = _WorkersToSchedule()
     token = set_current_workers_to_schedule(workers_to_schedule)
@@ -142,7 +155,11 @@ async def test_create_brain_dump_day_not_found():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user)
+    handler = CreateBrainDumpHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
 
     with pytest.raises(NotFoundError, match="Day"):
         await handler.handle(

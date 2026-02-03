@@ -14,7 +14,10 @@ from lykke.application.commands.push_subscription import (
 from lykke.application.notifications import (
     build_notification_payload_for_calendar_entry_change,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
@@ -43,16 +46,9 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
         CalendarEntryDeletedEvent,
     ]
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        user: UserEntity,
-        *,
-        uow_factory: UnitOfWorkFactory | None = None,
-        web_push_gateway: WebPushGatewayProtocol,
-    ) -> None:
-        super().__init__(ro_repos=ro_repos, user=user, uow_factory=uow_factory)
-        self._web_push_gateway = web_push_gateway
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    send_push_notification_handler: SendPushNotificationHandler
 
     async def handle(self, event: DomainEvent) -> None:
         """Handle calendar entry events by sending push notifications.
@@ -127,13 +123,6 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             )
             return
 
-        send_handler = SendPushNotificationHandler(
-            ro_repos=self._get_ro_repos(),
-            uow_factory=self._uow_factory,
-            user=self.user,
-            web_push_gateway=self._web_push_gateway,
-        )
-
         command = SendPushNotificationCommand(
             subscriptions=subscriptions,
             content=payload,
@@ -144,7 +133,7 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
                 )
             ],
         )
-        await send_handler.handle(command)
+        await self.send_push_notification_handler.handle(command)
 
         logger.info(
             f"Sent {change_type} notifications for calendar entry {calendar_entry_id} "

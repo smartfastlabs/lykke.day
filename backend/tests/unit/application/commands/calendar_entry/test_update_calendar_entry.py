@@ -22,6 +22,15 @@ from tests.support.dobles import (
 )
 
 
+class _RepositoryFactory:
+    def __init__(self, ro_repos: object) -> None:
+        self._ro_repos = ro_repos
+
+    def create(self, user: object) -> object:
+        _ = user
+        return self._ro_repos
+
+
 @pytest.mark.asyncio
 async def test_update_calendar_entry_attendance_status():
     """Test updating calendar entry attendance status."""
@@ -45,9 +54,9 @@ async def test_update_calendar_entry_attendance_status():
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateCalendarEntryHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     update_object = CalendarEntryUpdateObject(
@@ -91,9 +100,9 @@ async def test_update_calendar_entry_name():
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateCalendarEntryHandler(
-        ro_repos,
-        uow_factory,
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
     )
 
     update_object = CalendarEntryUpdateObject(name="Updated Name")

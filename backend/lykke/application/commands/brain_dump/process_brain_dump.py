@@ -16,6 +16,9 @@ from lykke.application.commands.task import (
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
 from lykke.application.queries.get_llm_prompt_context import (
@@ -28,15 +31,7 @@ from lykke.domain import value_objects
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
 
-    from lykke.application.handler_factory_protocols import (
-        CommandHandlerFactoryProtocol,
-        GatewayFactoryProtocol,
-    )
     from lykke.application.repositories import BrainDumpRepositoryReadOnlyProtocol
-    from lykke.application.unit_of_work import (
-        ReadOnlyRepositoryFactory,
-        UnitOfWorkFactory,
-    )
     from lykke.domain.entities import BrainDumpEntity, UserEntity
 
 
@@ -54,31 +49,14 @@ class ProcessBrainDumpHandler(
     """Process brain dump items into follow-up actions."""
 
     brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+    llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     create_adhoc_task_handler: CreateAdhocTaskHandler
     record_task_action_handler: RecordTaskActionHandler
     name = "process_brain_dump"
     template_usecase = "process_brain_dump"
-
-    def __init__(
-        self,
-        *,
-        user: UserEntity,
-        command_factory: CommandHandlerFactoryProtocol | None,
-        uow_factory: UnitOfWorkFactory,
-        gateway_factory: GatewayFactoryProtocol | None,
-        repository_factory: ReadOnlyRepositoryFactory,
-    ) -> None:
-        super().__init__(
-            ro_repos=None,
-            uow_factory=uow_factory,
-            user=user,
-            command_factory=command_factory,
-            gateway_factory=gateway_factory,
-            repository_factory=repository_factory,
-        )
-        self._brain_dump: BrainDumpEntity | None = None
-        self._brain_dump_date: dt_date | None = None
+    _brain_dump: BrainDumpEntity | None = None
+    _brain_dump_date: dt_date | None = None
 
     async def handle(self, command: ProcessBrainDumpCommand) -> None:
         """Run LLM processing for a brain dump item and apply actions."""
