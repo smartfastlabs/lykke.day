@@ -6,6 +6,10 @@ from datetime import date as dt_date, timedelta
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    RoutineRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity, TaskEntity
@@ -29,6 +33,9 @@ class EvaluateTimingStatusHandler(
 ):
     """Evaluates timing status changes and emits DomainEvents."""
 
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+
     async def handle(self, command: EvaluateTimingStatusCommand) -> None:
         async with self.new_uow() as uow:
             try:
@@ -41,10 +48,10 @@ class EvaluateTimingStatusHandler(
             previous_time = now - timedelta(seconds=command.poll_interval_seconds)
             target_date = command.date or get_current_date(user_timezone)
 
-            tasks = await uow.task_ro_repo.search(
+            tasks = await self.task_ro_repo.search(
                 value_objects.TaskQuery(date=target_date)
             )
-            routines = await uow.routine_ro_repo.search(
+            routines = await self.routine_ro_repo.search(
                 value_objects.RoutineQuery(date=target_date)
             )
             tasks_by_routine_definition = self._group_tasks_by_routine_definition(tasks)

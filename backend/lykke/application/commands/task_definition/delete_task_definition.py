@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class DeleteTaskDefinitionHandler(
 ):
     """Deletes a task definition."""
 
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+
     async def handle(self, command: DeleteTaskDefinitionCommand) -> None:
         """Delete a task definition.
 
@@ -28,7 +31,7 @@ class DeleteTaskDefinitionHandler(
             NotFoundError: If task definition not found
         """
         async with self.new_uow() as uow:
-            task_definition = await uow.task_definition_ro_repo.get(
+            task_definition = await self.task_definition_ro_repo.get(
                 command.task_definition_id
             )
             await uow.delete(task_definition)

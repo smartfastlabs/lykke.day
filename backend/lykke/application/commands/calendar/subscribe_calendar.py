@@ -7,6 +7,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.repositories import AuthTokenRepositoryReadOnlyProtocol
 from lykke.core.config import settings
 from lykke.domain.entities import CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
@@ -27,6 +28,7 @@ class SubscribeCalendarHandler(
     """Subscribes a calendar to push notifications for changes."""
 
     google_gateway: GoogleCalendarGatewayProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
 
     async def handle(self, command: SubscribeCalendarCommand) -> CalendarEntity:
         """Subscribe a calendar to push notifications.
@@ -47,7 +49,7 @@ class SubscribeCalendarHandler(
         calendar = command.calendar
         uow = self.new_uow()
         async with uow:
-            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
 
             if calendar.platform == "google":
                 # Generate unique channel ID for this subscription

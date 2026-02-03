@@ -84,12 +84,9 @@ def _build_calendar(user_id: Any, *, subscribed: bool) -> CalendarEntity:
 async def test_reset_calendar_data_skips_unsubscribed_calendars() -> None:
     user_id = uuid4()
     calendar = _build_calendar(user_id, subscribed=False)
-    uow = create_uow_double(
-        calendar_repo=create_calendar_repo_double(),
-        calendar_entry_repo=create_calendar_entry_repo_double(),
-        calendar_entry_series_repo=create_calendar_entry_series_repo_double(),
-        auth_token_repo=create_auth_token_repo_double(),
-    )
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    calendar_entry_series_repo = create_calendar_entry_series_repo_double()
+    calendar_repo = create_calendar_repo_double()
 
     async def all_calendars() -> list[CalendarEntity]:
         return [calendar]
@@ -100,15 +97,28 @@ async def test_reset_calendar_data_skips_unsubscribed_calendars() -> None:
     async def no_series(_: object) -> list[CalendarEntrySeriesEntity]:
         return []
 
-    uow.calendar_ro_repo.all = all_calendars
-    uow.calendar_entry_ro_repo.search = no_entries
-    uow.calendar_entry_series_ro_repo.search = no_series
+    calendar_repo.all = all_calendars
+    calendar_entry_repo.search = no_entries
+    calendar_entry_series_repo.search = no_series
+
+    uow = create_uow_double(
+        calendar_repo=calendar_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        calendar_entry_series_repo=calendar_entry_series_repo,
+        auth_token_repo=create_auth_token_repo_double(),
+    )
+
+    ro_repos = create_read_only_repos_double(
+        calendar_repo=calendar_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        calendar_entry_series_repo=calendar_entry_series_repo,
+    )
     google_gateway = create_google_gateway_double()
 
     handler = ResetCalendarDataHandler(
         user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(uow),
-        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
         gateway_factory=_GatewayFactory(google_gateway),
     )
 
@@ -142,12 +152,10 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
         platform="google",
         frequency=value_objects.TaskFrequency.WEEKLY,
     )
-    uow = create_uow_double(
-        calendar_repo=create_calendar_repo_double(),
-        calendar_entry_repo=create_calendar_entry_repo_double(),
-        calendar_entry_series_repo=create_calendar_entry_series_repo_double(),
-        auth_token_repo=create_auth_token_repo_double(),
-    )
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    calendar_entry_series_repo = create_calendar_entry_series_repo_double()
+    calendar_repo = create_calendar_repo_double()
+    auth_token_repo = create_auth_token_repo_double()
 
     async def all_calendars() -> list[CalendarEntity]:
         return [calendar]
@@ -161,10 +169,24 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
     async def get_token(_: object) -> AuthTokenEntity:
         return token
 
-    uow.calendar_ro_repo.all = all_calendars
-    uow.calendar_entry_ro_repo.search = entries
-    uow.calendar_entry_series_ro_repo.search = series_items
-    uow.auth_token_ro_repo.get = get_token
+    calendar_repo.all = all_calendars
+    calendar_entry_repo.search = entries
+    calendar_entry_series_repo.search = series_items
+    auth_token_repo.get = get_token
+
+    uow = create_uow_double(
+        calendar_repo=calendar_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        calendar_entry_series_repo=calendar_entry_series_repo,
+        auth_token_repo=auth_token_repo,
+    )
+
+    ro_repos = create_read_only_repos_double(
+        calendar_repo=calendar_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        calendar_entry_series_repo=calendar_entry_series_repo,
+        auth_token_repo=auth_token_repo,
+    )
 
     google_gateway = create_google_gateway_double()
     unsubscribed: list[str] = []
@@ -186,7 +208,7 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
     handler = ResetCalendarDataHandler(
         user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(uow),
-        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
         gateway_factory=_GatewayFactory(google_gateway),
     )
 
@@ -215,11 +237,12 @@ async def test_reset_calendar_data_rejects_unknown_platform() -> None:
         calendar_entry_series_repo=create_calendar_entry_series_repo_double(),
         auth_token_repo=create_auth_token_repo_double(),
     )
+    ro_repos = create_read_only_repos_double()
 
     handler = ResetCalendarDataHandler(
         user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(uow),
-        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
         gateway_factory=_GatewayFactory(create_google_gateway_double()),
     )
 

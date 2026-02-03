@@ -34,7 +34,7 @@ class UpdateCalendarEntrySeriesHandler(
     ) -> CalendarEntrySeriesEntity:
         """Update the specified calendar entry series."""
         async with self.new_uow() as uow:
-            series = await uow.calendar_entry_series_ro_repo.get(
+            series = await self.calendar_entry_series_ro_repo.get(
                 command.calendar_entry_series_id
             )
             series = series.apply_update(

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.core.utils.phone_numbers import digits_only, normalize_phone_number
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -20,6 +21,8 @@ class CreateLeadUserCommand(Command):
 class CreateLeadUserHandler(BaseCommandHandler[CreateLeadUserCommand, None]):
     """Create a lead user with status NEW_LEAD."""
 
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
     async def handle(self, command: CreateLeadUserCommand) -> None:
         """Create a lead if unique by phone/email."""
         async with self.new_uow() as uow:
@@ -31,14 +34,14 @@ class CreateLeadUserHandler(BaseCommandHandler[CreateLeadUserCommand, None]):
             )
 
             if normalized_email:
-                existing_by_email = await uow.user_ro_repo.search_one_or_none(
+                existing_by_email = await self.user_ro_repo.search_one_or_none(
                     value_objects.UserQuery(email=normalized_email)
                 )
                 if existing_by_email:
                     return
 
             if normalized_phone:
-                existing_by_phone = await uow.user_ro_repo.search_one_or_none(
+                existing_by_phone = await self.user_ro_repo.search_one_or_none(
                     value_objects.UserQuery(phone_number=normalized_phone)
                 )
                 if existing_by_phone:

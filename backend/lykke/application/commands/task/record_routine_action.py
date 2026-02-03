@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
 
@@ -21,6 +26,10 @@ class RecordRoutineActionHandler(
 ):
     """Records an action on all tasks in a routine for today."""
 
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+
     async def handle(self, command: RecordRoutineActionCommand) -> list[TaskEntity]:
         """Record an action on all tasks in a routine for today.
 
@@ -34,12 +43,12 @@ class RecordRoutineActionHandler(
             NotFoundError: If the routine or day is not found
         """
         async with self.new_uow() as uow:
-            routine = await uow.routine_ro_repo.get(command.routine_id)
+            routine = await self.routine_ro_repo.get(command.routine_id)
 
             day_id = DayEntity.id_from_date_and_user(routine.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
-            tasks = await uow.task_ro_repo.search(
+            tasks = await self.task_ro_repo.search(
                 value_objects.TaskQuery(
                     date=routine.date,
                     routine_definition_ids=[routine.routine_definition_id],

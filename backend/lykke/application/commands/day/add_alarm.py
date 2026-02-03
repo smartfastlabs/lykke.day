@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, time as dt_time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayRepositoryReadOnlyProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
@@ -25,6 +26,8 @@ class AddAlarmToDayHandler(
     BaseCommandHandler[AddAlarmToDayCommand, value_objects.Alarm]
 ):
     """Adds an alarm to a day."""
+
+    day_ro_repo: DayRepositoryReadOnlyProtocol
 
     @staticmethod
     def _default_alarm_name(alarm_time: dt_time) -> str:
@@ -48,7 +51,7 @@ class AddAlarmToDayHandler(
         async with self.new_uow() as uow:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
             timezone = ZoneInfo("UTC")
             try:

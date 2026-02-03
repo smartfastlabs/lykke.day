@@ -29,6 +29,7 @@ from lykke.application.gateways.llm_gateway_factory_protocol import (
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
+from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
@@ -54,6 +55,7 @@ class ProcessInboundSmsHandler(
 ):
     """Process an inbound SMS message into follow-up actions (reply, task, alarm, etc.)."""
 
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     create_adhoc_task_handler: CreateAdhocTaskHandler
@@ -132,7 +134,7 @@ class ProcessInboundSmsHandler(
         snapshot = self._build_llm_run_result_snapshot(result)
         async with self.new_uow() as uow:
             try:
-                message = await uow.message_ro_repo.get(message_id)
+                message = await self.message_ro_repo.get(message_id)
             except Exception:  # pylint: disable=broad-except
                 logger.debug(
                     f"Message {message_id} not found while recording llm_run_result"

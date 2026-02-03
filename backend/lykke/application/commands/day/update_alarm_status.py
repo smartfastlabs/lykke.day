@@ -5,6 +5,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayRepositoryReadOnlyProtocol
 from lykke.core.utils.dates import ensure_utc
 from lykke.domain.entities import DayEntity
 from lykke.domain.value_objects.day import Alarm, AlarmStatus
@@ -23,6 +24,8 @@ class UpdateAlarmStatusCommand(Command):
 class UpdateAlarmStatusHandler(BaseCommandHandler[UpdateAlarmStatusCommand, Alarm]):
     """Updates an alarm's status on a day."""
 
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
     async def handle(self, command: UpdateAlarmStatusCommand) -> Alarm:
         """Update an alarm's status on a day.
 
@@ -37,7 +40,7 @@ class UpdateAlarmStatusHandler(BaseCommandHandler[UpdateAlarmStatusCommand, Alar
         """
         async with self.new_uow() as uow:
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
             updated_alarm = day.update_alarm_status(
                 command.alarm_id,

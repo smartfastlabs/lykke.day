@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date, time as dt_time
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -24,6 +25,8 @@ class RemoveAlarmFromDayHandler(
 ):
     """Removes an alarm from a day."""
 
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
     async def handle(self, command: RemoveAlarmFromDayCommand) -> value_objects.Alarm:
         """Remove an alarm from a day.
 
@@ -39,7 +42,7 @@ class RemoveAlarmFromDayHandler(
         async with self.new_uow() as uow:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
             # Remove the alarm (this emits a domain event)
             removed_alarm = day.remove_alarm(

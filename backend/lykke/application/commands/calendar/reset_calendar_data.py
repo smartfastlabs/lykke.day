@@ -9,6 +9,12 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntrySeriesRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+)
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -41,6 +47,10 @@ class ResetCalendarDataHandler(
     """Delete calendar entries/series and refresh subscriptions for the user."""
 
     google_gateway: GoogleCalendarGatewayProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
 
     async def handle(self, command: ResetCalendarDataCommand) -> list[CalendarEntity]:
         """Remove all entries/series then refresh subscriptions for subscribed calendars."""
@@ -51,12 +61,12 @@ class ResetCalendarDataHandler(
             await self._delete_calendar_entries(uow)
             await self._delete_calendar_entry_series(uow)
 
-            calendars = await uow.calendar_ro_repo.all()
+            calendars = await self.calendar_ro_repo.all()
             for calendar in calendars:
                 if calendar.sync_subscription is None:
                     continue
 
-                token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+                token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                 refreshed = await self._refresh_subscription(calendar, token, uow)
                 updated_calendars.append(refreshed)
 
@@ -66,7 +76,7 @@ class ResetCalendarDataHandler(
         """Delete all calendar entries for the scoped user."""
         entries: Iterable[
             CalendarEntryEntity
-        ] = await uow.calendar_entry_ro_repo.search(value_objects.CalendarEntryQuery())
+        ] = await self.calendar_entry_ro_repo.search(value_objects.CalendarEntryQuery())
         for entry in entries:
             await uow.delete(entry)
 
@@ -74,7 +84,7 @@ class ResetCalendarDataHandler(
         """Delete all calendar entry series for the scoped user."""
         series_items: Iterable[
             CalendarEntrySeriesEntity
-        ] = await uow.calendar_entry_series_ro_repo.search(
+        ] = await self.calendar_entry_series_ro_repo.search(
             value_objects.CalendarEntrySeriesQuery()
         )
         for series in series_items:

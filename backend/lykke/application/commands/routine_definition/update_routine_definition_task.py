@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import RoutineDefinitionRepositoryReadOnlyProtocol
 from lykke.domain.entities import RoutineDefinitionEntity
 from lykke.domain.value_objects import RoutineDefinitionTask
 
@@ -22,6 +23,8 @@ class UpdateRoutineDefinitionTaskHandler(
 ):
     """Update the metadata or schedule of an attached RoutineDefinitionTask."""
 
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: UpdateRoutineDefinitionTaskCommand
     ) -> RoutineDefinitionEntity:
@@ -34,7 +37,7 @@ class UpdateRoutineDefinitionTaskHandler(
             The updated routine definition entity.
         """
         async with self.new_uow() as uow:
-            routine_definition = await uow.routine_definition_ro_repo.get(
+            routine_definition = await self.routine_definition_ro_repo.get(
                 command.routine_definition_id
             )
             updated_routine_definition = routine_definition.update_task(

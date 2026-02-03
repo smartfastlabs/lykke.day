@@ -11,6 +11,12 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.repositories import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntrySeriesRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+)
 from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import NotFoundError, TokenExpiredError
@@ -47,6 +53,10 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
     """Syncs calendar entries from external provider."""
 
     google_gateway: GoogleCalendarGatewayProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
 
     async def handle(self, command: SyncCalendarCommand) -> CalendarEntity:
         """Handle sync calendar command."""
@@ -61,15 +71,15 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         """Sync a calendar by ID using a fresh unit of work."""
         uow = self.new_uow()
         async with uow:
-            calendar = await uow.calendar_ro_repo.get(calendar_id)
-            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            calendar = await self.calendar_ro_repo.get(calendar_id)
+            token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
             return await self.sync_calendar_with_uow(calendar, token, uow)
 
     async def sync_calendar_entity(self, calendar: CalendarEntity) -> CalendarEntity:
         """Sync a provided calendar entity using a fresh unit of work."""
         uow = self.new_uow()
         async with uow:
-            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
             return await self.sync_calendar_with_uow(calendar, token, uow)
 
     async def sync_calendar_with_uow(
@@ -151,7 +161,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         series_changed_ids: set[UUID] = set()
         for series in fetched_series:
             try:
-                existing_series = await uow.calendar_entry_series_ro_repo.get(series.id)
+                existing_series = await self.calendar_entry_series_ro_repo.get(series.id)
             except NotFoundError:
                 series.create()
                 uow.add(series)
@@ -189,7 +199,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         platform_ids_to_check = [entry.platform_id for entry in entries_to_upsert]
         existing_entries_map: dict[str, CalendarEntryEntity] = {}
         if platform_ids_to_check:
-            existing_entries = await uow.calendar_entry_ro_repo.search(
+            existing_entries = await self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(platform_ids=platform_ids_to_check)
             )
             existing_entries_map = {
@@ -260,7 +270,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 series_for_update = series_by_id.get(series_id)
                 if series_for_update is None:
                     continue
-                series_entries = await uow.calendar_entry_ro_repo.search(
+                series_entries = await self.calendar_entry_ro_repo.search(
                     value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
                 )
                 # Sort so we have a deterministic representative (earliest by starts_at)
@@ -324,7 +334,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         if platform_ids_to_delete:
             unique_platform_ids = list(dict.fromkeys(platform_ids_to_delete))
             # Fetch entries to delete so we can call delete() on them
-            entries_to_delete = await uow.calendar_entry_ro_repo.search(
+            entries_to_delete = await self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(platform_ids=unique_platform_ids)
             )
             deleted_platform_ids = {entry.platform_id for entry in entries_to_delete}
@@ -349,7 +359,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         # If an entire series was removed, delete future entries and end the series
         if series_ids_with_deletions:
             for series_id in series_ids_with_deletions:
-                existing_series_entries = await uow.calendar_entry_ro_repo.search(
+                existing_series_entries = await self.calendar_entry_ro_repo.search(
                     value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
                 )
                 future_entries = [
@@ -378,7 +388,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 series_for_delete = series_by_id.get(series_id)
                 if series_for_delete is None:
                     try:
-                        series_for_delete = await uow.calendar_entry_series_ro_repo.get(
+                        series_for_delete = await self.calendar_entry_series_ro_repo.get(
                             series_id
                         )
                     except NotFoundError:
@@ -471,6 +481,8 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
     """Syncs all calendars for a user."""
 
     sync_calendar_handler: SyncCalendarHandler
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
 
     async def handle(self, command: SyncAllCalendarsCommand) -> None:
         """Handle sync all calendars command."""
@@ -480,10 +492,10 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         """Sync all calendars for the user."""
         uow = self.new_uow()
         async with uow:
-            calendars = await uow.calendar_ro_repo.all()
+            calendars = await self.calendar_ro_repo.all()
             for calendar in calendars:
                 try:
-                    token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+                    token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     await self.sync_calendar_handler.sync_calendar_with_uow(
                         calendar, token, uow
                     )

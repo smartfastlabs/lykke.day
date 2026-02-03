@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 from lykke.domain.events.base import EntityUpdatedEvent
@@ -24,11 +25,13 @@ class CreateUseCaseConfigHandler(
 ):
     """Creates or updates a usecase config."""
 
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+
     async def handle(self, command: CreateUseCaseConfigCommand) -> UseCaseConfigEntity:
         """Create or update a usecase config."""
         async with self.new_uow(command.user) as uow:
             # Check if config already exists
-            existing = await uow.usecase_config_ro_repo.search(
+            existing = await self.usecase_config_ro_repo.search(
                 UseCaseConfigQuery(usecase=command.usecase)
             )
             if existing:

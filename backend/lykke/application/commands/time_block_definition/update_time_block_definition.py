@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TimeBlockDefinitionRepositoryReadOnlyProtocol
 from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.domain.events.time_block_definition_events import (
     TimeBlockDefinitionUpdatedEvent,
@@ -24,6 +25,8 @@ class UpdateTimeBlockDefinitionHandler(
 ):
     """Updates an existing time block definition."""
 
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: UpdateTimeBlockDefinitionCommand
     ) -> TimeBlockDefinitionEntity:
@@ -37,7 +40,7 @@ class UpdateTimeBlockDefinitionHandler(
         """
         async with self.new_uow() as uow:
             # Get the existing time block definition
-            time_block_definition = await uow.time_block_definition_ro_repo.get(
+            time_block_definition = await self.time_block_definition_ro_repo.get(
                 command.time_block_definition_id
             )
 

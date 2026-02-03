@@ -5,6 +5,13 @@ from datetime import date
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    TaskDefinitionRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, RoutineEntity, TaskEntity
 
@@ -22,6 +29,12 @@ class AddRoutineDefinitionToDayHandler(
 ):
     """Adds a routine definition's tasks to a day."""
 
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: AddRoutineDefinitionToDayCommand
     ) -> list[TaskEntity]:
@@ -36,13 +49,13 @@ class AddRoutineDefinitionToDayHandler(
         async with self.new_uow() as uow:
             # Ensure day exists for the given date
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            await uow.day_ro_repo.get(day_id)
+            await self.day_ro_repo.get(day_id)
 
-            routine_definition = await uow.routine_definition_ro_repo.get(
+            routine_definition = await self.routine_definition_ro_repo.get(
                 command.routine_definition_id
             )
 
-            existing_routines = await uow.routine_ro_repo.search(
+            existing_routines = await self.routine_ro_repo.search(
                 value_objects.RoutineQuery(
                     date=command.date,
                     routine_definition_ids=[command.routine_definition_id],
@@ -54,7 +67,7 @@ class AddRoutineDefinitionToDayHandler(
                 )
                 await uow.create(routine)
 
-            existing_tasks = await uow.task_ro_repo.search(
+            existing_tasks = await self.task_ro_repo.search(
                 value_objects.TaskQuery(
                     date=command.date,
                     routine_definition_ids=[command.routine_definition_id],
@@ -65,7 +78,7 @@ class AddRoutineDefinitionToDayHandler(
 
             created_tasks: list[TaskEntity] = []
             for routine_definition_task in routine_definition.tasks:
-                task_definition = await uow.task_definition_ro_repo.get(
+                task_definition = await self.task_definition_ro_repo.get(
                     routine_definition_task.task_definition_id
                 )
                 task_time_window = (

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TaskRepositoryReadOnlyProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import TaskEntity
 
@@ -18,6 +19,8 @@ class DeleteTaskCommand(Command):
 class DeleteTaskHandler(BaseCommandHandler[DeleteTaskCommand, None]):
     """Deletes a task."""
 
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+
     async def handle(self, command: DeleteTaskCommand) -> None:
         """Delete a task.
 
@@ -25,7 +28,7 @@ class DeleteTaskHandler(BaseCommandHandler[DeleteTaskCommand, None]):
             command: The command containing the task ID to delete
         """
         async with self.new_uow() as uow:
-            task = await uow.task_ro_repo.get(command.task_id)
+            task = await self.task_ro_repo.get(command.task_id)
             if task.user_id != self.user.id:
                 raise NotFoundError(f"Task {command.task_id} not found")
             await uow.delete(task)

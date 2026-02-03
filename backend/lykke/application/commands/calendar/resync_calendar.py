@@ -9,6 +9,10 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+)
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity
@@ -37,13 +41,15 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
 
     google_gateway: GoogleCalendarGatewayProtocol
     sync_calendar_handler: SyncCalendarHandler
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
 
     async def handle(self, command: ResyncCalendarCommand) -> CalendarEntity:
         """Perform a full resync of the given calendar."""
         calendar = command.calendar
         uow = self.new_uow()
         async with uow:
-            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
 
             await self._delete_calendar_entries(calendar.id, uow)
             calendar = await self._unsubscribe(calendar, token, uow)
@@ -56,7 +62,7 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
         self, calendar_id: UUID, uow: UnitOfWorkProtocol
     ) -> None:
         """Remove all calendar entries for the calendar."""
-        entries = await uow.calendar_entry_ro_repo.search(
+        entries = await self.calendar_entry_ro_repo.search(
             value_objects.CalendarEntryQuery(calendar_id=calendar_id)
         )
         for entry in entries:

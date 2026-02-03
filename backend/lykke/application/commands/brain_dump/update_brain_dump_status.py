@@ -5,6 +5,7 @@ from datetime import date as dt_date
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import BrainDumpRepositoryReadOnlyProtocol
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity
@@ -24,12 +25,14 @@ class UpdateBrainDumpStatusHandler(
 ):
     """Updates a brain dump's status."""
 
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: UpdateBrainDumpStatusCommand
     ) -> BrainDumpEntity:
         """Update a brain dump's status."""
         async with self.new_uow() as uow:
-            item = await uow.brain_dump_ro_repo.get(command.item_id)
+            item = await self.brain_dump_ro_repo.get(command.item_id)
             if item.date != command.date:
                 raise DomainError(
                     f"Brain dump {command.item_id} not found for {command.date}"

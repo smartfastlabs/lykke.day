@@ -12,6 +12,11 @@ from uuid import UUID
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+)
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity
@@ -37,6 +42,9 @@ class ResetCalendarSyncHandler(
 
     google_gateway: GoogleCalendarGatewayProtocol
     sync_calendar_handler: SyncCalendarHandler
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
 
     async def handle(self, command: ResetCalendarSyncCommand) -> list[CalendarEntity]:
         """Reset sync for all calendars with subscriptions enabled.
@@ -55,7 +63,7 @@ class ResetCalendarSyncHandler(
 
         async with self.new_uow() as uow:
             # Step 1: Get all calendars with sync_subscription enabled
-            all_calendars = await uow.calendar_ro_repo.all()
+            all_calendars = await self.calendar_ro_repo.all()
             subscribed_calendars = [
                 cal for cal in all_calendars if cal.sync_subscription is not None
             ]
@@ -74,7 +82,7 @@ class ResetCalendarSyncHandler(
             # Step 2: Unsubscribe all calendars
             for calendar in subscribed_calendars:
                 try:
-                    token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+                    token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     await self._unsubscribe(calendar, token, uow)
                 except Exception as e:
                     logger.error(f"Error unsubscribing calendar {calendar.id}: {e}")
@@ -87,8 +95,8 @@ class ResetCalendarSyncHandler(
             updated_calendars = []
             for calendar_id in calendar_ids:
                 try:
-                    calendar = await uow.calendar_ro_repo.get(calendar_id)
-                    token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+                    calendar = await self.calendar_ro_repo.get(calendar_id)
+                    token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     calendar = await self._subscribe(calendar, token, uow)
                     updated_calendars.append(calendar)
                 except Exception as e:
@@ -122,7 +130,7 @@ class ResetCalendarSyncHandler(
         # Get all entries for these calendars
         all_entries = []
         for calendar_id in calendar_ids:
-            entries = await uow.calendar_entry_ro_repo.search(
+            entries = await self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(calendar_id=calendar_id)
             )
             all_entries.extend(entries)

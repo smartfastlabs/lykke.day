@@ -30,6 +30,6 @@ class UpdateCalendarEntryHandler(
     ) -> CalendarEntryEntity:
         """Update the specified calendar entry."""
         async with self.new_uow() as uow:
-            entry = await uow.calendar_entry_ro_repo.get(command.calendar_entry_id)
+            entry = await self.calendar_entry_ro_repo.get(command.calendar_entry_id)
             entry = entry.apply_calendar_entry_update(command.update_data)
             return uow.add(entry)

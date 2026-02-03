@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import RoutineDefinitionRepositoryReadOnlyProtocol
 from lykke.domain.entities import RoutineDefinitionEntity
 
 
@@ -20,6 +21,8 @@ class RemoveRoutineDefinitionTaskHandler(
 ):
     """Detach a RoutineDefinitionTask from a routine definition."""
 
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: RemoveRoutineDefinitionTaskCommand
     ) -> RoutineDefinitionEntity:
@@ -32,7 +35,7 @@ class RemoveRoutineDefinitionTaskHandler(
             The updated routine definition entity.
         """
         async with self.new_uow() as uow:
-            routine_definition = await uow.routine_definition_ro_repo.get(
+            routine_definition = await self.routine_definition_ro_repo.get(
                 command.routine_definition_id
             )
             updated_routine_definition = routine_definition.remove_task(

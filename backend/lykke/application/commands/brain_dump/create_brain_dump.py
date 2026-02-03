@@ -6,6 +6,7 @@ from datetime import date as dt_date
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayRepositoryReadOnlyProtocol
 from lykke.application.worker_schedule import get_current_workers_to_schedule
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity
@@ -24,11 +25,13 @@ class CreateBrainDumpHandler(
 ):
     """Creates a brain dump."""
 
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
     async def handle(self, command: CreateBrainDumpCommand) -> BrainDumpEntity:
         """Create a brain dump for the given date."""
         async with self.new_uow() as uow:
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            await uow.day_ro_repo.get(day_id)
+            await self.day_ro_repo.get(day_id)
 
             item = BrainDumpEntity(
                 user_id=self.user.id,

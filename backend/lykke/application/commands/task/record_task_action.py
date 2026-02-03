@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
 
@@ -19,6 +23,9 @@ class RecordTaskActionCommand(Command):
 class RecordTaskActionHandler(BaseCommandHandler[RecordTaskActionCommand, TaskEntity]):
     """Records an action on a task."""
 
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
     async def handle(self, command: RecordTaskActionCommand) -> TaskEntity:
         """Record an action on a task through the Day aggregate root.
 
@@ -33,11 +40,11 @@ class RecordTaskActionHandler(BaseCommandHandler[RecordTaskActionCommand, TaskEn
         """
         async with self.new_uow() as uow:
             # Get the task to find its scheduled_date
-            task = await uow.task_ro_repo.get(command.task_id)
+            task = await self.task_ro_repo.get(command.task_id)
 
             # Get the Day aggregate root using the task's scheduled_date
             day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
             # Use Day aggregate root method to record action
             # This ensures proper aggregate boundaries and domain event handling

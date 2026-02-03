@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayTemplateRepositoryReadOnlyProtocol
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
@@ -20,6 +21,8 @@ class RemoveDayTemplateRoutineDefinitionHandler(
 ):
     """Detach a routine definition from a day template."""
 
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: RemoveDayTemplateRoutineDefinitionCommand
     ) -> DayTemplateEntity:
@@ -32,7 +35,7 @@ class RemoveDayTemplateRoutineDefinitionHandler(
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            day_template = await self.day_template_ro_repo.get(command.day_template_id)
             updated = day_template.remove_routine_definition(
                 command.routine_definition_id
             )

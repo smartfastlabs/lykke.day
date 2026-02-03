@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayTemplateRepositoryReadOnlyProtocol
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.events.day_template_events import DayTemplateUpdatedEvent
 from lykke.domain.value_objects import DayTemplateUpdateObject
@@ -22,6 +23,8 @@ class UpdateDayTemplateHandler(
 ):
     """Updates an existing day template."""
 
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+
     async def handle(self, command: UpdateDayTemplateCommand) -> DayTemplateEntity:
         """Update an existing day template.
 
@@ -36,7 +39,7 @@ class UpdateDayTemplateHandler(
         """
         async with self.new_uow() as uow:
             # Get the existing day template
-            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            day_template = await self.day_template_ro_repo.get(command.day_template_id)
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
             day_template = day_template.apply_update(

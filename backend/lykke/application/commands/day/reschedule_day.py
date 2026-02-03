@@ -11,6 +11,10 @@ from lykke.application.commands.day.schedule_day import (
     ScheduleDayCommand,
     ScheduleDayHandler,
 )
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -29,6 +33,8 @@ class RescheduleDayHandler(
     """Reschedules a day by cleaning up existing tasks and audit logs, then creating fresh tasks."""
 
     schedule_day_handler: ScheduleDayHandler
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def handle(self, command: RescheduleDayCommand) -> value_objects.DayContext:
         """Reschedule a day by cleaning up and recreating all tasks.
@@ -50,12 +56,12 @@ class RescheduleDayHandler(
         async with self.new_uow() as uow:
             # Step 1: Get the existing Day entity
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
             logger.info(f"Found existing day for {command.date}")
 
             # Step 2: Delete all existing tasks for this date
             # First, verify how many tasks exist before deletion for logging
-            existing_tasks = await uow.task_ro_repo.search(
+            existing_tasks = await self.task_ro_repo.search(
                 value_objects.TaskQuery(date=command.date, is_adhoc=False)
             )
             logger.info(
@@ -67,7 +73,7 @@ class RescheduleDayHandler(
             )
 
             # Verify deletion worked
-            remaining_tasks = await uow.task_ro_repo.search(
+            remaining_tasks = await self.task_ro_repo.search(
                 value_objects.TaskQuery(date=command.date, is_adhoc=False)
             )
             if remaining_tasks:

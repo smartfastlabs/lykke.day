@@ -7,6 +7,16 @@ from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+    TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.exceptions import NotFoundError
@@ -35,6 +45,14 @@ class ScheduleDayHandler(
     """Schedules a day with tasks from routines."""
 
     preview_day_handler: PreviewDayHandler
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     @staticmethod
     def _time_to_local_datetime(
@@ -203,20 +221,20 @@ class ScheduleDayHandler(
         if existing_day is None:
             if force:
                 try:
-                    existing_day = await uow.day_ro_repo.get(day_id)
+                    existing_day = await self.day_ro_repo.get(day_id)
                 except NotFoundError:
                     existing_day = None
             else:
                 try:
-                    existing_day = await uow.day_ro_repo.get(day_id)
+                    existing_day = await self.day_ro_repo.get(day_id)
                     tasks, calendar_entries, existing_routines = await asyncio.gather(
-                        uow.task_ro_repo.search(
+                        self.task_ro_repo.search(
                             value_objects.TaskQuery(date=command.date)
                         ),
-                        uow.calendar_entry_ro_repo.search(
+                        self.calendar_entry_ro_repo.search(
                             value_objects.CalendarEntryQuery(date=command.date)
                         ),
-                        uow.routine_ro_repo.search(
+                        self.routine_ro_repo.search(
                             value_objects.RoutineQuery(date=command.date)
                         ),
                     )
@@ -249,10 +267,9 @@ class ScheduleDayHandler(
             raise ValueError("Day template is required to schedule")
 
         # Re-fetch template to ensure it's in the current UoW context
-        template = await uow.day_template_ro_repo.get(preview_result.day.template.id)
+        template = await self.day_template_ro_repo.get(preview_result.day.template.id)
 
         timezone = ZoneInfo("UTC")
-        user_repo = getattr(uow, "user_ro_repo", None) or self.user_ro_repo
         try:
             user = self.user
         except Exception:
@@ -306,7 +323,7 @@ class ScheduleDayHandler(
             # Fetch all time block definitions
             time_block_defs = await asyncio.gather(
                 *[
-                    uow.time_block_definition_ro_repo.get(def_id)
+                    self.time_block_definition_ro_repo.get(def_id)
                     for def_id in unique_def_ids
                 ]
             )
@@ -374,7 +391,7 @@ class ScheduleDayHandler(
 
         # Create routines for active routine definitions
         routines: list[RoutineEntity] = []
-        routine_definitions = await uow.routine_definition_ro_repo.all()
+        routine_definitions = await self.routine_definition_ro_repo.all()
         for routine_definition in routine_definitions:
             if routine_definition.routine_definition_schedule.is_active_for_date(
                 command.date

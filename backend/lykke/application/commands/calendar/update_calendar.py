@@ -37,7 +37,7 @@ class UpdateCalendarHandler(BaseCommandHandler[UpdateCalendarCommand, CalendarEn
         """
         async with self.new_uow() as uow:
             # Get the existing calendar
-            calendar = await uow.calendar_ro_repo.get(command.calendar_id)
+            calendar = await self.calendar_ro_repo.get(command.calendar_id)
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
             calendar = calendar.apply_update(command.update_data, CalendarUpdatedEvent)

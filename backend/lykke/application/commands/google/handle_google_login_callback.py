@@ -8,6 +8,10 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.repositories import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+)
 from lykke.core.exceptions import AuthenticationError
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity
@@ -43,6 +47,8 @@ class HandleGoogleLoginCallbackHandler(
     """Handle Google OAuth callback and update auth tokens/calendars."""
 
     google_gateway: GoogleCalendarGatewayProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
     async def handle(
         self, command: HandleGoogleLoginCallbackCommand
@@ -61,7 +67,7 @@ class HandleGoogleLoginCallbackHandler(
             existing_auth_token = None
             if command.auth_token_id:
                 try:
-                    existing_auth_token = await uow.auth_token_ro_repo.get(
+                    existing_auth_token = await self.auth_token_ro_repo.get(
                         command.auth_token_id
                     )
                     if existing_auth_token.user_id != self.user.id:
@@ -79,7 +85,7 @@ class HandleGoogleLoginCallbackHandler(
                     existing_auth_token = None
 
             if not existing_auth_token and google_platform_ids:
-                existing_calendars = await uow.calendar_ro_repo.search(
+                existing_calendars = await self.calendar_ro_repo.search(
                     value_objects.CalendarQuery()
                 )
                 matching_calendar = next(
@@ -93,7 +99,7 @@ class HandleGoogleLoginCallbackHandler(
                 )
                 if matching_calendar:
                     try:
-                        existing_auth_token = await uow.auth_token_ro_repo.get(
+                        existing_auth_token = await self.auth_token_ro_repo.get(
                             matching_calendar.auth_token_id
                         )
                         logger.info(
@@ -138,7 +144,7 @@ class HandleGoogleLoginCallbackHandler(
                 await uow.create(auth_token_data)
 
             if existing_auth_token:
-                all_user_calendars = await uow.calendar_ro_repo.search(
+                all_user_calendars = await self.calendar_ro_repo.search(
                     value_objects.CalendarQuery()
                 )
                 for cal in all_user_calendars:
@@ -151,7 +157,7 @@ class HandleGoogleLoginCallbackHandler(
 
             for google_calendar in calendar_list.get("items", []):
                 platform_id = google_calendar["id"]
-                existing_calendar = await uow.calendar_ro_repo.search_one_or_none(
+                existing_calendar = await self.calendar_ro_repo.search_one_or_none(
                     value_objects.CalendarQuery(platform_id=platform_id)
                 )
 

@@ -5,6 +5,7 @@ from datetime import time
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import DayTemplateRepositoryReadOnlyProtocol
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
@@ -22,6 +23,8 @@ class RemoveDayTemplateTimeBlockHandler(
 ):
     """Remove a time block from a day template."""
 
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: RemoveDayTemplateTimeBlockCommand
     ) -> DayTemplateEntity:
@@ -34,7 +37,7 @@ class RemoveDayTemplateTimeBlockHandler(
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            day_template = await self.day_template_ro_repo.get(command.day_template_id)
             updated = day_template.remove_time_block(
                 command.time_block_definition_id, command.start_time
             )

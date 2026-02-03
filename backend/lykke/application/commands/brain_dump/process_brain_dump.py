@@ -255,7 +255,7 @@ class ProcessBrainDumpHandler(
     ) -> None:
         async with self.new_uow() as uow:
             try:
-                item = await uow.brain_dump_ro_repo.get(item_id)
+                item = await self.brain_dump_ro_repo.get(item_id)
             except Exception:
                 logger.debug(
                     f"Brain dump item {item_id} not found for day {date}",
@@ -292,7 +292,7 @@ class ProcessBrainDumpHandler(
         snapshot = self._build_llm_run_result_snapshot(result)
         async with self.new_uow() as uow:
             try:
-                item = await uow.brain_dump_ro_repo.get(item_id)
+                item = await self.brain_dump_ro_repo.get(item_id)
             except Exception:
                 logger.debug(
                     f"Brain dump item {item_id} not found for day {date}",

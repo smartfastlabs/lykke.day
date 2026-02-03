@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.user_events import UserUpdatedEvent
@@ -19,6 +20,8 @@ class UpdateUserCommand(Command):
 class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
     """Updates an existing user."""
 
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
     async def handle(self, command: UpdateUserCommand) -> UserEntity:
         """Update an existing user.
 
@@ -33,7 +36,7 @@ class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
         """
         async with self.new_uow() as uow:
             # Get the existing user
-            user = await uow.user_ro_repo.get(self.user.id)
+            user = await self.user_ro_repo.get(self.user.id)
 
             update_data = command.update_data
             if update_data.phone_number is not None:
