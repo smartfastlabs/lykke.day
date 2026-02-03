@@ -28,6 +28,9 @@ export const TodaysTasksView: Component = () => {
   // out tasks with `timing_status === "hidden"` (which the backend uses for
   // things like "later today" or snoozed items).
   const allTasks = createMemo(() => tasks() ?? []);
+  const activeTasks = createMemo(() =>
+    allTasks().filter((task) => task.status !== "COMPLETE" && task.status !== "PUNT"),
+  );
   const stats = createMemo(() => getTaskStats(allTasks()));
   const completionPercentage = createMemo(() => {
     const s = stats();
@@ -99,7 +102,7 @@ export const TodaysTasksView: Component = () => {
         <SectionCard
           title="Your Tasks"
           description="Swipe right to complete, left to punt or snooze"
-          hasItems={allTasks().length > 0}
+          hasItems={activeTasks().length > 0}
           emptyState={emptyState}
         >
           <form class="mb-6 space-y-3" onSubmit={handleAddTask}>
@@ -129,7 +132,7 @@ export const TodaysTasksView: Component = () => {
             </div>
             <FormError error={formError()} />
           </form>
-          <TaskList tasks={allTasks} />
+          <TaskList tasks={activeTasks} />
         </SectionCard>
       </AnimatedSection>
 

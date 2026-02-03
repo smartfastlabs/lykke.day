@@ -12,7 +12,12 @@ export const NeedsAttentionSection: Component<NeedsAttentionSectionProps> = (
   props,
 ) => {
   const needsAttentionTasks = createMemo(() =>
-    props.tasks.filter((task) => task.timing_status === "needs_attention"),
+    props.tasks.filter(
+      (task) =>
+        task.timing_status === "needs_attention" &&
+        task.status !== "COMPLETE" &&
+        task.status !== "PUNT",
+    ),
   );
 
   return (

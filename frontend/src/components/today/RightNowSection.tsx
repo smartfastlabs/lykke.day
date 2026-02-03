@@ -63,7 +63,12 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
   });
 
   const pastDueTasks = createMemo(() => {
-    return props.tasks.filter((task) => task.timing_status === "past-due");
+    return props.tasks.filter(
+      (task) =>
+        task.timing_status === "past-due" &&
+        task.status !== "COMPLETE" &&
+        task.status !== "PUNT",
+    );
   });
 
   const hasRightNowItems = createMemo(

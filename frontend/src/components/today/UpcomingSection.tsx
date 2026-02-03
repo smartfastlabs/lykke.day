@@ -74,7 +74,11 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
   const upcomingTasks = createMemo(() => {
     return props.tasks
       .filter((task) => {
-        return task.timing_status === "inactive";
+        return (
+          task.timing_status === "inactive" &&
+          task.status !== "COMPLETE" &&
+          task.status !== "PUNT"
+        );
       })
       .sort((a, b) => {
         const aTime = getTaskNextAvailableTime(a);
