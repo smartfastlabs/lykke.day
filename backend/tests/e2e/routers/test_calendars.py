@@ -97,40 +97,6 @@ async def test_get_calendar_not_found(authenticated_client):
 
 
 @pytest.mark.asyncio
-async def test_create_calendar(authenticated_client):
-    """Test creating a new calendar."""
-    client, user = await authenticated_client()
-
-    # Create an auth token first
-    auth_token_repo = AuthTokenRepository(user=user)
-    auth_token = AuthTokenEntity(
-        id=uuid4(),
-        user_id=user.id,
-        platform="google",
-        token="test_token",
-        refresh_token="refresh_token",
-    )
-    auth_token = await auth_token_repo.put(auth_token)
-
-    calendar_data = {
-        "user_id": str(user.id),
-        "name": "New Calendar",
-        "auth_token_id": str(auth_token.id),
-        "platform": "google",
-        "platform_id": "new-platform-id",
-    }
-
-    response = client.post("/calendars/create", json=calendar_data)
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["name"] == "New Calendar"
-    assert data["user_id"] == str(user.id)
-    assert data["platform"] == "google"
-    assert data["platform_id"] == "new-platform-id"
-
-
-@pytest.mark.asyncio
 async def test_update_calendar(authenticated_client):
     """Test updating an existing calendar."""
     client, user = await authenticated_client()
@@ -146,17 +112,17 @@ async def test_update_calendar(authenticated_client):
     )
     auth_token = await auth_token_repo.put(auth_token)
 
-    # Create a calendar
-    calendar_data = {
-        "user_id": str(user.id),
-        "name": "Update Test Calendar",
-        "auth_token_id": str(auth_token.id),
-        "platform": "google",
-        "platform_id": "update-test-id",
-    }
-    create_response = client.post("/calendars/create", json=calendar_data)
-    assert create_response.status_code == 200
-    calendar_id = create_response.json()["id"]
+    # Create a calendar via repository
+    calendar_repo = CalendarRepository(user=user)
+    calendar = CalendarEntity(
+        user_id=user.id,
+        name="Update Test Calendar",
+        auth_token_id=auth_token.id,
+        platform="google",
+        platform_id="update-test-id",
+    )
+    calendar = await calendar_repo.put(calendar)
+    calendar_id = calendar.id
 
     # Update the calendar
     update_data = {
@@ -170,7 +136,7 @@ async def test_update_calendar(authenticated_client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == calendar_id
+    assert data["id"] == str(calendar_id)
     assert data["name"] == "Updated Calendar Name"
 
 
@@ -219,17 +185,17 @@ async def test_delete_calendar(authenticated_client):
     )
     auth_token = await auth_token_repo.put(auth_token)
 
-    # Create a calendar
-    calendar_data = {
-        "user_id": str(user.id),
-        "name": "Delete Test Calendar",
-        "auth_token_id": str(auth_token.id),
-        "platform": "google",
-        "platform_id": "delete-test-id",
-    }
-    create_response = client.post("/calendars/create", json=calendar_data)
-    assert create_response.status_code == 200
-    calendar_id = create_response.json()["id"]
+    # Create a calendar via repository
+    calendar_repo = CalendarRepository(user=user)
+    calendar = CalendarEntity(
+        user_id=user.id,
+        name="Delete Test Calendar",
+        auth_token_id=auth_token.id,
+        platform="google",
+        platform_id="delete-test-id",
+    )
+    calendar = await calendar_repo.put(calendar)
+    calendar_id = calendar.id
 
     # Delete the calendar
     response = client.delete(f"/calendars/{calendar_id}")

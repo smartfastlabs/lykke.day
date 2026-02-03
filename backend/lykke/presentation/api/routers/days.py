@@ -511,7 +511,6 @@ async def _send_day_context_parts(
         response = WebSocketSyncResponseSchema(
             day_context=None,
             changes=None,
-            routines=None,
             partial_context=partial_context,
             partial_key=part_key,
             sync_complete=index == len(parts) - 1,

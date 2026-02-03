@@ -28,6 +28,7 @@ from lykke.application.queries.calendar import (
     SearchCalendarsQuery,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import CalendarEntity
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.presentation.api.schemas import (
     CalendarSchema,
