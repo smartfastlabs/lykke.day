@@ -49,7 +49,6 @@ from lykke.presentation.api.schemas import (
     FactoidSchema,
     HighLevelPlanSchema,
     MessageSchema,
-    PushNotificationContextSchema,
     PushSubscriptionSchema,
     RoutineDefinitionSchema,
     RoutineSchema,
@@ -435,38 +434,6 @@ def map_push_notification_to_schema(
             )
             for entity in notification.referenced_entities
         ],
-    )
-
-
-def map_push_notification_context_to_schema(
-    context: value_objects.PushNotificationContext,
-    *,
-    user_timezone: str | None = None,
-) -> PushNotificationContextSchema:
-    """Convert PushNotificationContext value object to schema."""
-    current_time = get_current_datetime_in_timezone(user_timezone)
-    task_schemas = [
-        map_task_to_schema(task, current_time=current_time, user_timezone=user_timezone)
-        for task in context.tasks
-    ]
-    routine_schemas = [
-        map_routine_to_schema(
-            routine,
-            tasks=context.tasks,
-            current_time=current_time,
-            user_timezone=user_timezone,
-        )
-        for routine in context.routines
-    ]
-    calendar_entry_schemas = [
-        map_calendar_entry_to_schema(entry, user_timezone=user_timezone)
-        for entry in context.calendar_entries
-    ]
-    return PushNotificationContextSchema(
-        notification=map_push_notification_to_schema(context.notification),
-        tasks=task_schemas,
-        routines=routine_schemas,
-        calendar_entries=calendar_entry_schemas,
     )
 
 

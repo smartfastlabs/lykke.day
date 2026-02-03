@@ -89,14 +89,12 @@ class SendPushNotificationHandler(
         if isinstance(command.content, value_objects.NotificationPayload):
             content_dict = dataclass_to_json_dict(command.content)
             filtered_content = {k: v for k, v in content_dict.items() if v is not None}
-            filtered_content["url"] = f"/me/push/{notification_id}"
             content_str = json.dumps(filtered_content)
             content_for_push = filtered_content
         elif isinstance(command.content, dict):
             filtered_content = {
                 k: v for k, v in command.content.items() if v is not None
             }
-            filtered_content["url"] = f"/me/push/{notification_id}"
             content_str = json.dumps(filtered_content)
             content_for_push = filtered_content
         else:

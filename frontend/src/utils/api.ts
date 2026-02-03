@@ -21,7 +21,6 @@ import {
   Alarm,
   BrainDump,
   PushNotification,
-  PushNotificationContext,
   Factoid,
   Tactic,
   Trigger,
@@ -847,10 +846,6 @@ export const notificationAPI = {
   },
   get: (id: string): Promise<PushNotification> =>
     fetchData<PushNotification>(`/api/push-notifications/${id}`),
-  getContext: (id: string): Promise<PushNotificationContext> =>
-    fetchData<PushNotificationContext>(
-      `/api/push-notifications/${id}/context`,
-    ),
 };
 
 export const calendarAPI = {

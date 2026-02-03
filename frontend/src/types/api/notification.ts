@@ -1,6 +1,3 @@
-import type { Routine } from "./routine";
-import type { Event, PushNotification, Task } from "./utils";
-
 export type LLMRunResultSnapshot = {
   current_time?: string;
   llm_provider?: string;
@@ -13,10 +10,3 @@ export type LLMRunResultSnapshot = {
 };
 
 export type ReferencedEntity = { entity_type: string; entity_id: string };
-
-export type PushNotificationContext = {
-  notification: PushNotification;
-  tasks: Task[];
-  routines: Routine[];
-  calendar_entries: Event[];
-};

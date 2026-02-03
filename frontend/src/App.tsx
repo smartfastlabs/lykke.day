@@ -47,7 +47,6 @@ import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
 import AddAlarmPage from "@/pages/me/today/AddAlarm";
-import PushNotificationDetailPage from "@/pages/me/push/Detail";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import KioskPage from "@/pages/me/kiosk/Index";
 import NavigationLayout from "@/pages/me/navigation/Layout";
@@ -304,10 +303,6 @@ export default function App() {
                 <Route
                   path="/notifications/:id"
                   component={TodayNotificationDetailPage}
-                />
-                <Route
-                  path="/push/:id"
-                  component={PushNotificationDetailPage}
                 />
                 <Route
                   path="/brain-dumps/:id"
