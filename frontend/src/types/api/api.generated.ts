@@ -351,26 +351,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/me/tomorrow/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Tomorrow Context
-         * @description Get tomorrow's full DayContext snapshot (requires it to be scheduled).
-         */
-        get: operations["get_tomorrow_context_me_tomorrow_context_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/me/today/alarms": {
         parameters: {
             query?: never;
@@ -1290,26 +1270,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/routine-definitions/{uuid}/actions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Record Routine Definition Action
-         * @description Record an action on all tasks in a routine definition for today.
-         */
-        post: operations["record_routine_definition_action_routine_definitions__uuid__actions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/routines/{uuid}/actions": {
         parameters: {
             query?: never;
@@ -1776,26 +1736,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/calendars/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Calendar
-         * @description Create a new calendar.
-         */
-        post: operations["create_calendar_calendars_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/usecase-configs/{usecase}": {
         parameters: {
             query?: never;
@@ -2129,26 +2069,6 @@ export interface components {
         BrainDumpUpdateSchema: {
             status?: components["schemas"]["BrainDumpStatus"] | null;
             type?: components["schemas"]["BrainDumpType"] | null;
-        };
-        /**
-         * CalendarCreateSchema
-         * @description API schema for creating a Calendar entity.
-         */
-        CalendarCreateSchema: {
-            /** Name */
-            name: string;
-            /**
-             * Auth Token Id
-             * Format: uuid
-             */
-            auth_token_id: string;
-            /** Platform Id */
-            platform_id: string;
-            /** Platform */
-            platform: string;
-            /** Last Sync At */
-            last_sync_at?: string | null;
-            default_event_category?: components["schemas"]["EventCategory"] | null;
         };
         /**
          * CalendarEntryAttendanceStatus
@@ -4628,26 +4548,6 @@ export interface operations {
             };
         };
     };
-    get_tomorrow_context_me_tomorrow_context_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
     add_alarm_to_today_me_today_alarms_post: {
         parameters: {
             query: {
@@ -6593,41 +6493,6 @@ export interface operations {
             };
         };
     };
-    record_routine_definition_action_routine_definitions__uuid__actions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Action"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskSchema"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     record_routine_action_routines__uuid__actions_post: {
         parameters: {
             query?: never;
@@ -7542,39 +7407,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PagedResponseSchema_CalendarSchema_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_calendar_calendars_create_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CalendarCreateSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarSchema"];
                 };
             };
             /** @description Validation Error */

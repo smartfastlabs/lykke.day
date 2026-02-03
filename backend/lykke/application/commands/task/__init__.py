@@ -6,10 +6,6 @@ from .record_routine_action import (
     RecordRoutineActionCommand,
     RecordRoutineActionHandler,
 )
-from .record_routine_definition_action import (
-    RecordRoutineDefinitionActionCommand,
-    RecordRoutineDefinitionActionHandler,
-)
 from .record_task_action import RecordTaskActionCommand, RecordTaskActionHandler
 from .reschedule_task import RescheduleTaskCommand, RescheduleTaskHandler
 
@@ -20,8 +16,6 @@ __all__ = [
     "DeleteTaskHandler",
     "RecordRoutineActionCommand",
     "RecordRoutineActionHandler",
-    "RecordRoutineDefinitionActionCommand",
-    "RecordRoutineDefinitionActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
     "RescheduleTaskCommand",

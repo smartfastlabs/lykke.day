@@ -9,8 +9,6 @@ from dobles import allow
 from lykke.application.commands.task import (
     RecordRoutineActionCommand,
     RecordRoutineActionHandler,
-    RecordRoutineDefinitionActionCommand,
-    RecordRoutineDefinitionActionHandler,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -168,70 +166,3 @@ async def test_record_routine_action_only_updates_tasks_not_punted_or_completed(
     assert any(isinstance(e, TaskEntity) and e.id == ready_task.id for e in uow.added)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("action_type", "expected_ready_status"),
-    [
-        (value_objects.ActionType.PUNT, value_objects.TaskStatus.PUNT),
-        (value_objects.ActionType.COMPLETE, value_objects.TaskStatus.COMPLETE),
-    ],
-)
-async def test_record_routine_definition_action_only_updates_tasks_not_punted_or_completed(
-    action_type: value_objects.ActionType,
-    expected_ready_status: value_objects.TaskStatus,
-) -> None:
-    """RecordRoutineDefinitionActionHandler should skip tasks already punted/completed."""
-    user_id = uuid4()
-    task_date = dt_date(2025, 11, 27)
-    routine_definition_id = uuid4()
-
-    day = _make_day(user_id, task_date)
-    ready_task, punted_task, completed_task, completed_at = _make_tasks(
-        user_id=user_id,
-        task_date=task_date,
-        routine_definition_id=routine_definition_id,
-    )
-
-    task_repo = create_task_repo_double()
-    allow(task_repo).search.and_return([ready_task, punted_task, completed_task])
-
-    day_repo = create_day_repo_double()
-    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
-    allow(day_repo).get.with_args(day_id).and_return(day)
-
-    ro_repos = create_read_only_repos_double(
-        task_repo=task_repo,
-        day_repo=day_repo,
-    )
-    uow = create_uow_double(
-        task_repo=task_repo,
-        day_repo=day_repo,
-    )
-    uow_factory = create_uow_factory_double(uow)
-
-    action = value_objects.Action(type=action_type)
-
-    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
-    handler = RecordRoutineDefinitionActionHandler(ro_repos, uow_factory, user)
-    result = await handler.handle(
-        RecordRoutineDefinitionActionCommand(
-            routine_definition_id=routine_definition_id,
-            action=action,
-            date=task_date,
-        )
-    )
-
-    assert len(result) == 1
-    assert result[0].id == ready_task.id
-    assert ready_task.status == expected_ready_status
-    assert len(ready_task.actions) == 1
-    assert ready_task.actions[0].type == action_type
-
-    # Skipped tasks are untouched
-    assert punted_task.status == value_objects.TaskStatus.PUNT
-    assert punted_task.actions == []
-    assert completed_task.status == value_objects.TaskStatus.COMPLETE
-    assert completed_task.actions == []
-    assert completed_task.completed_at == completed_at
-    assert completed_task.completed_at == completed_at
-    assert completed_task.completed_at == completed_at

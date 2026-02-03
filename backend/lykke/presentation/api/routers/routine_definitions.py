@@ -1,14 +1,10 @@
 """Router for RoutineDefinition CRUD operations."""
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from lykke.application.commands import (
-    RecordRoutineDefinitionActionCommand,
-    RecordRoutineDefinitionActionHandler,
-)
 from lykke.application.commands.routine_definition import (
     AddRoutineDefinitionTaskCommand,
     AddRoutineDefinitionTaskHandler,
@@ -39,7 +35,6 @@ from lykke.presentation.api.schemas import (
     RoutineDefinitionTaskCreateSchema,
     RoutineDefinitionTaskUpdateSchema,
     RoutineDefinitionUpdateSchema,
-    TaskSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_definition_to_schema
 from lykke.presentation.handler_factory import (
@@ -56,9 +51,6 @@ from .routine_definition_mappers import (
     update_schema_to_update_object,
 )
 from .utils import build_search_query, create_paged_response
-
-if TYPE_CHECKING:
-    from datetime import date
 
 router = APIRouter()
 
@@ -222,22 +214,3 @@ async def remove_routine_definition_task(
     return map_routine_definition_to_schema(updated)
 
 
-@router.post("/{uuid}/actions")
-async def record_routine_definition_action(
-    uuid: UUID,
-    action: value_objects.Action,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> list[TaskSchema]:
-    """Record an action on all tasks in a routine definition for today."""
-    from lykke.core.utils.dates import get_current_date
-    from lykke.presentation.api.schemas.mappers import map_task_to_schema
-
-    today: date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(RecordRoutineDefinitionActionHandler)
-    updated_tasks = await handler.handle(
-        RecordRoutineDefinitionActionCommand(
-            routine_definition_id=uuid, action=action, date=today
-        )
-    )
-    return [map_task_to_schema(task) for task in updated_tasks]

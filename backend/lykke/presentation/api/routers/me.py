@@ -4,7 +4,7 @@ from datetime import UTC, datetime as dt_datetime, time as dt_time
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lykke.application.commands.brain_dump import (
@@ -50,7 +50,6 @@ from lykke.presentation.api.schemas import (
     BasePersonalitySchema,
     BrainDumpSchema,
     CalendarEntrySchema,
-    DayContextSchema,
     DaySchema,
     RoutineSchema,
     TaskSchema,
@@ -62,7 +61,6 @@ from lykke.presentation.api.schemas.mappers import (
     map_alarm_to_schema,
     map_brain_dump_to_schema,
     map_calendar_entry_to_schema,
-    map_day_context_to_schema,
     map_day_to_schema,
     map_routine_to_schema,
     map_task_to_schema,
@@ -318,18 +316,6 @@ async def get_tomorrow_routines(
         )
         for routine in context.routines
     ]
-
-
-@router.get("/tomorrow/context", response_model=DayContextSchema)
-async def get_tomorrow_context(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> DayContextSchema:
-    """Get tomorrow's full DayContext snapshot (requires it to be scheduled)."""
-    context = await _get_tomorrow_context(
-        query_factory=query_factory, user_timezone=user.settings.timezone
-    )
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 
 
 # ============================================================================

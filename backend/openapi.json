@@ -822,34 +822,6 @@
         }
       }
     },
-    "/me/tomorrow/context": {
-      "get": {
-        "tags": [
-          "auth",
-          "user"
-        ],
-        "summary": "Get Tomorrow Context",
-        "description": "Get tomorrow's full DayContext snapshot (requires it to be scheduled).",
-        "operationId": "get_tomorrow_context_me_tomorrow_context_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
     "/me/today/alarms": {
       "post": {
         "tags": [
@@ -4072,69 +4044,6 @@
         }
       }
     },
-    "/routine-definitions/{uuid}/actions": {
-      "post": {
-        "tags": [
-          "routine-definitions"
-        ],
-        "summary": "Record Routine Definition Action",
-        "description": "Record an action on all tasks in a routine definition for today.",
-        "operationId": "record_routine_definition_action_routine_definitions__uuid__actions_post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "uuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Action"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaskSchema"
-                  },
-                  "title": "Response Record Routine Definition Action Routine Definitions  Uuid  Actions Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/routines/{uuid}/actions": {
       "post": {
         "tags": [
@@ -5551,53 +5460,6 @@
         ]
       }
     },
-    "/calendars/create": {
-      "post": {
-        "tags": [
-          "calendars"
-        ],
-        "summary": "Create Calendar",
-        "description": "Create a new calendar.",
-        "operationId": "create_calendar_calendars_create_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CalendarCreateSchema"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CalendarSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
     "/usecase-configs/{usecase}": {
       "get": {
         "tags": [
@@ -6445,58 +6307,6 @@
         "type": "object",
         "title": "BrainDumpUpdateSchema",
         "description": "API schema for updating a brain dump."
-      },
-      "CalendarCreateSchema": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "auth_token_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Auth Token Id"
-          },
-          "platform_id": {
-            "type": "string",
-            "title": "Platform Id"
-          },
-          "platform": {
-            "type": "string",
-            "title": "Platform"
-          },
-          "last_sync_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Sync At"
-          },
-          "default_event_category": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/EventCategory"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "auth_token_id",
-          "platform_id",
-          "platform"
-        ],
-        "title": "CalendarCreateSchema",
-        "description": "API schema for creating a Calendar entity."
       },
       "CalendarEntryAttendanceStatus": {
         "type": "string",

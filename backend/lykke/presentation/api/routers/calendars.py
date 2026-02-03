@@ -6,8 +6,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lykke.application.commands.calendar import (
-    CreateCalendarCommand,
-    CreateCalendarHandler,
     DeleteCalendarCommand,
     DeleteCalendarHandler,
     ResetCalendarDataCommand,
@@ -30,10 +28,8 @@ from lykke.application.queries.calendar import (
     SearchCalendarsQuery,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.presentation.api.schemas import (
-    CalendarCreateSchema,
     CalendarSchema,
     CalendarUpdateSchema,
     PagedResponseSchema,
@@ -47,7 +43,6 @@ from lykke.presentation.handler_factory import (
 from lykke.presentation.workers.tasks.calendar import sync_single_calendar_task
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
-from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
@@ -167,30 +162,6 @@ async def search_calendars(
         SearchCalendarsQuery(search_query=search_query)
     )
     return create_paged_response(result, map_calendar_to_schema)
-
-
-@router.post("/create", response_model=CalendarSchema)
-async def create_calendar(
-    calendar_data: CalendarCreateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-) -> CalendarSchema:
-    """Create a new calendar."""
-    create_calendar_handler = command_factory.create(CreateCalendarHandler)
-    # Convert schema to entity (id is optional for create, entity will generate it if None)
-    calendar = CalendarEntity(
-        user_id=user.id,
-        name=calendar_data.name,
-        auth_token_id=calendar_data.auth_token_id,
-        platform_id=calendar_data.platform_id,
-        platform=calendar_data.platform,
-        last_sync_at=calendar_data.last_sync_at,
-        default_event_category=calendar_data.default_event_category,
-    )
-    created = await create_calendar_handler.handle(
-        CreateCalendarCommand(calendar=calendar)
-    )
-    return map_calendar_to_schema(created)
 
 
 @router.put("/{uuid}", response_model=CalendarSchema)
