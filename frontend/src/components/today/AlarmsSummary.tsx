@@ -18,7 +18,7 @@ export const AlarmsSummary: Component<AlarmsSummaryProps> = (props) => {
 
   return (
     <Show
-      when={!props.isLoading || props.alarms.length > 0}
+      when={!props.isLoading}
       fallback={
         <FuzzyCard class="p-5 space-y-4">
           <div class="flex items-center justify-between">

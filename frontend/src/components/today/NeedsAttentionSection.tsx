@@ -24,7 +24,7 @@ export const NeedsAttentionSection: Component<NeedsAttentionSectionProps> = (
 
   return (
     <Show
-      when={!props.isLoading || props.tasks.length > 0}
+      when={!props.isLoading}
       fallback={
         <FuzzyCard class="p-3 space-y-3">
           <div class="flex items-center gap-2">

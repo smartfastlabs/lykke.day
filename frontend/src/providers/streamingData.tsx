@@ -65,6 +65,7 @@ interface StreamingDataContextValue {
   routines: Accessor<Routine[]>;
   // Loading and error states
   isLoading: Accessor<boolean>;
+  isPartLoading: (part: DayContextPartKey) => boolean;
   notificationsLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
   // Connection state
@@ -140,6 +141,8 @@ type DayContextPartKey =
   | "brain_dumps"
   | "push_notifications";
 
+type DayContextLoadingState = Record<DayContextPartKey, boolean>;
+
 interface PartialDayContext {
   day?: Day;
   calendar_entries?: Event[];
@@ -203,6 +206,15 @@ export function StreamingDataProvider(props: ParentProps) {
     data: DayContextWithRoutines | undefined;
   }>({ data: undefined });
   const [isLoading, setIsLoading] = createSignal(true);
+  const [dayContextLoading, setDayContextLoading] =
+    createStore<DayContextLoadingState>({
+      day: true,
+      tasks: true,
+      calendar_entries: true,
+      routines: true,
+      brain_dumps: true,
+      push_notifications: true,
+    });
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
@@ -273,6 +285,28 @@ export function StreamingDataProvider(props: ParentProps) {
     "brain_dumps",
     "push_notifications",
   ];
+
+  const setLoadingForParts = (
+    parts: DayContextPartKey[],
+    loading: boolean,
+  ) => {
+    parts.forEach((part) => {
+      setDayContextLoading(part, loading);
+    });
+  };
+
+  const getPartsFromPartialContext = (
+    partial: PartialDayContext,
+  ): DayContextPartKey[] => {
+    const parts: DayContextPartKey[] = [];
+    if (partial.day) parts.push("day");
+    if (partial.tasks) parts.push("tasks");
+    if (partial.calendar_entries) parts.push("calendar_entries");
+    if (partial.routines) parts.push("routines");
+    if (partial.brain_dumps) parts.push("brain_dumps");
+    if (partial.push_notifications) parts.push("push_notifications");
+    return parts;
+  };
 
   const buildEmptyDayContext = (currentDay: Day): DayContextWithRoutines => ({
     day: currentDay,
@@ -352,6 +386,8 @@ export function StreamingDataProvider(props: ParentProps) {
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
+  const isPartLoading = (part: DayContextPartKey): boolean =>
+    dayContextLoading[part];
   const shouldHideEvent = (
     status?: import("@/types/api").CalendarEntryAttendanceStatus | null,
   ): boolean => status === "DIDNT_HAPPEN" || status === "NOT_GOING";
@@ -519,6 +555,7 @@ export function StreamingDataProvider(props: ParentProps) {
     });
     if (sent) {
       setIsLoading(true);
+      setLoadingForParts(request.partial_keys ?? DAY_CONTEXT_PARTS, true);
     }
   };
 
@@ -594,6 +631,15 @@ export function StreamingDataProvider(props: ParentProps) {
     if (message.partial_context) {
       const previousContext = dayContextStore.data;
       const didApplyChanges = applyPartialContext(message.partial_context);
+      if (didApplyChanges) {
+        const partsToMark =
+          message.partial_key != null
+            ? [message.partial_key]
+            : getPartsFromPartialContext(message.partial_context);
+        if (partsToMark.length > 0) {
+          setLoadingForParts(partsToMark, false);
+        }
+      }
       logDebugEvent("state", "apply_partial_context", {
         partialKey: message.partial_key ?? null,
         didApplyChanges,
@@ -606,6 +652,7 @@ export function StreamingDataProvider(props: ParentProps) {
       }
       if (message.sync_complete) {
         setIsLoading(false);
+        setLoadingForParts(DAY_CONTEXT_PARTS, false);
         setIsOutOfSync(false);
         void refreshAuxiliaryData();
         const baselineContext = fullSyncBaseContext ?? previousContext;
@@ -630,6 +677,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
     if (message.day_context) {
       setIsLoading(false);
+      setLoadingForParts(DAY_CONTEXT_PARTS, false);
       fullSyncBaseContext = undefined;
       const previousContext = dayContextStore.data;
       // Full context - replace store
@@ -1304,6 +1352,7 @@ export function StreamingDataProvider(props: ParentProps) {
     day,
     routines,
     isLoading,
+    isPartLoading,
     notificationsLoading,
     error,
     isConnected,

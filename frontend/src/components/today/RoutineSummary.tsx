@@ -39,11 +39,7 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
 
   return (
     <Show
-      when={
-        !props.isLoading ||
-        props.tasks.length > 0 ||
-        props.routines.length > 0
-      }
+      when={!props.isLoading}
       fallback={
         <FuzzyCard class="p-4 space-y-3">
           <div class="flex items-center justify-between gap-3">

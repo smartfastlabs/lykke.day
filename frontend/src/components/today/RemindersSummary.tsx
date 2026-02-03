@@ -26,7 +26,7 @@ export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
 
   return (
     <Show
-      when={!props.isLoading || props.reminders.length > 0}
+      when={!props.isLoading}
       fallback={
         <FuzzyCard class="p-5 space-y-4">
           <div class="flex items-center justify-between">

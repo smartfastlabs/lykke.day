@@ -34,7 +34,7 @@ const isAllDayEvent = (event: Event): boolean => {
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tasks, events, reminders, alarms, routines, isLoading } =
+  const { tasks, events, reminders, alarms, routines, isLoading, isPartLoading } =
     useStreamingData();
   const [now, setNow] = createSignal(new Date());
 
@@ -190,62 +190,75 @@ export const TodayPage: Component = () => {
     });
   });
 
+  const isEventsLoading = createMemo(() => isPartLoading("calendar_entries"));
+  const isTasksLoading = createMemo(() => isPartLoading("tasks"));
+  const isRoutinesLoading = createMemo(() => isPartLoading("routines"));
+  const isDayLoading = createMemo(() => isPartLoading("day"));
+  const isTasksOrEventsLoading = createMemo(
+    () => isTasksLoading() || isEventsLoading(),
+  );
+  const isTasksOrRoutinesLoading = createMemo(
+    () => isTasksLoading() || isRoutinesLoading(),
+  );
+
   return (
     <>
       <div class="mb-3">
         <RightNowSection
           events={allEvents()}
           tasks={allTasks()}
-          isLoading={isLoading()}
+          isLoading={isTasksOrEventsLoading()}
         />
       </div>
       <div class="mb-3">
         <UpcomingSection
           events={allEvents()}
           tasks={allTasks()}
-          isLoading={isLoading()}
+          isLoading={isTasksOrEventsLoading()}
         />
       </div>
       <div class="mb-3">
-        <NeedsAttentionSection tasks={allTasks()} isLoading={isLoading()} />
+        <NeedsAttentionSection tasks={allTasks()} isLoading={isTasksLoading()} />
       </div>
-      <Show when={isLoading() || allReminders().length > 0}>
+      <Show when={isTasksLoading() || allReminders().length > 0}>
         <div class="mb-6">
           <RemindersSummary
             reminders={allReminders()}
             href="/me/today/reminders"
-            isLoading={isLoading()}
+            isLoading={isTasksLoading()}
           />
         </div>
       </Show>
-      <Show when={isLoading() || allAlarms().length > 0}>
+      <Show when={isDayLoading() || allAlarms().length > 0}>
         <div class="mb-6">
           <AlarmsSummary
             alarms={allAlarms()}
             href="/me/today/alarms"
-            isLoading={isLoading()}
+            isLoading={isDayLoading()}
           />
         </div>
       </Show>
       <div class="mb-6 flex flex-col md:flex-row gap-4">
-        <Show when={isLoading() || hasUpcomingEvents()}>
+        <Show when={isEventsLoading() || hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">
             <EventsSection
               events={eventsForSections()}
               href="/me/today/events"
-              isLoading={isLoading()}
+              isLoading={isEventsLoading()}
             />
           </div>
         </Show>
         <div
           class={
-            isLoading() || hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"
+            isEventsLoading() || hasUpcomingEvents()
+              ? "w-full md:w-1/2"
+              : "w-full"
           }
         >
           <TasksSection
             tasks={tasksForSections()}
             href="/me/today/tasks"
-            isLoading={isLoading()}
+            isLoading={isTasksLoading()}
           />
         </div>
       </div>
@@ -254,7 +267,7 @@ export const TodayPage: Component = () => {
         <RoutineSummary
           tasks={allTasks()}
           routines={allRoutines()}
-          isLoading={isLoading()}
+          isLoading={isTasksOrRoutinesLoading()}
         />
       </div>
     </>
