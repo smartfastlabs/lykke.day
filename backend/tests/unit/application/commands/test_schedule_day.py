@@ -130,15 +130,11 @@ async def test_schedule_day_creates_day_and_tasks():
 
     # Verify day was created
     assert len(uow.created) >= 1
-    created_day = next(
-        e for e in uow.created if isinstance(e, DayEntity)
-    )
+    created_day = next(e for e in uow.created if isinstance(e, DayEntity))
     assert created_day.date == task_date
 
     # Verify tasks were created
-    created_tasks = [
-        e for e in uow.created if isinstance(e, TaskEntity)
-    ]
+    created_tasks = [e for e in uow.created if isinstance(e, TaskEntity)]
     assert len(created_tasks) == 2
 
 
@@ -563,9 +559,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
     assert day_tb2.name == template_tb2.name
 
     # Verify the created day entity also has the timeblocks
-    created_day = next(
-        e for e in uow.created if isinstance(e, DayEntity)
-    )
+    created_day = next(e for e in uow.created if isinstance(e, DayEntity))
     assert len(created_day.time_blocks) == 2, "Created day should have 2 timeblocks"
 
 
@@ -650,9 +644,7 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     assert result.day.high_level_plan.intentions == ["Be present", "Stay off phone"]
 
     # Verify the created day entity also has the high_level_plan
-    created_day = next(
-        e for e in uow.created if isinstance(e, DayEntity)
-    )
+    created_day = next(e for e in uow.created if isinstance(e, DayEntity))
     assert created_day.high_level_plan is not None
     assert created_day.high_level_plan.title == template.high_level_plan.title
     assert created_day.high_level_plan.text == template.high_level_plan.text
@@ -741,7 +733,6 @@ async def test_schedule_day_copies_alarms_from_template():
     assert alarm.url == "https://example.com"
     assert alarm.datetime == datetime(2025, 11, 27, 8, 0, tzinfo=UTC)
 
-    created_day = next(
-        e for e in uow.created if isinstance(e, DayEntity)
-    )
+    created_day = next(e for e in uow.created if isinstance(e, DayEntity))
+    assert len(created_day.alarms) == 1
     assert len(created_day.alarms) == 1

@@ -144,9 +144,7 @@ async def test_no_broadcast_without_pubsub_gateway(test_user: UserEntity) -> Non
         await uow.create(audit_log)
 
     # Verify the entity was saved to database
-    uow_read = SqlAlchemyUnitOfWork(
-        user=test_user, pubsub_gateway=StubPubSubGateway()
-    )
+    uow_read = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=StubPubSubGateway())
     async with uow_read:
         saved_log = await uow_read.audit_log_ro_repo.get(audit_log.id)
         assert saved_log.id == audit_log.id

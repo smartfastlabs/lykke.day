@@ -35,9 +35,7 @@ async def process_brain_dump_item_task(
     pubsub_gateway: RedisPubSubGateway | None = None,
 ) -> None:
     """Process a brain dump item for a specific user."""
-    logger.info(
-        f"Starting brain dump processing for user {user_id} item {item_id}"
-    )
+    logger.info(f"Starting brain dump processing for user {user_id} item {item_id}")
 
     try:
         date = dt_date.fromisoformat(day_date)

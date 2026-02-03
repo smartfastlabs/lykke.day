@@ -12,12 +12,7 @@ from lykke.application.commands.task import (
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import (
-    DayEntity,
-    DayTemplateEntity,
-    TaskEntity,
-    UserEntity,
-)
+from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity, UserEntity
 from lykke.domain.events.task_events import (
     TaskActionRecordedEvent,
     TaskStateUpdatedEvent,

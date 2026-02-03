@@ -13,10 +13,7 @@ from lykke.application.commands.calendar_entry import (
 from lykke.domain.entities import CalendarEntryEntity, UserEntity
 from lykke.domain.events.calendar_entry_events import CalendarEntryUpdatedEvent
 from lykke.domain.value_objects import CalendarEntryUpdateObject
-from lykke.domain.value_objects.task import (
-    CalendarEntryAttendanceStatus,
-    TaskFrequency,
-)
+from lykke.domain.value_objects.task import CalendarEntryAttendanceStatus, TaskFrequency
 from tests.support.dobles import (
     create_calendar_entry_repo_double,
     create_read_only_repos_double,
@@ -44,9 +41,7 @@ async def test_update_calendar_entry_attendance_status():
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).get.and_return(entry)
 
-    ro_repos = create_read_only_repos_double(
-        calendar_entry_repo=calendar_entry_repo
-    )
+    ro_repos = create_read_only_repos_double(calendar_entry_repo=calendar_entry_repo)
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateCalendarEntryHandler(
@@ -92,9 +87,7 @@ async def test_update_calendar_entry_name():
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).get.and_return(entry)
 
-    ro_repos = create_read_only_repos_double(
-        calendar_entry_repo=calendar_entry_repo
-    )
+    ro_repos = create_read_only_repos_double(calendar_entry_repo=calendar_entry_repo)
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateCalendarEntryHandler(

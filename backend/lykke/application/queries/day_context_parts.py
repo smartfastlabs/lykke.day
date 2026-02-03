@@ -109,7 +109,9 @@ class GetDayRoutinesHandler(BaseQueryHandler[GetDayRoutinesQuery, list[RoutineEn
         )
         if not routines:
             if tasks is None:
-                tasks = await self.task_ro_repo.search(value_objects.TaskQuery(date=date))
+                tasks = await self.task_ro_repo.search(
+                    value_objects.TaskQuery(date=date)
+                )
             routines = await self._build_routines_from_tasks(date, tasks)
         return sorted(routines, key=lambda routine: getattr(routine, "name", ""))
 

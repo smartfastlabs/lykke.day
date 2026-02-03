@@ -100,9 +100,7 @@ class VerifySmsLoginCodeHandler(
             status=value_objects.UserStatus.ACTIVE,
         )
 
-    async def _create_user(
-        self, uow: UnitOfWorkProtocol, user: UserEntity
-    ) -> None:
+    async def _create_user(self, uow: UnitOfWorkProtocol, user: UserEntity) -> None:
         """Create a new user with default day templates."""
         await uow.create(user)
 

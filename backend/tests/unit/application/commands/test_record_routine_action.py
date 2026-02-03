@@ -234,3 +234,4 @@ async def test_record_routine_definition_action_only_updates_tasks_not_punted_or
     assert completed_task.actions == []
     assert completed_task.completed_at == completed_at
     assert completed_task.completed_at == completed_at
+    assert completed_task.completed_at == completed_at

@@ -169,9 +169,7 @@ async def test_smart_handle_runs_llm_when_enabled(
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
     await handler.handle(
-        SmartNotificationCommand(
-            user=_build_user(user_id), triggered_by="scheduled"
-        )
+        SmartNotificationCommand(user=_build_user(user_id), triggered_by="scheduled")
     )
 
     assert called is True
@@ -437,4 +435,5 @@ async def test_smart_tool_handles_send_errors() -> None:
     allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
+    await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")

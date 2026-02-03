@@ -345,3 +345,4 @@ async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> No
     )
     assert event.alarm_id == expected_alarm_id
     assert event.alarm_id == expected_alarm_id
+    assert event.alarm_id == expected_alarm_id

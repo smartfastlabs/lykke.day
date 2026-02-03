@@ -109,9 +109,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             if calendar.sync_subscription
             else None
         )
-        user_timezone = (
-            self.user.settings.timezone if self.user.settings else None
-        )
+        user_timezone = self.user.settings.timezone if self.user.settings else None
 
         (
             fetched_entries,

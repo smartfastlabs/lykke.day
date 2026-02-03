@@ -31,8 +31,8 @@ if TYPE_CHECKING:
         UseCaseConfigRepositoryReadOnlyProtocol,
         UserRepositoryReadOnlyProtocol,
     )
-    from lykke.domain.entities import UserEntity
     from lykke.domain import value_objects
+    from lykke.domain.entities import UserEntity
 
 
 @dataclass(frozen=True)

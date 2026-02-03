@@ -8,13 +8,13 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import TaskEntity
 from lykke.domain.value_objects.query import TaskQuery
+from lykke.domain.value_objects.routine_definition import TimeWindow
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskStatus,
     TaskType,
 )
-from lykke.domain.value_objects.routine_definition import TimeWindow
 from lykke.infrastructure.repositories import TaskRepository
 
 

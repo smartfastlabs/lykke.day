@@ -87,7 +87,7 @@ def _default_llm_gateway_factory() -> LLMGatewayFactoryProtocol:
 def build_domain_event_handler(
     handler_class: type[DomainEventHandler],
     ro_repos: ReadOnlyRepositories,
-    user: "UserEntity",
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory | None,
 ) -> DomainEventHandler:
     """Construct a domain event handler with outer-layer dependencies."""
@@ -147,7 +147,7 @@ class QueryHandlerFactory:
     def __init__(
         self,
         *,
-        user: "UserEntity",
+        user: UserEntity,
         ro_repo_factory: ReadOnlyRepositoryFactory,
         ro_repos: ReadOnlyRepositories | None = None,
         registry: dict[type[BaseQueryHandler], QueryHandlerProvider] | None = None,
@@ -395,7 +395,7 @@ class CommandHandlerFactory:
     def __init__(
         self,
         *,
-        user: "UserEntity",
+        user: UserEntity,
         ro_repo_factory: ReadOnlyRepositoryFactory,
         uow_factory: UnitOfWorkFactory,
         ro_repos: ReadOnlyRepositories | None = None,

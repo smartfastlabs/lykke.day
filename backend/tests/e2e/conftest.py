@@ -84,9 +84,7 @@ async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     ro_repos = ro_repo_factory.create(user)
     preview_handler = PreviewDayHandler(ro_repos, user)
-    schedule_handler = ScheduleDayHandler(
-        ro_repos, uow_factory, user, preview_handler
-    )
+    schedule_handler = ScheduleDayHandler(ro_repos, uow_factory, user, preview_handler)
     await schedule_handler.handle(ScheduleDayCommand(date=date))
 
 

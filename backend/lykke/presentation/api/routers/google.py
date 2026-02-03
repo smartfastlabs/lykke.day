@@ -24,11 +24,11 @@ from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
 )
+from lykke.presentation.webhook_relay import webhook_relay_manager
 from lykke.presentation.workers.tasks.calendar import (
     resubscribe_calendar_task,
     sync_single_calendar_task,
 )
-from lykke.presentation.webhook_relay import webhook_relay_manager
 
 from .dependencies.factories import command_handler_factory
 from .dependencies.services import get_read_only_repository_factory

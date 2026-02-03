@@ -549,3 +549,4 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
     tool = tools[0]
 
     await tool.callback(should_notify=True, message="Morning plan", priority="high")
+    await tool.callback(should_notify=True, message="Morning plan", priority="high")

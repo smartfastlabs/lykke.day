@@ -6,9 +6,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from lykke.domain.entities import UserEntity
-
 from lykke.application.base_handler import BaseHandler
+from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
     from lykke.application.unit_of_work import ReadOnlyRepositories

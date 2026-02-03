@@ -12,19 +12,14 @@ from lykke.application.commands.usecase_config import (
     DeleteUseCaseConfigHandler,
 )
 from lykke.application.llm import render_system_prompt
-from lykke.application.queries import (
-    PreviewLLMSnapshotHandler,
-    PreviewLLMSnapshotQuery,
-)
+from lykke.application.queries import PreviewLLMSnapshotHandler, PreviewLLMSnapshotQuery
 from lykke.application.queries.usecase_config import (
     GetUseCaseConfigHandler,
     GetUseCaseConfigQuery,
 )
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain.entities import UserEntity
-from lykke.presentation.api.schemas import (
-    NotificationUseCaseConfigSchema,
-)
+from lykke.presentation.api.schemas import NotificationUseCaseConfigSchema
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,

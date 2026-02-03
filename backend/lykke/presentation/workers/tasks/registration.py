@@ -1,9 +1,9 @@
 """Registration helpers for background worker event handlers."""
 
 from collections.abc import Callable
+from uuid import UUID
 
 from loguru import logger
-from uuid import UUID
 
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity

@@ -135,9 +135,7 @@ async def evaluate_smart_notification_task(
             try:
                 user = await load_user(user_id)
             except Exception:
-                logger.warning(
-                    f"User not found for smart notification task {user_id}"
-                )
+                logger.warning(f"User not found for smart notification task {user_id}")
                 return
             resolved_handler = get_smart_notification_handler(
                 user=user,

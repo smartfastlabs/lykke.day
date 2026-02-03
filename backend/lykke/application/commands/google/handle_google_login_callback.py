@@ -62,9 +62,7 @@ class HandleGoogleLoginCallbackHandler(
 
         service = build("calendar", "v3", credentials=flow.credentials)
         calendar_list = service.calendarList().list().execute()
-        google_platform_ids = {
-            cal["id"] for cal in calendar_list.get("items", [])
-        }
+        google_platform_ids = {cal["id"] for cal in calendar_list.get("items", [])}
 
         calendars_to_resubscribe: list[UUID] = []
 
@@ -76,9 +74,7 @@ class HandleGoogleLoginCallbackHandler(
                         command.auth_token_id
                     )
                     if existing_auth_token.user_id != self.user.id:
-                        raise AuthenticationError(
-                            "Auth token does not belong to user"
-                        )
+                        raise AuthenticationError("Auth token does not belong to user")
                     logger.info(
                         f"Re-authenticating specific auth token {existing_auth_token.id} "
                         f"for user {self.user.id}"
@@ -143,7 +139,7 @@ class HandleGoogleLoginCallbackHandler(
                             client_secret=auth_token_data.client_secret,
                             scopes=auth_token_data.scopes,
                             expires_at=auth_token_data.expires_at,
-                        )
+                        ),
                     )
                 )
                 uow.add(auth_token_data)

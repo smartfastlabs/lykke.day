@@ -23,16 +23,12 @@ async def test_list_routine_definitions(authenticated_client):
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     await routine_definition_repo.put(routine_definition)
 
-    response = client.post(
-        "/routine-definitions/", json={"limit": 50, "offset": 0}
-    )
+    response = client.post("/routine-definitions/", json={"limit": 50, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
@@ -58,9 +54,7 @@ async def test_get_routine_definition(authenticated_client):
         name="Get Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
@@ -100,9 +94,7 @@ async def test_create_routine_definition(authenticated_client):
         "tasks": [],
     }
 
-    response = client.post(
-        "/routine-definitions/create", json=routine_definition_data
-    )
+    response = client.post("/routine-definitions/create", json=routine_definition_data)
 
     assert response.status_code == 201
 
@@ -128,9 +120,7 @@ async def test_create_routine_definition_with_tasks(authenticated_client):
         ],
     }
 
-    response = client.post(
-        "/routine-definitions/create", json=routine_definition_data
-    )
+    response = client.post("/routine-definitions/create", json=routine_definition_data)
 
     assert response.status_code == 201
     body = response.json()
@@ -153,9 +143,7 @@ async def test_update_routine_definition(authenticated_client):
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
@@ -190,16 +178,12 @@ async def test_delete_routine_definition(authenticated_client):
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
 
-    response = client.delete(
-        f"/routine-definitions/{routine_definition.id}"
-    )
+    response = client.delete(f"/routine-definitions/{routine_definition.id}")
 
     assert response.status_code in [204, 200]
 
@@ -226,9 +210,7 @@ async def test_list_routine_definitions_pagination(authenticated_client):
         await routine_definition_repo.put(routine_definition)
 
     # Test pagination
-    response = client.post(
-        "/routine-definitions/", json={"limit": 2, "offset": 0}
-    )
+    response = client.post("/routine-definitions/", json={"limit": 2, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()

@@ -186,7 +186,9 @@ def get_calendar_entry_notification_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> CalendarEntryNotificationHandler:
     """Get a CalendarEntryNotificationHandler instance for a user."""
-    from lykke.application.commands.notifications import CalendarEntryNotificationHandler
+    from lykke.application.commands.notifications import (
+        CalendarEntryNotificationHandler,
+    )
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(

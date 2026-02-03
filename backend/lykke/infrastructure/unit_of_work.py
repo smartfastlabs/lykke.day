@@ -364,9 +364,7 @@ class SqlAlchemyUnitOfWork:
         )
         self._calendar_rw_repo = calendar_repo
 
-        day_repo = cast(
-            "DayRepositoryReadWriteProtocol", DayRepository(user=self.user)
-        )
+        day_repo = cast("DayRepositoryReadWriteProtocol", DayRepository(user=self.user))
         self.day_ro_repo = cast("DayRepositoryReadOnlyProtocol", day_repo)
         self._day_rw_repo = day_repo
 
@@ -1284,9 +1282,7 @@ class SqlAlchemyReadOnlyRepositories:
         )
         self.calendar_ro_repo = calendar_repo
 
-        day_repo = cast(
-            "DayRepositoryReadOnlyProtocol", DayRepository(user=self.user)
-        )
+        day_repo = cast("DayRepositoryReadOnlyProtocol", DayRepository(user=self.user))
         self.day_ro_repo = day_repo
 
         day_template_repo = cast(

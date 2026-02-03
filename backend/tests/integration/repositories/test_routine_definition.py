@@ -12,10 +12,7 @@ from lykke.domain.value_objects.routine_definition import (
     RoutineDefinitionTask,
     TimeWindow,
 )
-from lykke.domain.value_objects.task import (
-    TaskCategory,
-    TaskFrequency,
-)
+from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
 
@@ -28,9 +25,7 @@ async def test_get(routine_definition_repo, test_user):
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     await routine_definition_repo.put(routine_definition)
@@ -57,9 +52,7 @@ async def test_put(routine_definition_repo, test_user):
         name="New Routine Definition",
         category=TaskCategory.HOUSE,
         description="New description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
 
@@ -78,9 +71,7 @@ async def test_all(routine_definition_repo, test_user):
         name="Routine Definition 1",
         category=TaskCategory.HOUSE,
         description="Description 1",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine2 = RoutineDefinitionEntity(
@@ -89,9 +80,7 @@ async def test_all(routine_definition_repo, test_user):
         name="Routine Definition 2",
         category=TaskCategory.HOUSE,
         description="Description 2",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.WEEKLY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.WEEKLY),
         tasks=[],
     )
     await routine_definition_repo.put(routine1)
@@ -105,9 +94,7 @@ async def test_all(routine_definition_repo, test_user):
 
 
 @pytest.mark.asyncio
-async def test_user_isolation(
-    routine_definition_repo, test_user, create_test_user
-):
+async def test_user_isolation(routine_definition_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
@@ -115,9 +102,7 @@ async def test_user_isolation(
         name="User1 Routine Definition",
         category=TaskCategory.HOUSE,
         description="Description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     await routine_definition_repo.put(routine_definition)
@@ -140,9 +125,7 @@ async def test_put_with_task_time_window(routine_definition_repo, test_user):
         name="With Task Schedule",
         category=TaskCategory.HOUSE,
         description="Has scheduled task",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[
             RoutineDefinitionTask(
                 task_definition_id=uuid4(),

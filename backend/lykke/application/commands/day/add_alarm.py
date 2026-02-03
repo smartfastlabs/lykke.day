@@ -21,7 +21,9 @@ class AddAlarmToDayCommand(Command):
     url: str = ""
 
 
-class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_objects.Alarm]):
+class AddAlarmToDayHandler(
+    BaseCommandHandler[AddAlarmToDayCommand, value_objects.Alarm]
+):
     """Adds an alarm to a day."""
 
     @staticmethod
@@ -59,7 +61,9 @@ class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_object
                 except (ZoneInfoNotFoundError, ValueError):
                     timezone = ZoneInfo("UTC")
 
-            alarm_local_dt = datetime.combine(command.date, command.time, tzinfo=timezone)
+            alarm_local_dt = datetime.combine(
+                command.date, command.time, tzinfo=timezone
+            )
             name = (command.name or "").strip()
             if not name:
                 name = self._default_alarm_name(command.time)
@@ -77,4 +81,5 @@ class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_object
 
             # Add entity to UoW for saving
             uow.add(day)
+            return alarm
             return alarm

@@ -68,6 +68,7 @@ async def test_reset_calendar_data_skips_unsubscribed_calendars() -> None:
         calendar_entry_series_repo=create_calendar_entry_series_repo_double(),
         auth_token_repo=create_auth_token_repo_double(),
     )
+
     async def all_calendars() -> list[CalendarEntity]:
         return [calendar]
 
@@ -125,6 +126,7 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
         calendar_entry_series_repo=create_calendar_entry_series_repo_double(),
         auth_token_repo=create_auth_token_repo_double(),
     )
+
     async def all_calendars() -> list[CalendarEntity]:
         return [calendar]
 
@@ -149,6 +151,7 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
         unsubscribed.append(kwargs["channel_id"])
 
     google_gateway.unsubscribe_from_calendar = unsubscribe_from_calendar
+
     async def subscribe_to_calendar(**_: Any) -> value_objects.CalendarSubscription:
         return value_objects.CalendarSubscription(
             channel_id="new-channel",

@@ -37,9 +37,7 @@ def get_calendar_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> CalendarRepositoryReadWriteProtocol:
     """Get a user-scoped instance of CalendarRepository."""
-    return cast(
-        "CalendarRepositoryReadWriteProtocol", CalendarRepository(user=user)
-    )
+    return cast("CalendarRepositoryReadWriteProtocol", CalendarRepository(user=user))
 
 
 def get_time_block_definition_ro_repo(

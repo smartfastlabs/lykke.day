@@ -24,9 +24,7 @@ class RemoveAlarmFromDayHandler(
 ):
     """Removes an alarm from a day."""
 
-    async def handle(
-        self, command: RemoveAlarmFromDayCommand
-    ) -> value_objects.Alarm:
+    async def handle(self, command: RemoveAlarmFromDayCommand) -> value_objects.Alarm:
         """Remove an alarm from a day.
 
         Args:
@@ -53,4 +51,5 @@ class RemoveAlarmFromDayHandler(
 
             # Add entity to UoW for saving
             uow.add(day)
+            return removed_alarm
             return removed_alarm

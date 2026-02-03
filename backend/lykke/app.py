@@ -1,9 +1,9 @@
 import os
 import sys
-from uuid import UUID
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
+from uuid import UUID
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,6 +71,7 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
         pubsub_gateway=pubsub_gateway,
         workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
     )
+
     async def _load_user(user_id: UUID) -> UserEntity | None:
         user_repo = UserRepository()
         try:

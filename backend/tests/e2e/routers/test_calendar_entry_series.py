@@ -4,7 +4,11 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntrySeriesEntity
+from lykke.domain.entities import (
+    AuthTokenEntity,
+    CalendarEntity,
+    CalendarEntrySeriesEntity,
+)
 from lykke.domain.value_objects.task import EventCategory, TaskFrequency
 from lykke.infrastructure.repositories import (
     AuthTokenRepository,

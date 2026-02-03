@@ -108,3 +108,4 @@ async def test_process_inbound_sms_records_llm_run_result_on_message() -> None:
     assert updated.llm_run_result is not None
     assert updated.llm_run_result.llm_provider == value_objects.LLMProvider.OPENAI
     assert updated.llm_run_result.system_prompt == "system"
+    assert updated.llm_run_result.system_prompt == "system"

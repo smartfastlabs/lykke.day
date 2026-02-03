@@ -70,7 +70,9 @@ async def test_sync_creates_new_events(test_user, test_calendar, calendar_entry_
 
 
 @pytest.mark.asyncio
-async def test_sync_updates_existing_events(test_user, test_calendar, calendar_entry_repo):
+async def test_sync_updates_existing_events(
+    test_user, test_calendar, calendar_entry_repo
+):
     """Test that sync updates existing events in the database."""
     # Create initial event
     event = CalendarEntryEntity(
@@ -124,7 +126,9 @@ async def test_sync_updates_existing_events(test_user, test_calendar, calendar_e
 
 
 @pytest.mark.asyncio
-async def test_sync_deletes_cancelled_events(test_user, test_calendar, calendar_entry_repo):
+async def test_sync_deletes_cancelled_events(
+    test_user, test_calendar, calendar_entry_repo
+):
     """Test that sync deletes cancelled events from the database."""
     # Create event
     event = CalendarEntryEntity(
