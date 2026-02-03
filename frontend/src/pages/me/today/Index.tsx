@@ -34,8 +34,15 @@ const isAllDayEvent = (event: Event): boolean => {
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tasks, events, reminders, alarms, routines, isLoading, isPartLoading } =
-    useStreamingData();
+  const {
+    tasks,
+    events,
+    reminders,
+    alarms,
+    routines,
+    isLoading,
+    isPartLoading,
+  } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
 
   // Update time every 30 seconds to keep sections aligned
@@ -218,7 +225,10 @@ export const TodayPage: Component = () => {
         />
       </div>
       <div class="mb-3">
-        <NeedsAttentionSection tasks={allTasks()} isLoading={isTasksLoading()} />
+        <NeedsAttentionSection
+          tasks={allTasks()}
+          isLoading={isTasksLoading()}
+        />
       </div>
       <Show when={isTasksLoading() || allReminders().length > 0}>
         <div class="mb-6">

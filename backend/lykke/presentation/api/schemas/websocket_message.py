@@ -5,14 +5,14 @@ from uuid import UUID
 
 from .audit_log import AuditLogSchema
 from .base import BaseSchema
-from .day_context import DayContextSchema
-from .task import TaskSchema
-from .calendar_entry import CalendarEntrySchema
 from .brain_dump import BrainDumpSchema
+from .calendar_entry import CalendarEntrySchema
 from .day import DaySchema
+from .day_context import DayContextSchema
 from .message import MessageSchema
 from .push_notification import PushNotificationSchema
 from .routine import RoutineSchema
+from .task import TaskSchema
 
 
 DayContextPartKey = Literal[
@@ -118,9 +118,6 @@ class WebSocketSyncResponseSchema(BaseSchema):
     )
     changes: list[EntityChangeSchema] | None = (
         None  # Incremental changes if since_timestamp was provided (only for today's entities)
-    )
-    routines: list[RoutineSchema] | None = (
-        None  # Routines (included in full sync response)
     )
     partial_context: DayContextPartialSchema | None = None
     partial_key: DayContextPartKey | None = None

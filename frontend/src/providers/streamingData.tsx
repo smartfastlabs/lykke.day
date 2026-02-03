@@ -164,7 +164,6 @@ interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
   day_context?: DayContextWithRoutines;
   changes?: EntityChange[];
-  routines?: Routine[];
   partial_context?: PartialDayContext;
   partial_key?: DayContextPartKey | null;
   sync_complete?: boolean | null;
@@ -286,10 +285,7 @@ export function StreamingDataProvider(props: ParentProps) {
     "push_notifications",
   ];
 
-  const setLoadingForParts = (
-    parts: DayContextPartKey[],
-    loading: boolean,
-  ) => {
+  const setLoadingForParts = (parts: DayContextPartKey[], loading: boolean) => {
     parts.forEach((part) => {
       setDayContextLoading(part, loading);
     });
@@ -690,19 +686,6 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
       setIsOutOfSync(false);
-
-      // Update routines if provided separately
-      if (message.routines) {
-        setDayContextStore((current) => {
-          if (!current.data) return current;
-          return {
-            data: {
-              ...current.data,
-              routines: message.routines,
-            },
-          };
-        });
-      }
 
       void refreshAuxiliaryData();
 
