@@ -239,4 +239,3 @@ class GetIncrementalChangesHandler(
             return None
         except Exception:
             return None
-            return None

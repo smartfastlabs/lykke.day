@@ -52,81 +52,69 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
   return (
     <Page variant="app" hideFooter>
       <div class="min-h-[100dvh] box-border relative overflow-hidden">
-        <Show
-          when={Boolean(day())}
-          fallback={
-            <div class="relative z-10 p-8 text-center text-stone-400">
-              Loading...
-            </div>
-          }
-        >
-          <div class="relative z-10 max-w-4xl mx-auto px-6 py-6">
-            <div class="mb-5 md:mb-7">
-              <div class="relative flex items-start justify-between mb-4">
-                <div>
-                  <div class="flex items-center gap-3 text-stone-600 mb-2">
-                    <span class="font-semibold text-lg text-amber-600/80">
-                      {planTitle() || dateLabel()}
-                    </span>
-                  </div>
-                  <Show when={planTitle()}>
-                    <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
-                      {dateLabel()}
-                    </p>
-                  </Show>
+        <div class="relative z-10 max-w-4xl mx-auto px-6 py-6">
+          <div class="mb-5 md:mb-7">
+            <div class="relative flex items-start justify-between mb-4">
+              <div>
+                <div class="flex items-center gap-3 text-stone-600 mb-2">
+                  <span class="font-semibold text-lg text-amber-600/80">
+                    {planTitle() || dateLabel()}
+                  </span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <a
-                    href="/me/today/brain-dumps"
-                    aria-label="Today's brain dumps"
-                    title="Today's brain dumps"
-                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                  >
-                    <Icon icon={faBrain} class="w-4 h-4 fill-amber-600/70" />
-                  </a>
-                  <a
-                    href="/me/today/notifications"
-                    aria-label="Today's notifications"
-                    title="Today's notifications"
-                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                  >
-                    <Icon icon={faBell} class="w-4 h-4 fill-amber-600/70" />
-                  </a>
-                  <a
-                    href="/me/today/edit"
-                    aria-label="Edit day"
-                    title="Edit day"
-                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                  >
-                    <Icon
-                      icon={faPenToSquare}
-                      class="w-4 h-4 fill-amber-600/70"
-                    />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={sync}
-                    aria-label="Refresh"
-                    title="Refresh"
-                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                  >
-                    <Icon icon={faRotate} class="w-4 h-4 fill-amber-600/70" />
-                  </button>
-                  <Show when={isWorkday()}>
-                    <span class="px-3 py-1.25 md:px-4 md:py-1.5 rounded-full bg-amber-50/95 text-amber-600 text-[11px] md:text-xs font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
-                      Workday
-                    </span>
-                  </Show>
-                </div>
+                <Show when={planTitle()}>
+                  <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
+                    {dateLabel()}
+                  </p>
+                </Show>
               </div>
-              <TimeBlocksSummary
-                timeBlocks={timeBlocks()}
-                dayDate={dayDate()}
-              />
+              <div class="flex items-center gap-2">
+                <a
+                  href="/me/today/brain-dumps"
+                  aria-label="Today's brain dumps"
+                  title="Today's brain dumps"
+                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                >
+                  <Icon icon={faBrain} class="w-4 h-4 fill-amber-600/70" />
+                </a>
+                <a
+                  href="/me/today/notifications"
+                  aria-label="Today's notifications"
+                  title="Today's notifications"
+                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                >
+                  <Icon icon={faBell} class="w-4 h-4 fill-amber-600/70" />
+                </a>
+                <a
+                  href="/me/today/edit"
+                  aria-label="Edit day"
+                  title="Edit day"
+                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                >
+                  <Icon
+                    icon={faPenToSquare}
+                    class="w-4 h-4 fill-amber-600/70"
+                  />
+                </a>
+                <button
+                  type="button"
+                  onClick={sync}
+                  aria-label="Refresh"
+                  title="Refresh"
+                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                >
+                  <Icon icon={faRotate} class="w-4 h-4 fill-amber-600/70" />
+                </button>
+                <Show when={isWorkday()}>
+                  <span class="px-3 py-1.25 md:px-4 md:py-1.5 rounded-full bg-amber-50/95 text-amber-600 text-[11px] md:text-xs font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
+                    Workday
+                  </span>
+                </Show>
+              </div>
             </div>
-            {props.children}
+            <TimeBlocksSummary timeBlocks={timeBlocks()} dayDate={dayDate()} />
           </div>
-        </Show>
+          {props.children}
+        </div>
       </div>
     </Page>
   );

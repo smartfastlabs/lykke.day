@@ -38,7 +38,7 @@ async def test_put(user_repo):
     user = UserEntity(
         id=uid,
         email=f"test-{uid}@example.com",
-        phone_number=f"+1555{uid.hex[:7]}",
+        phone_number=f"+1{uid.int % 10**10:010d}",
         hashed_password="hashed_password",
         settings=UserSetting(),
     )
@@ -139,7 +139,7 @@ async def test_user_with_custom_settings(user_repo):
     user = UserEntity(
         id=uid,
         email=f"test-{uid}@example.com",
-        phone_number=f"+1555{uid.hex[:7]}",
+        phone_number=f"+1{uid.int % 10**10:010d}",
         hashed_password="hash",
         settings=settings,
     )

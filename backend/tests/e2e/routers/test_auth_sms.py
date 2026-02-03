@@ -25,7 +25,7 @@ def stub_sms_gateway():
 @pytest.mark.asyncio
 async def test_sms_request_returns_200(test_client):
     """Test POST /auth/sms/request returns 200 (generic success, no info leak)."""
-    phone = f"+1555{uuid4().hex[:7]}"
+    phone = f"+1{uuid4().int % 10**10:010d}"
     response = test_client.post(
         "/auth/sms/request",
         json={"phone_number": phone},

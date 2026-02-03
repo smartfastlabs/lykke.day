@@ -50,7 +50,7 @@ async def create_test_user():
         if email is None:
             email = f"test-{uuid4()}@example.com"
         if phone_number is None:
-            phone_number = f"+1555{uuid4().hex[:7]}"
+            phone_number = f"+1{uuid4().int % 10**10:010d}"
 
         user = UserEntity(
             email=email,

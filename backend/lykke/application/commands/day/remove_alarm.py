@@ -52,4 +52,3 @@ class RemoveAlarmFromDayHandler(
             # Add entity to UoW for saving
             uow.add(day)
             return removed_alarm
-            return removed_alarm

@@ -35,7 +35,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "test_password_123"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     register_response = test_client.post(
         "/auth/register",

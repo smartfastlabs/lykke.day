@@ -82,4 +82,3 @@ class AddAlarmToDayHandler(
             # Add entity to UoW for saving
             uow.add(day)
             return alarm
-            return alarm

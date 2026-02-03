@@ -193,43 +193,69 @@ export const TodayPage: Component = () => {
   return (
     <>
       <div class="mb-3">
-        <RightNowSection events={allEvents()} tasks={allTasks()} />
+        <RightNowSection
+          events={allEvents()}
+          tasks={allTasks()}
+          isLoading={isLoading()}
+        />
       </div>
       <div class="mb-3">
-        <UpcomingSection events={allEvents()} tasks={allTasks()} />
+        <UpcomingSection
+          events={allEvents()}
+          tasks={allTasks()}
+          isLoading={isLoading()}
+        />
       </div>
       <div class="mb-3">
-        <NeedsAttentionSection tasks={allTasks()} />
+        <NeedsAttentionSection tasks={allTasks()} isLoading={isLoading()} />
       </div>
-      <Show when={allReminders().length > 0}>
+      <Show when={isLoading() || allReminders().length > 0}>
         <div class="mb-6">
           <RemindersSummary
             reminders={allReminders()}
             href="/me/today/reminders"
+            isLoading={isLoading()}
           />
         </div>
       </Show>
-      <Show when={allAlarms().length > 0}>
+      <Show when={isLoading() || allAlarms().length > 0}>
         <div class="mb-6">
-          <AlarmsSummary alarms={allAlarms()} href="/me/today/alarms" />
+          <AlarmsSummary
+            alarms={allAlarms()}
+            href="/me/today/alarms"
+            isLoading={isLoading()}
+          />
         </div>
       </Show>
       <div class="mb-6 flex flex-col md:flex-row gap-4">
-        <Show when={hasUpcomingEvents()}>
+        <Show when={isLoading() || hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">
             <EventsSection
               events={eventsForSections()}
               href="/me/today/events"
+              isLoading={isLoading()}
             />
           </div>
         </Show>
-        <div class={hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"}>
-          <TasksSection tasks={tasksForSections()} href="/me/today/tasks" />
+        <div
+          class={
+            isLoading() || hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"
+          }
+        >
+          <TasksSection
+            tasks={tasksForSections()}
+            href="/me/today/tasks"
+            isLoading={isLoading()}
+          />
         </div>
       </div>
 
       <div class="mb-6">
-        <RoutineSummary tasks={allTasks()} routines={allRoutines()} />
+        <RoutineSummary
+          tasks={allTasks()}
+          routines={allRoutines()}
+          isLoading={isLoading()}
+        />
       </div>
     </>
   );

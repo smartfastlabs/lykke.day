@@ -19,3 +19,4 @@ export {
 } from "./NeedsAttentionSection";
 export { default as HighLevelPlanPrompt } from "./HighLevelPlanPrompt";
 export { default as TimeBlocksSummary } from "./TimeBlocksSummary";
+export { FuzzyCard, FuzzyLine } from "./FuzzyCard";

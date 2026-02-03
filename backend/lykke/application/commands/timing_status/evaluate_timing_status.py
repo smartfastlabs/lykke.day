@@ -129,4 +129,3 @@ class EvaluateTimingStatusHandler(
             key = task.routine_definition_id
             grouped.setdefault(key, []).append(task)
         return grouped
-        return grouped

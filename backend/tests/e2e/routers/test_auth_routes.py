@@ -11,7 +11,7 @@ async def test_register(test_client):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "password123"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     response = test_client.post(
         "/auth/register",
@@ -34,7 +34,7 @@ async def test_register_duplicate_email(test_client):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "password123"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     # Register first user
     test_client.post(
@@ -52,7 +52,7 @@ async def test_register_duplicate_email(test_client):
         json={
             "email": email,
             "password": password,
-            "phone_number": f"+1555{uuid4().hex[:7]}",
+            "phone_number": f"+1{uuid4().int % 10**10:010d}",
         },
     )
 
@@ -65,7 +65,7 @@ async def test_login(test_client):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "password123"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     # Register user first
     test_client.post(
@@ -95,7 +95,7 @@ async def test_login_wrong_password(test_client):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "correct_password"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     # Register user
     test_client.post(
@@ -123,7 +123,7 @@ async def test_logout(test_client):
     uid = uuid4()
     email = f"test-{uid}@example.com"
     password = "password123"
-    phone_number = f"+1555{uid.hex[:7]}"
+    phone_number = f"+1{uid.int % 10**10:010d}"
 
     # Register and login
     test_client.post(
