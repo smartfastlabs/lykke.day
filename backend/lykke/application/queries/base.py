@@ -10,7 +10,11 @@ from lykke.application.base_handler import BaseHandler
 from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
-    from lykke.application.unit_of_work import ReadOnlyRepositories
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        ReadOnlyRepositoryFactory,
+        ReadWriteRepositoryFactory,
+    )
     from lykke.domain.entities.day_template import DayTemplateEntity
 
 # Query type and result type
@@ -67,6 +71,18 @@ class BaseQueryHandler(
     - Implement async def handle(self, query: QueryT) -> ResultT
     """
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
+    def __init__(
+        self,
+        ro_repos: ReadOnlyRepositories | None,
+        user: UserEntity,
+        *,
+        repository_factory: ReadOnlyRepositoryFactory | None = None,
+        readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
+    ) -> None:
         """Initialize the query handler with its dependencies."""
-        super().__init__(ro_repos, user)
+        super().__init__(
+            ro_repos,
+            user,
+            repository_factory=repository_factory,
+            readwrite_repository_factory=readwrite_repository_factory,
+        )

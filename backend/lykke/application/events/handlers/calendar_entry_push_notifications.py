@@ -128,7 +128,7 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             return
 
         send_handler = SendPushNotificationHandler(
-            ro_repos=self._ro_repos,
+            ro_repos=self._get_ro_repos(),
             uow_factory=self._uow_factory,
             user=self.user,
             web_push_gateway=self._web_push_gateway,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, TypeVar, overload
+from typing import TYPE_CHECKING, TypeVar, cast, overload
 
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
@@ -40,6 +40,12 @@ from lykke.application.queries import (
     PreviewLLMSnapshotHandler,
 )
 from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
+from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
+from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.infrastructure.gateways import (
     GoogleCalendarGateway,
     RedisPubSubGateway,
@@ -49,12 +55,6 @@ from lykke.infrastructure.gateways import (
 
 if TYPE_CHECKING:
     from lykke.application.events.handlers import DomainEventHandler
-    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-    from lykke.application.gateways.llm_gateway_factory_protocol import (
-        LLMGatewayFactoryProtocol,
-    )
-    from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
-    from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
     from lykke.application.unit_of_work import (
         ReadOnlyRepositories,
         ReadOnlyRepositoryFactory,
@@ -173,6 +173,9 @@ class QueryHandlerFactory:
         if provider is None:
             return handler_class(self._ro_repos, self.user)
         return provider(self)
+
+    def can_create(self, handler_class: type[object]) -> bool:
+        return issubclass(handler_class, BaseQueryHandler)
 
 
 def _build_schedule_day_handler(
@@ -353,13 +356,11 @@ def _build_process_brain_dump_handler(
     factory: CommandHandlerFactory,
 ) -> ProcessBrainDumpHandler:
     return ProcessBrainDumpHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user,
-        factory.llm_gateway_factory,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.create(CreateAdhocTaskHandler),
-        factory.create(RecordTaskActionHandler),
+        user=factory.user,
+        command_factory=factory,
+        uow_factory=factory.uow_factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
     )
 
 
@@ -554,8 +555,30 @@ class CommandHandlerFactory:
     @overload
     def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...
 
-    def create(self, handler_class: type[BaseCommandHandler]) -> BaseCommandHandler:
-        provider = self._registry.get(handler_class)
+    @overload
+    def create(self, handler_class: type[object]) -> object: ...
+
+    def create(self, handler_class: type[object]) -> object:
+        gateway_provider = self._gateway_provider_for_type(handler_class)
+        if gateway_provider is not None:
+            return gateway_provider()
+        handler_type = cast(type[BaseCommandHandler], handler_class)
+        provider = self._registry.get(handler_type)
         if provider is None:
-            return handler_class(self._ro_repos, self.uow_factory, self.user)
+            return handler_type(self._ro_repos, self.uow_factory, self.user)
         return provider(self)
+
+    def can_create(self, handler_class: type[object]) -> bool:
+        if self._gateway_provider_for_type(handler_class) is not None:
+            return True
+        return issubclass(handler_class, BaseCommandHandler)
+
+    def _gateway_provider_for_type(
+        self, gateway_type: type[object]
+    ) -> Callable[[], object] | None:
+        return {
+            GoogleCalendarGatewayProtocol: lambda: self.google_gateway,
+            WebPushGatewayProtocol: lambda: self.web_push_gateway,
+            SMSProviderProtocol: lambda: self.sms_gateway,
+            LLMGatewayFactoryProtocol: lambda: self.llm_gateway_factory,
+        }.get(gateway_type)

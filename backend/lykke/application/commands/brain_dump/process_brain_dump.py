@@ -16,9 +16,6 @@ from lykke.application.commands.task import (
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
-from lykke.application.gateways.llm_gateway_factory_protocol import (
-    LLMGatewayFactoryProtocol,
-)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
 from lykke.application.queries.get_llm_prompt_context import (
@@ -27,13 +24,20 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
-from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
 
-    from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-    from lykke.domain.entities import BrainDumpEntity
+    from lykke.application.handler_factory_protocols import (
+        CommandHandlerFactoryProtocol,
+        GatewayFactoryProtocol,
+    )
+    from lykke.application.repositories import BrainDumpRepositoryReadOnlyProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositoryFactory,
+        UnitOfWorkFactory,
+    )
+    from lykke.domain.entities import BrainDumpEntity, UserEntity
 
 
 @dataclass(frozen=True)
@@ -49,25 +53,31 @@ class ProcessBrainDumpHandler(
 ):
     """Process brain dump items into follow-up actions."""
 
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+    get_llm_prompt_context_handler: GetLLMPromptContextHandler
+    create_adhoc_task_handler: CreateAdhocTaskHandler
+    record_task_action_handler: RecordTaskActionHandler
     name = "process_brain_dump"
     template_usecase = "process_brain_dump"
 
     def __init__(
         self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
+        *,
         user: UserEntity,
-        llm_gateway_factory: LLMGatewayFactoryProtocol,
-        get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        create_adhoc_task_handler: CreateAdhocTaskHandler,
-        record_task_action_handler: RecordTaskActionHandler,
+        command_factory: CommandHandlerFactoryProtocol | None,
+        uow_factory: UnitOfWorkFactory,
+        gateway_factory: GatewayFactoryProtocol | None,
+        repository_factory: ReadOnlyRepositoryFactory,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user)
-        self._llm_gateway_factory = llm_gateway_factory
-        self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
-        self._create_adhoc_task_handler = create_adhoc_task_handler
-        self._record_task_action_handler = record_task_action_handler
-        self._brain_dump_item: BrainDumpEntity | None = None
+        super().__init__(
+            ro_repos=None,
+            uow_factory=uow_factory,
+            user=user,
+            command_factory=command_factory,
+            gateway_factory=gateway_factory,
+            repository_factory=repository_factory,
+        )
+        self._brain_dump: BrainDumpEntity | None = None
         self._brain_dump_date: dt_date | None = None
 
     async def handle(self, command: ProcessBrainDumpCommand) -> None:
@@ -85,7 +95,7 @@ class ProcessBrainDumpHandler(
             )
             return
 
-        self._brain_dump_item = item
+        self._brain_dump = item
         self._brain_dump_date = command.date
         llm_run_result = await self.run_llm()
         if llm_run_result is not None:
@@ -96,15 +106,15 @@ class ProcessBrainDumpHandler(
             )
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
-        if self._brain_dump_item is None or self._brain_dump_date is None:
+        if self._brain_dump is None or self._brain_dump_date is None:
             raise RuntimeError("Brain dump context was not initialized")
-        prompt_context = await self._get_llm_prompt_context_handler.handle(
+        prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=self._brain_dump_date)
         )
         return UseCasePromptInput(
             prompt_context=prompt_context,
             extra_template_vars={
-                "brain_dump_item": self._brain_dump_item,
+                "brain_dump_item": self._brain_dump,
                 "brain_dump_date": self._brain_dump_date,
             },
         )
@@ -116,9 +126,9 @@ class ProcessBrainDumpHandler(
         prompt_context: value_objects.LLMPromptContext,
         llm_provider: value_objects.LLMProvider,
     ) -> list[LLMTool]:
-        if self._brain_dump_item is None or self._brain_dump_date is None:
+        if self._brain_dump is None or self._brain_dump_date is None:
             raise RuntimeError("Brain dump context was not initialized")
-        brain_dump_item = self._brain_dump_item
+        brain_dump_item = self._brain_dump
         brain_dump_date = self._brain_dump_date
         _ = current_time
         _ = prompt_context
@@ -142,7 +152,7 @@ class ProcessBrainDumpHandler(
             - Time fields (available_time, start_time, end_time, cutoff_time)
               should be 24h format HH:MM.
             """
-            await self._mark_brain_dump_item_as_command(
+            await self._mark_brain_dump_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
@@ -157,7 +167,7 @@ class ProcessBrainDumpHandler(
                 )
 
             task_tags = tags or []
-            await self._create_adhoc_task_handler.handle(
+            await self.create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
                     scheduled_date=brain_dump_date,
                     name=name,
@@ -174,11 +184,11 @@ class ProcessBrainDumpHandler(
             Notes:
             - Use for simple, quick reminders.
             """
-            await self._mark_brain_dump_item_as_command(
+            await self._mark_brain_dump_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
-            await self._create_adhoc_task_handler.handle(
+            await self.create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
                     scheduled_date=brain_dump_date,
                     name=reminder,
@@ -197,7 +207,7 @@ class ProcessBrainDumpHandler(
             - Use only when the item refers to an existing task.
             - action must be "complete" or "punt".
             """
-            await self._mark_brain_dump_item_as_command(
+            await self._mark_brain_dump_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
@@ -206,7 +216,7 @@ class ProcessBrainDumpHandler(
             else:
                 action_type = value_objects.ActionType.PUNT
 
-            await self._record_task_action_handler.handle(
+            await self.record_task_action_handler.handle(
                 RecordTaskActionCommand(
                     task_id=task_id,
                     action=value_objects.Action(
@@ -225,7 +235,7 @@ class ProcessBrainDumpHandler(
             - Use only when the item refers to an existing reminder (task type REMINDER).
             - action must be "complete" or "punt".
             """
-            await self._mark_brain_dump_item_as_command(
+            await self._mark_brain_dump_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
@@ -234,7 +244,7 @@ class ProcessBrainDumpHandler(
                 if action == "complete"
                 else value_objects.ActionType.PUNT
             )
-            await self._record_task_action_handler.handle(
+            await self.record_task_action_handler.handle(
                 RecordTaskActionCommand(
                     task_id=reminder_id,
                     action=value_objects.Action(
@@ -262,7 +272,7 @@ class ProcessBrainDumpHandler(
             LLMTool(callback=no_action),
         ]
 
-    async def _mark_brain_dump_item_as_command(
+    async def _mark_brain_dump_as_command(
         self, *, date: dt_date, item_id: UUID
     ) -> None:
         async with self.new_uow() as uow:

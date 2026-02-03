@@ -554,4 +554,3 @@ async def add_routine_to_tomorrow(
         )
     )
     return [map_task_to_schema(task) for task in tasks]
-    return [map_task_to_schema(task) for task in tasks]

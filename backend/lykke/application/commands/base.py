@@ -12,6 +12,7 @@ from lykke.application.handler_factory_protocols import (
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
     ReadOnlyRepositoryFactory,
+    ReadWriteRepositoryFactory,
     UnitOfWorkFactory,
     UnitOfWorkProtocol,
 )
@@ -85,6 +86,7 @@ class BaseCommandHandler(
         command_factory: CommandHandlerFactoryProtocol | None = None,
         gateway_factory: GatewayFactoryProtocol | None = None,
         repository_factory: ReadOnlyRepositoryFactory | None = None,
+        readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
     ) -> None:
         """Initialize the command handler with its dependencies."""
         super().__init__(
@@ -94,6 +96,7 @@ class BaseCommandHandler(
             uow_factory=uow_factory,
             gateway_factory=gateway_factory,
             repository_factory=repository_factory,
+            readwrite_repository_factory=readwrite_repository_factory,
         )
         self._uow_factory = uow_factory
 

@@ -13,7 +13,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from loguru import logger
 
 from lykke.application.events import send_domain_events
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    ReadWriteRepositoryFactory,
+)
 from lykke.application.worker_schedule import (
     NoOpWorkersToSchedule,
     WorkersToScheduleProtocol,
@@ -128,6 +131,7 @@ if TYPE_CHECKING:
         RoutineRepositoryReadOnlyProtocol,
         RoutineRepositoryReadWriteProtocol,
         SmsLoginCodeRepositoryReadOnlyProtocol,
+        SmsLoginCodeRepositoryReadWriteProtocol,
         TacticRepositoryReadOnlyProtocol,
         TacticRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
@@ -143,7 +147,11 @@ if TYPE_CHECKING:
         UserRepositoryReadOnlyProtocol,
         UserRepositoryReadWriteProtocol,
     )
-    from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        ReadWriteRepositories,
+        UnitOfWorkProtocol,
+    )
     from lykke.application.worker_schedule import (
         WorkerRegistryProtocol,
         WorkersToScheduleProtocol,
@@ -1414,3 +1422,154 @@ class SqlAlchemyReadOnlyRepositoryFactory:
             Read-only repositories scoped to the user.
         """
         return SqlAlchemyReadOnlyRepositories(user=user)
+
+
+class SqlAlchemyReadWriteRepositories:
+    """SQLAlchemy implementation of ReadWriteRepositories.
+
+    Provides read-write access to repositories without a Unit of Work.
+    Each repository manages its own database connections.
+    """
+
+    def __init__(self, user: UserEntity) -> None:
+        """Initialize read-write repositories for a specific user.
+
+        Args:
+            user: The user entity to scope repositories to.
+        """
+        self.user = user
+
+        # Initialize all read-write repositories with user scoping (where applicable)
+        # UserRepository and SmsLoginCodeRepository are not user-scoped
+        user_repo = cast("UserRepositoryReadWriteProtocol", UserRepository())
+        self.user_rw_repo = user_repo
+
+        auth_token_repo = cast(
+            "AuthTokenRepositoryReadWriteProtocol",
+            AuthTokenRepository(user=self.user),
+        )
+        self.auth_token_rw_repo = auth_token_repo
+
+        # All other repositories are user-scoped
+        calendar_repo = cast(
+            "CalendarRepositoryReadWriteProtocol",
+            CalendarRepository(user=self.user),
+        )
+        self.calendar_rw_repo = calendar_repo
+
+        day_repo = cast("DayRepositoryReadWriteProtocol", DayRepository(user=self.user))
+        self.day_rw_repo = day_repo
+
+        day_template_repo = cast(
+            "DayTemplateRepositoryReadWriteProtocol",
+            DayTemplateRepository(user=self.user),
+        )
+        self.day_template_rw_repo = day_template_repo
+
+        calendar_entry_repo = cast(
+            "CalendarEntryRepositoryReadWriteProtocol",
+            CalendarEntryRepository(user=self.user),
+        )
+        self.calendar_entry_rw_repo = calendar_entry_repo
+
+        calendar_entry_series_repo = cast(
+            "CalendarEntrySeriesRepositoryReadWriteProtocol",
+            CalendarEntrySeriesRepository(user=self.user),
+        )
+        self.calendar_entry_series_rw_repo = calendar_entry_series_repo
+
+        push_subscription_repo = cast(
+            "PushSubscriptionRepositoryReadWriteProtocol",
+            PushSubscriptionRepository(user=self.user),
+        )
+        self.push_subscription_rw_repo = push_subscription_repo
+
+        routine_definition_repo = cast(
+            "RoutineDefinitionRepositoryReadWriteProtocol",
+            RoutineDefinitionRepository(user=self.user),
+        )
+        self.routine_definition_rw_repo = routine_definition_repo
+
+        routine_repo = cast(
+            "RoutineRepositoryReadWriteProtocol",
+            RoutineRepository(user=self.user),
+        )
+        self.routine_rw_repo = routine_repo
+
+        tactic_repo = cast(
+            "TacticRepositoryReadWriteProtocol",
+            TacticRepository(user=self.user),
+        )
+        self.tactic_rw_repo = tactic_repo
+
+        task_definition_repo = cast(
+            "TaskDefinitionRepositoryReadWriteProtocol",
+            TaskDefinitionRepository(user=self.user),
+        )
+        self.task_definition_rw_repo = task_definition_repo
+
+        task_repo = cast("TaskRepositoryReadWriteProtocol", TaskRepository(user=self.user))
+        self.task_rw_repo = task_repo
+
+        time_block_definition_repo = cast(
+            "TimeBlockDefinitionRepositoryReadWriteProtocol",
+            TimeBlockDefinitionRepository(user=self.user),
+        )
+        self.time_block_definition_rw_repo = time_block_definition_repo
+
+        trigger_repo = cast(
+            "TriggerRepositoryReadWriteProtocol",
+            TriggerRepository(user=self.user),
+        )
+        self.trigger_rw_repo = trigger_repo
+
+        usecase_config_repo = cast(
+            "UseCaseConfigRepositoryReadWriteProtocol",
+            UseCaseConfigRepository(user=self.user),
+        )
+        self.usecase_config_rw_repo = usecase_config_repo
+
+        # Chatbot-related repositories
+        bot_personality_repo = cast(
+            "BotPersonalityRepositoryReadWriteProtocol",
+            BotPersonalityRepository(user=self.user),
+        )
+        self.bot_personality_rw_repo = bot_personality_repo
+
+        brain_dump_repo = cast(
+            "BrainDumpRepositoryReadWriteProtocol",
+            BrainDumpRepository(user=self.user),
+        )
+        self.brain_dump_rw_repo = brain_dump_repo
+
+        message_repo = cast(
+            "MessageRepositoryReadWriteProtocol",
+            MessageRepository(user=self.user),
+        )
+        self.message_rw_repo = message_repo
+
+        factoid_repo = cast(
+            "FactoidRepositoryReadWriteProtocol",
+            FactoidRepository(user=self.user),
+        )
+        self.factoid_rw_repo = factoid_repo
+
+        push_notification_repo = cast(
+            "PushNotificationRepositoryReadWriteProtocol",
+            PushNotificationRepository(user=self.user),
+        )
+        self.push_notification_rw_repo = push_notification_repo
+
+        sms_login_code_repo = cast(
+            "SmsLoginCodeRepositoryReadWriteProtocol",
+            SmsLoginCodeRepository(),
+        )
+        self.sms_login_code_rw_repo = sms_login_code_repo
+
+
+class SqlAlchemyReadWriteRepositoryFactory:
+    """Factory for creating SqlAlchemyReadWriteRepositories instances."""
+
+    def create(self, user: UserEntity) -> ReadWriteRepositories:
+        """Create read-write repositories for the given user."""
+        return SqlAlchemyReadWriteRepositories(user=user)

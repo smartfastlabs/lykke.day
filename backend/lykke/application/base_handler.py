@@ -1,19 +1,22 @@
 """Base handler class shared by commands, queries, and event handlers."""
 
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass
+from inspect import get_annotations
 from typing import TYPE_CHECKING, Any
 
-from lykke.application.handler_factory_protocols import (
-    CommandHandlerFactoryProtocol,
-    GatewayFactoryProtocol,
-)
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
-from lykke.domain.entities import UserEntity
+from lykke.application.unit_of_work import ReadOnlyRepositories, ReadWriteRepositories
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from lykke.application.handler_factory_protocols import (
+        BaseFactory,
+        CommandHandlerFactoryProtocol,
+        GatewayFactoryProtocol,
+    )
     from lykke.application.repositories import (
         AuditLogRepositoryReadOnlyProtocol,
         AuthTokenRepositoryReadOnlyProtocol,
@@ -39,6 +42,12 @@ if TYPE_CHECKING:
         UseCaseConfigRepositoryReadOnlyProtocol,
         UserRepositoryReadOnlyProtocol,
     )
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositoryFactory,
+        ReadWriteRepositoryFactory,
+        UnitOfWorkFactory,
+    )
+    from lykke.domain.entities import UserEntity
 
 
 class BaseHandler:
@@ -57,37 +66,41 @@ class BaseHandler:
     """
 
     # Repository attribute suffix used to identify repository lookups
-    _REPO_SUFFIX = "_ro_repo"
+    _RO_REPO_SUFFIX = "_ro_repo"
+    _RW_REPO_SUFFIX = "_rw_repo"
 
     # Type hints for static analysis (repos are accessed lazily at runtime)
-    audit_log_ro_repo: "AuditLogRepositoryReadOnlyProtocol"
-    auth_token_ro_repo: "AuthTokenRepositoryReadOnlyProtocol"
-    bot_personality_ro_repo: "BotPersonalityRepositoryReadOnlyProtocol"
-    brain_dump_ro_repo: "BrainDumpRepositoryReadOnlyProtocol"
-    calendar_entry_ro_repo: "CalendarEntryRepositoryReadOnlyProtocol"
-    calendar_entry_series_ro_repo: "CalendarEntrySeriesRepositoryReadOnlyProtocol"
-    calendar_ro_repo: "CalendarRepositoryReadOnlyProtocol"
-    day_ro_repo: "DayRepositoryReadOnlyProtocol"
-    day_template_ro_repo: "DayTemplateRepositoryReadOnlyProtocol"
-    factoid_ro_repo: "FactoidRepositoryReadOnlyProtocol"
-    message_ro_repo: "MessageRepositoryReadOnlyProtocol"
-    push_notification_ro_repo: "PushNotificationRepositoryReadOnlyProtocol"
-    push_subscription_ro_repo: "PushSubscriptionRepositoryReadOnlyProtocol"
-    routine_ro_repo: "RoutineRepositoryReadOnlyProtocol"
-    routine_definition_ro_repo: "RoutineDefinitionRepositoryReadOnlyProtocol"
-    tactic_ro_repo: "TacticRepositoryReadOnlyProtocol"
-    task_definition_ro_repo: "TaskDefinitionRepositoryReadOnlyProtocol"
-    task_ro_repo: "TaskRepositoryReadOnlyProtocol"
-    time_block_definition_ro_repo: "TimeBlockDefinitionRepositoryReadOnlyProtocol"
-    trigger_ro_repo: "TriggerRepositoryReadOnlyProtocol"
-    usecase_config_ro_repo: "UseCaseConfigRepositoryReadOnlyProtocol"
-    user_ro_repo: "UserRepositoryReadOnlyProtocol"
-    sms_login_code_ro_repo: "SmsLoginCodeRepositoryReadOnlyProtocol"
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
 
     command_factory: CommandHandlerFactoryProtocol | None
     gateway_factory: GatewayFactoryProtocol | None
     _uow_factory: UnitOfWorkFactory | None
-    _repository_factory: ReadOnlyRepositoryFactory | None
+    _repository_factory: ReadOnlyRepositoryFactory
+    _rw_repository_factory: ReadWriteRepositoryFactory | None
+    _repositories: ReadOnlyRepositories | None
+    _rw_repositories: ReadWriteRepositories | None
 
     def __init__(
         self,
@@ -98,6 +111,7 @@ class BaseHandler:
         uow_factory: UnitOfWorkFactory | None = None,
         gateway_factory: GatewayFactoryProtocol | None = None,
         repository_factory: ReadOnlyRepositoryFactory | None = None,
+        readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
     ) -> None:
         """Initialize the handler with its dependencies.
 
@@ -109,42 +123,145 @@ class BaseHandler:
         self.command_factory = command_factory
         self.gateway_factory = gateway_factory
         self._uow_factory = uow_factory
+
+        if repository_factory is None:
+            if ro_repos is None:
+                raise ValueError("BaseHandler requires ro_repos or repository_factory.")
+            repository_factory = _StaticReadOnlyRepositoryFactory(ro_repos=ro_repos)
+
         self._repository_factory = repository_factory
-
-        if ro_repos is None:
-            if repository_factory is None:
-                raise ValueError(
-                    "BaseHandler requires ro_repos or repository_factory."
-                )
-            ro_repos = repository_factory.create(user)
-
-        self._ro_repos = ro_repos
+        self._rw_repository_factory = readwrite_repository_factory
+        self._repositories = None
+        self._rw_repositories = None
+        self._wire_dependencies()
 
     def __getattr__(self, name: str) -> Any:
         """Provide lazy access to repositories from the container.
 
         This allows handlers to access repositories like self.task_ro_repo
         without explicitly wiring them in __init__. The repository is looked
-        up from _ro_repos on first access.
+        up from the repository factory on first access.
 
         Args:
             name: Attribute name being accessed
 
         Returns:
-            The repository if it exists on _ro_repos
+            The repository if it exists on the repositories
 
         Raises:
-            AttributeError: If the attribute doesn't exist on _ro_repos
+            AttributeError: If the attribute doesn't exist on the repositories
         """
         # Only intercept repository lookups
-        if name.endswith(self._REPO_SUFFIX):
-            # Try to get from _ro_repos
+        if name.endswith(self._RO_REPO_SUFFIX):
             try:
-                ro_repos = object.__getattribute__(self, "_ro_repos")
+                ro_repos = self._get_ro_repos()
                 return getattr(ro_repos, name)
+            except AttributeError:
+                pass
+        if name.endswith(self._RW_REPO_SUFFIX):
+            try:
+                rw_repos = self._get_rw_repos()
+                return getattr(rw_repos, name)
             except AttributeError:
                 pass
 
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{name}'"
         )
+
+    def _wire_dependencies(self) -> None:
+        """Populate annotated dependencies from factories when available."""
+        factories: list[BaseFactory] = [
+            _RepositoryDependencyFactory(
+                self._get_ro_repos, _build_repo_type_map(ReadOnlyRepositories)
+            )
+        ]
+        if self._rw_repository_factory is not None:
+            factories.append(
+                _RepositoryDependencyFactory(
+                    self._get_rw_repos,
+                    _build_repo_type_map(ReadWriteRepositories),
+                )
+            )
+        if self.gateway_factory is not None:
+            factories.append(self.gateway_factory)
+        if self.command_factory is not None:
+            factories.append(self.command_factory)
+        query_factory = getattr(self.command_factory, "query_factory", None)
+        if query_factory is not None:
+            factories.append(query_factory)
+
+        for cls in type(self).mro():
+            annotations = get_annotations(cls, eval_str=False)
+            if not annotations:
+                continue
+            for name, annotation in annotations.items():
+                if name in self.__dict__:
+                    continue
+
+                resolved = self._resolve_annotation(cls, annotation)
+                if resolved is None:
+                    continue
+
+                for factory in factories:
+                    if factory.can_create(resolved):
+                        setattr(self, name, factory.create(resolved))
+                        break
+
+    def _get_ro_repos(self) -> ReadOnlyRepositories:
+        if self._repositories is None:
+            self._repositories = self._repository_factory.create(self.user)
+        return self._repositories
+
+    def _get_rw_repos(self) -> ReadWriteRepositories:
+        if self._rw_repository_factory is None:
+            raise AttributeError("No ReadWriteRepositoryFactory configured.")
+        if self._rw_repositories is None:
+            self._rw_repositories = self._rw_repository_factory.create(self.user)
+        return self._rw_repositories
+
+    @staticmethod
+    def _resolve_annotation(owner: type[object], annotation: object) -> type | None:
+        if isinstance(annotation, str):
+            module = sys.modules.get(owner.__module__)
+            if module is None:
+                return None
+            return getattr(module, annotation, None)
+        if isinstance(annotation, type):
+            return annotation
+        return None
+
+
+@dataclass(frozen=True)
+class _StaticReadOnlyRepositoryFactory:
+    ro_repos: ReadOnlyRepositories
+
+    def create(self, user: UserEntity) -> ReadOnlyRepositories:
+        _ = user
+        return self.ro_repos
+
+
+def _build_repo_type_map(repo_protocol: type[object]) -> dict[type[object], str]:
+    annotations = get_annotations(repo_protocol, eval_str=False)
+    return {
+        annotation: name
+        for name, annotation in annotations.items()
+        if isinstance(annotation, type)
+    }
+
+
+class _RepositoryDependencyFactory:
+    def __init__(
+        self,
+        get_repos: Callable[[], object],
+        repo_type_map: dict[type[object], str],
+    ) -> None:
+        self._get_repos = get_repos
+        self._repo_type_map = repo_type_map
+
+    def can_create(self, dependency_type: type[object]) -> bool:
+        return dependency_type in self._repo_type_map
+
+    def create(self, dependency_type: type[object]) -> object:
+        repo_name = self._repo_type_map[dependency_type]
+        return getattr(self._get_repos(), repo_name)

@@ -14,6 +14,13 @@ from lykke.application.commands.brain_dump import (
     ProcessBrainDumpCommand,
     ProcessBrainDumpHandler,
 )
+from lykke.application.commands.task import (
+    CreateAdhocTaskHandler,
+    RecordTaskActionHandler,
+)
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -73,11 +80,57 @@ class _LLMGatewayFactory:
 
 
 @dataclass
+class _GatewayFactory:
+    llm_gateway_factory: _LLMGatewayFactory
+
+    def can_create(self, gateway_type: type[object]) -> bool:
+        return gateway_type is LLMGatewayFactoryProtocol
+
+    def create(self, gateway_type: type[object]) -> object:
+        _ = gateway_type
+        return self.llm_gateway_factory
+
+
+@dataclass
 class _Recorder:
     commands: list[object]
 
     async def handle(self, command: Any) -> None:
         self.commands.append(command)
+
+
+@dataclass
+class _CommandFactory:
+    handlers: dict[type[object], object]
+    query_factory: object | None = None
+
+    def can_create(self, handler_class: type[object]) -> bool:
+        return handler_class in self.handlers
+
+    def create(self, handler_class: type[object]) -> object:
+        return self.handlers[handler_class]
+
+
+@dataclass
+class _QueryFactory:
+    handler: object
+
+    def can_create(self, handler_class: type[object]) -> bool:
+        _ = handler_class
+        return True
+
+    def create(self, handler_class: type[object]) -> object:
+        _ = handler_class
+        return self.handler
+
+
+@dataclass
+class _RepositoryFactory:
+    ro_repos: object
+
+    def create(self, user: UserEntity) -> object:
+        _ = user
+        return self.ro_repos
 
 
 @pytest.mark.asyncio
@@ -122,14 +175,19 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         brain_dump_repo=brain_dump_repo,
     )
 
+    command_factory = _CommandFactory(
+        handlers={
+            CreateAdhocTaskHandler: task_recorder,
+            RecordTaskActionHandler: _Recorder(commands=[]),
+        },
+        query_factory=_QueryFactory(handler=object()),
+    )
     handler = ProcessBrainDumpHandler(
-        ro_repos,
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        _LLMGatewayFactory(),
-        object(),
-        task_recorder,
-        _Recorder(commands=[]),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        command_factory=command_factory,
+        uow_factory=create_uow_factory_double(uow),
+        gateway_factory=_GatewayFactory(llm_gateway_factory=_LLMGatewayFactory()),
+        repository_factory=_RepositoryFactory(ro_repos=ro_repos),
     )
 
     async def run_llm_side_effect() -> None:
@@ -190,14 +248,19 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         brain_dump_repo=brain_dump_repo,
     )
 
+    command_factory = _CommandFactory(
+        handlers={
+            CreateAdhocTaskHandler: _Recorder(commands=[]),
+            RecordTaskActionHandler: task_action_recorder,
+        },
+        query_factory=_QueryFactory(handler=object()),
+    )
     handler = ProcessBrainDumpHandler(
-        ro_repos,
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        _LLMGatewayFactory(),
-        object(),
-        _Recorder(commands=[]),
-        task_action_recorder,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        command_factory=command_factory,
+        uow_factory=create_uow_factory_double(uow),
+        gateway_factory=_GatewayFactory(llm_gateway_factory=_LLMGatewayFactory()),
+        repository_factory=_RepositoryFactory(ro_repos=ro_repos),
     )
 
     async def run_llm_side_effect() -> None:
@@ -256,14 +319,19 @@ async def test_process_brain_dump_update_reminder_records_task_action() -> None:
         brain_dump_repo=brain_dump_repo,
     )
 
+    command_factory = _CommandFactory(
+        handlers={
+            CreateAdhocTaskHandler: _Recorder(commands=[]),
+            RecordTaskActionHandler: task_action_recorder,
+        },
+        query_factory=_QueryFactory(handler=object()),
+    )
     handler = ProcessBrainDumpHandler(
-        ro_repos,
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        _LLMGatewayFactory(),
-        object(),
-        _Recorder(commands=[]),
-        task_action_recorder,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        command_factory=command_factory,
+        uow_factory=create_uow_factory_double(uow),
+        gateway_factory=_GatewayFactory(llm_gateway_factory=_LLMGatewayFactory()),
+        repository_factory=_RepositoryFactory(ro_repos=ro_repos),
     )
 
     async def run_llm_side_effect() -> None:
@@ -321,14 +389,19 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
         brain_dump_repo=brain_dump_repo,
     )
 
+    command_factory = _CommandFactory(
+        handlers={
+            CreateAdhocTaskHandler: _Recorder(commands=[]),
+            RecordTaskActionHandler: _Recorder(commands=[]),
+        },
+        query_factory=_QueryFactory(handler=object()),
+    )
     handler = ProcessBrainDumpHandler(
-        ro_repos,
-        create_uow_factory_double(uow),
-        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
-        _LLMGatewayFactory(),
-        object(),
-        _Recorder(commands=[]),
-        _Recorder(commands=[]),
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        command_factory=command_factory,
+        uow_factory=create_uow_factory_double(uow),
+        gateway_factory=_GatewayFactory(llm_gateway_factory=_LLMGatewayFactory()),
+        repository_factory=_RepositoryFactory(ro_repos=ro_repos),
     )
 
     async def run_llm_side_effect() -> None:
