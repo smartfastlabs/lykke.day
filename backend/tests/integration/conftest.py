@@ -85,7 +85,7 @@ async def test_user(create_test_user):
 
 async def _setup_day_templates_for_user(user: UserEntity) -> None:
     """Helper function to create default day templates for a user."""
-    repo = DayTemplateRepository(user_id=user.id)
+    repo = DayTemplateRepository(user=user)
 
     # Create default template (UUID will be auto-generated from slug + user_id)
     default_template = DayTemplateEntity(
@@ -118,37 +118,37 @@ async def user_repo():
 @pytest_asyncio.fixture
 async def day_repo(test_user):
     """DayRepository scoped to test_user."""
-    return DayRepository(user_id=test_user.id)
+    return DayRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def brain_dump_repo(test_user):
     """BrainDumpRepository scoped to test_user."""
-    return BrainDumpRepository(user_id=test_user.id)
+    return BrainDumpRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def day_template_repo(test_user):
     """DayTemplateRepository scoped to test_user."""
-    return DayTemplateRepository(user_id=test_user.id)
+    return DayTemplateRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def calendar_entry_repo(test_user):
     """CalendarEntryRepository scoped to test_user."""
-    return CalendarEntryRepository(user_id=test_user.id)
+    return CalendarEntryRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def task_repo(test_user):
     """TaskRepository scoped to test_user."""
-    return TaskRepository(user_id=test_user.id)
+    return TaskRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def calendar_repo(test_user):
     """CalendarRepository scoped to test_user."""
-    return CalendarRepository(user_id=test_user.id)
+    return CalendarRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
@@ -186,8 +186,8 @@ async def create_calendar(calendar_repo, create_auth_token):
 
 @pytest_asyncio.fixture
 async def auth_token_repo(test_user):
-    """AuthTokenRepository (not user-scoped)."""
-    return AuthTokenRepository()
+    """AuthTokenRepository scoped to test_user."""
+    return AuthTokenRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
@@ -213,62 +213,62 @@ async def create_auth_token(auth_token_repo):
 @pytest_asyncio.fixture
 async def push_subscription_repo(test_user):
     """PushSubscriptionRepository scoped to test_user."""
-    return PushSubscriptionRepository(user_id=test_user.id)
+    return PushSubscriptionRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def routine_definition_repo(test_user):
     """RoutineDefinitionRepository scoped to test_user."""
-    return RoutineDefinitionRepository(user_id=test_user.id)
+    return RoutineDefinitionRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def task_definition_repo(test_user):
     """TaskDefinitionRepository scoped to test_user."""
-    return TaskDefinitionRepository(user_id=test_user.id)
+    return TaskDefinitionRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def time_block_definition_repo(test_user):
     """TimeBlockDefinitionRepository scoped to test_user."""
-    return TimeBlockDefinitionRepository(user_id=test_user.id)
+    return TimeBlockDefinitionRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def tactic_repo(test_user):
     """TacticRepository scoped to test_user."""
-    return TacticRepository(user_id=test_user.id)
+    return TacticRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def trigger_repo(test_user):
     """TriggerRepository scoped to test_user."""
-    return TriggerRepository(user_id=test_user.id)
+    return TriggerRepository(user=test_user)
 
 
 # AI Chatbot repository fixtures
 @pytest_asyncio.fixture
 async def bot_personality_repo(test_user):
     """BotPersonalityRepository with user scoping."""
-    return BotPersonalityRepository(user_id=test_user.id)
+    return BotPersonalityRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def message_repo(test_user):
     """MessageRepository scoped to test_user."""
-    return MessageRepository(user_id=test_user.id)
+    return MessageRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def factoid_repo(test_user):
     """FactoidRepository scoped to test_user."""
-    return FactoidRepository(user_id=test_user.id)
+    return FactoidRepository(user=test_user)
 
 
 @pytest_asyncio.fixture
 async def audit_log_repo(test_user):
     """AuditLogRepository scoped to test_user."""
-    return AuditLogRepository(user_id=test_user.id)
+    return AuditLogRepository(user=test_user)
 
 
 # AI Chatbot test data fixtures

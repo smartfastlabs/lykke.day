@@ -47,7 +47,9 @@ class FakeRoutinesHandler:
 
 class FakeScheduleDayHandler:
     async def handle(self, _command: object) -> object:
-        raise AssertionError("ScheduleDayHandler should not be called for existing day.")
+        raise AssertionError(
+            "ScheduleDayHandler should not be called for existing day."
+        )
 
 
 class FakePubSubGateway:
@@ -66,7 +68,9 @@ class FakePubSubGateway:
 async def test_partial_sync_sends_part_payloads_in_order() -> None:
     user_id = uuid4()
     date_value = dt_date(2026, 1, 15)
-    day = DayEntity(user_id=user_id, date=date_value, status=value_objects.DayStatus.STARTED)
+    day = DayEntity(
+        user_id=user_id, date=date_value, status=value_objects.DayStatus.STARTED
+    )
     task = TaskEntity(
         user_id=user_id,
         scheduled_date=date_value,

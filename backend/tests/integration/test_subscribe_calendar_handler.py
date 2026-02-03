@@ -105,9 +105,9 @@ async def test_subscribe_calendar_persists_subscription(
     google_gateway = FakeGoogleGateway(expiration=expiration)
 
     handler = SubscribeCalendarHandler(
-        ro_repos=SqlAlchemyReadOnlyRepositories(user_id=test_user.id),
+        ro_repos=SqlAlchemyReadOnlyRepositories(user=test_user),
         uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
     )
 

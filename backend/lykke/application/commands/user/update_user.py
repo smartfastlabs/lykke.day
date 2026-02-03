@@ -33,7 +33,7 @@ class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
         """
         async with self.new_uow() as uow:
             # Get the existing user
-            user = await uow.user_ro_repo.get(self.user_id)
+            user = await uow.user_ro_repo.get(self.user.id)
 
             update_data = command.update_data
             if update_data.phone_number is not None:

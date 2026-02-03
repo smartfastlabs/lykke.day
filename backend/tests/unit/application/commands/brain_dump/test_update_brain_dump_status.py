@@ -12,7 +12,7 @@ from lykke.application.commands.brain_dump import (
 )
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain.entities import BrainDumpEntity
+from lykke.domain.entities import BrainDumpEntity, UserEntity
 from lykke.domain.events.day_events import BrainDumpStatusChangedEvent
 from tests.support.dobles import (
     create_brain_dump_repo_double,
@@ -38,7 +38,8 @@ async def test_update_brain_dump_status_updates_item():
     ro_repos = create_read_only_repos_double(brain_dump_repo=brain_dump_repo)
     uow = create_uow_double(brain_dump_repo=brain_dump_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user)
 
     await handler.handle(
         UpdateBrainDumpStatusCommand(
@@ -70,7 +71,8 @@ async def test_update_brain_dump_status_wrong_date():
     ro_repos = create_read_only_repos_double(brain_dump_repo=brain_dump_repo)
     uow = create_uow_double(brain_dump_repo=brain_dump_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user)
 
     with pytest.raises(DomainError, match="not found"):
         await handler.handle(

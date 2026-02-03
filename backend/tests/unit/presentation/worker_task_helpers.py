@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import time
 from typing import Any, Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from dobles import InstanceDouble, allow
 
@@ -18,6 +18,8 @@ class TaskProtocol(Protocol):
 
 
 class HandlerProtocol(Protocol):
+    user: UserEntity
+
     async def handle(self, command: object) -> None: ...
 
 
@@ -47,9 +49,12 @@ def create_task_recorder() -> tuple[InstanceDouble, list[dict[str, Any]]]:
     return task, calls
 
 
-def create_handler_recorder() -> tuple[InstanceDouble, list[object]]:
+def create_handler_recorder(
+    user: UserEntity | None = None,
+) -> tuple[InstanceDouble, list[object]]:
     calls: list[object] = []
     handler = InstanceDouble(_protocol_path(HandlerProtocol))
+    handler.user = user or build_user(uuid4())
 
     async def handle(command: object) -> None:
         calls.append(command)

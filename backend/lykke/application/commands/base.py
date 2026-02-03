@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, TypeVar
-from uuid import UUID
 
 from lykke.application.base_handler import BaseHandler
 from lykke.application.unit_of_work import (
@@ -11,6 +10,7 @@ from lykke.application.unit_of_work import (
     UnitOfWorkFactory,
     UnitOfWorkProtocol,
 )
+from lykke.domain.entities import UserEntity
 
 # Command type and result type
 CommandT = TypeVar("CommandT", bound="Command")
@@ -40,7 +40,7 @@ class CommandHandler(ABC, Generic[CommandT, ResultT]):
     Example:
         class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, DayContext]):
             async def handle(self, cmd: ScheduleDayCommand) -> DayContext:
-                async with self.uow_factory.create(cmd.user_id) as uow:
+                async with self.uow_factory.create(cmd.user) as uow:
                     day = await self._create_day(uow, cmd)
                     day.schedule(template)
                     await uow.create(day)
@@ -73,19 +73,19 @@ class BaseCommandHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
     ) -> None:
         """Initialize the command handler with its dependencies."""
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)
         self._uow_factory = uow_factory
 
-    def new_uow(self, user_id: UUID | None = None) -> UnitOfWorkProtocol:
+    def new_uow(self, user: UserEntity | None = None) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance.
 
         Args:
-            user_id: Optional user ID. If not provided, uses self.user_id.
+            user: Optional user entity. If not provided, uses self.user.
 
         Returns:
             A UnitOfWork context manager instance.
         """
-        return self._uow_factory.create(user_id or self.user_id)
+        return self._uow_factory.create(user or self.user)

@@ -11,7 +11,7 @@ from lykke.application.queries.routine_definition import (
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineDefinitionEntity
+from lykke.domain.entities import RoutineDefinitionEntity, UserEntity
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_routine_definition_repo_double,
@@ -41,7 +41,8 @@ async def test_get_routine_definition_returns_routine_definition_by_id():
         routine_definition
     )
     ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
-    handler = GetRoutineDefinitionHandler(ro_repos, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = GetRoutineDefinitionHandler(ro_repos, user)
 
     # Act
     result = await handler.handle(
@@ -66,7 +67,8 @@ async def test_get_routine_definition_raises_not_found_for_invalid_id():
         NotFoundError("Routine definition not found")
     )
     ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
-    handler = GetRoutineDefinitionHandler(ro_repos, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = GetRoutineDefinitionHandler(ro_repos, user)
 
     # Act & Assert
     with pytest.raises(NotFoundError):

@@ -97,7 +97,7 @@ async def test_user_isolation(push_subscription_repo, test_user, create_test_use
 
     # Create another user
     user2 = await create_test_user()
-    push_subscription_repo2 = PushSubscriptionRepository(user_id=user2.id)
+    push_subscription_repo2 = PushSubscriptionRepository(user=user2)
 
     # User2 should not see user1's subscription
     with pytest.raises(NotFoundError):

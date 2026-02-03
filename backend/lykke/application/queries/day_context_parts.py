@@ -31,7 +31,7 @@ class GetDayEntityHandler(BaseQueryHandler[GetDayEntityQuery, DayEntity]):
 
     async def handle(self, query: GetDayEntityQuery) -> DayEntity:
         """Handle day lookup query."""
-        day_id = DayEntity.id_from_date_and_user(query.date, self.user_id)
+        day_id = DayEntity.id_from_date_and_user(query.date, self.user.id)
         return await self.day_ro_repo.get(day_id)
 
 
@@ -130,7 +130,7 @@ class GetDayRoutinesHandler(BaseQueryHandler[GetDayRoutinesQuery, list[RoutineEn
             if routine_definition.id in routine_definition_ids:
                 routines.append(
                     RoutineEntity.from_definition(
-                        routine_definition, date, self.user_id
+                        routine_definition, date, self.user.id
                     )
                 )
         return routines

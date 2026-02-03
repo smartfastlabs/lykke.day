@@ -1,9 +1,9 @@
 """Base handler class shared by commands, queries, and event handlers."""
 
 from typing import TYPE_CHECKING, Any
-from uuid import UUID
 
 from lykke.application.unit_of_work import ReadOnlyRepositories
+from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
     from lykke.application.repositories import (
@@ -76,14 +76,14 @@ class BaseHandler:
     user_ro_repo: "UserRepositoryReadOnlyProtocol"
     sms_login_code_ro_repo: "SmsLoginCodeRepositoryReadOnlyProtocol"
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
         """Initialize the handler with its dependencies.
 
         Args:
             ro_repos: Read-only repositories container
-            user_id: The user ID for this handler instance
+            user: The user entity for this handler instance
         """
-        self.user_id = user_id
+        self.user = user
         self._ro_repos = ro_repos
 
     def __getattr__(self, name: str) -> Any:

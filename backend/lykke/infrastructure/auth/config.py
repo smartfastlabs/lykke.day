@@ -125,7 +125,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     ) -> None:
         """Called after a user registers."""
         # Create default day templates for new user
-        day_template_repo = DayTemplateRepository(user_id=user.id)
+        day_template_repo = DayTemplateRepository(user=user)
 
         default_templates = [
             DayTemplateEntity(user_id=user.id, slug="default", icon=None),

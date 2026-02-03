@@ -16,7 +16,7 @@ async def test_list_routine_definitions(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine definition via repository (since router is read-only)
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -51,7 +51,7 @@ async def test_get_routine_definition(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine definition via repository
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -146,7 +146,7 @@ async def test_update_routine_definition(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine definition via repository
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -183,7 +183,7 @@ async def test_delete_routine_definition(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine definition via repository
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -210,7 +210,7 @@ async def test_list_routine_definitions_pagination(authenticated_client):
     client, user = await authenticated_client()
 
     # Create multiple routine definitions via repository
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     for i in range(3):
         routine_definition = RoutineDefinitionEntity(
             id=uuid4(),

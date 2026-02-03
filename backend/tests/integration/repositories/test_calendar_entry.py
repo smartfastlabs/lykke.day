@@ -360,7 +360,7 @@ async def test_user_isolation(
 
     # Create another user
     user2 = await create_test_user()
-    calendar_entry_repo2 = CalendarEntryRepository(user_id=user2.id)
+    calendar_entry_repo2 = CalendarEntryRepository(user=user2)
 
     # User2 should not see user1's calendar entry
     with pytest.raises(NotFoundError):

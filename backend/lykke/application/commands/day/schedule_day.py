@@ -21,6 +21,7 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
+    UserEntity,
 )
 from lykke.domain.events.day_events import DayUpdatedEvent
 
@@ -175,10 +176,10 @@ class ScheduleDayHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         preview_day_handler: PreviewDayHandler,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self.preview_day_handler = preview_day_handler
 
     async def handle(self, command: ScheduleDayCommand) -> value_objects.DayContext:
@@ -211,7 +212,7 @@ class ScheduleDayHandler(
             force: If True, bypass the early return for existing days
             cleanup_existing_tasks: If True, delete tasks for the date before scheduling
         """
-        day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+        day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
         if existing_day is None:
             if force:
                 try:
@@ -266,7 +267,7 @@ class ScheduleDayHandler(
         timezone = ZoneInfo("UTC")
         user_repo = getattr(uow, "user_ro_repo", None) or self.user_ro_repo
         try:
-            user = await user_repo.get(self.user_id)
+            user = self.user
         except Exception:
             user = None
         if user and user.settings.timezone:
@@ -343,7 +344,7 @@ class ScheduleDayHandler(
             # Create and schedule the day
             day = DayEntity.create_for_date(
                 command.date,
-                user_id=self.user_id,
+                user_id=self.user.id,
                 template=template,
             )
             day.high_level_plan = template.high_level_plan
@@ -392,7 +393,7 @@ class ScheduleDayHandler(
                 command.date
             ):
                 routine = RoutineEntity(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     date=command.date,
                     routine_definition_id=routine_definition.id,
                     name=routine_definition.name,

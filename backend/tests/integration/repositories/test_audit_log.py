@@ -319,7 +319,7 @@ async def test_empty_meta_handling(audit_log_repo, test_user):
 async def test_user_scoping(audit_log_repo, test_user, create_test_user):
     """Test that audit logs are scoped to user."""
     other_user = await create_test_user()
-    other_user_repo = AuditLogRepository(user_id=other_user.id)
+    other_user_repo = AuditLogRepository(user=other_user)
 
     task_id = uuid4()
     log1 = AuditLogEntity(

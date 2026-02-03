@@ -71,7 +71,7 @@ async def test_preview_day_uses_provided_template():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user_id)
+    handler = PreviewDayHandler(ro_repos, user)
 
     # Act
     result = await handler.handle(
@@ -135,7 +135,7 @@ async def test_preview_day_falls_back_to_user_default_template():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user_id)
+    handler = PreviewDayHandler(ro_repos, user)
 
     # Act - no template_id provided
     result = await handler.handle(PreviewDayQuery(date=task_date))
@@ -195,7 +195,7 @@ async def test_preview_day_uses_existing_day_template_if_available():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user_id)
+    handler = PreviewDayHandler(ro_repos, user)
 
     # Act - no template_id provided
     result = await handler.handle(PreviewDayQuery(date=task_date))
@@ -257,7 +257,7 @@ async def test_preview_day_returns_calendar_entries():
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
     )
-    handler = PreviewDayHandler(ro_repos, user_id)
+    handler = PreviewDayHandler(ro_repos, user)
 
     # Act
     result = await handler.handle(

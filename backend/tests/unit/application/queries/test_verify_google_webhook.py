@@ -11,7 +11,7 @@ from lykke.application.queries.google import (
     VerifyGoogleWebhookQuery,
 )
 from lykke.core.exceptions import NotFoundError
-from lykke.domain.entities import CalendarEntity
+from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.domain.value_objects.sync import SyncSubscription
 from tests.support.dobles import (
     create_calendar_repo_double,
@@ -41,7 +41,8 @@ async def test_verify_google_webhook_returns_true_for_valid_token():
     allow(calendar_repo).get.with_args(calendar.id).and_return(calendar)
 
     ro_repos = create_read_only_repos_double(calendar_repo=calendar_repo)
-    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user_id=user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user=user)
 
     result = await handler.handle(
         VerifyGoogleWebhookQuery(
@@ -76,7 +77,8 @@ async def test_verify_google_webhook_returns_false_for_missing_token():
     allow(calendar_repo).get.with_args(calendar.id).and_return(calendar)
 
     ro_repos = create_read_only_repos_double(calendar_repo=calendar_repo)
-    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user_id=user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = VerifyGoogleWebhookHandler(ro_repos=ro_repos, user=user)
 
     result = await handler.handle(
         VerifyGoogleWebhookQuery(

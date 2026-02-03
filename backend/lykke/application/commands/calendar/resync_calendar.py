@@ -11,7 +11,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
@@ -41,11 +41,11 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         google_gateway: GoogleCalendarGatewayProtocol,
         sync_calendar_handler: SyncCalendarHandler,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._google_gateway = google_gateway
         self._sync_calendar_handler = sync_calendar_handler
 
@@ -119,7 +119,7 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
         client_state = secrets.token_urlsafe(32)
 
         base_url = settings.API_BASE_URL.rstrip("/")
-        webhook_url = f"{base_url}/google/webhook/{self.user_id}/{calendar.id}"
+        webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
         subscription = await self._google_gateway.subscribe_to_calendar(
             calendar=calendar,

@@ -24,6 +24,7 @@ from lykke.core.utils.dates import (
     get_current_time,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
@@ -34,6 +35,7 @@ from .common import (
     get_smart_notification_handler,
     get_unit_of_work_factory,
     get_user_repository,
+    load_user,
 )
 
 
@@ -45,6 +47,8 @@ _CommandT = TypeVar("_CommandT", contravariant=True)
 
 
 class _NotificationHandler(Protocol[_CommandT]):
+    user: UserEntity
+
     async def handle(self, command: _CommandT) -> None: ...
 
 
@@ -128,18 +132,26 @@ async def evaluate_smart_notification_task(
     try:
         resolved_handler: _NotificationHandler[SmartNotificationCommand]
         if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(
+                    f"User not found for smart notification task {user_id}"
+                )
+                return
             resolved_handler = get_smart_notification_handler(
-                user_id=user_id,
+                user=user,
                 uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
                 ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
             )
         else:
             resolved_handler = handler
+            user = resolved_handler.user
 
         try:
             await resolved_handler.handle(
                 SmartNotificationCommand(
-                    user_id=user_id,
+                    user=user,
                     triggered_by=triggered_by,
                 )
             )
@@ -164,15 +176,22 @@ async def evaluate_calendar_entry_notifications_task(
     logger.info(f"Starting calendar entry notification evaluation for user {user_id}")
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
+        try:
+            user = await load_user(user_id)
+        except Exception:
+            logger.warning(
+                f"User not found for calendar entry notification task {user_id}"
+            )
+            return
         handler = get_calendar_entry_notification_handler(
-            user_id=user_id,
+            user=user,
             uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
             ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
         )
         try:
             await handler.handle(
                 CalendarEntryNotificationCommand(
-                    user_id=user_id,
+                    user=user,
                     triggered_by=triggered_by,
                 )
             )
@@ -242,7 +261,7 @@ async def evaluate_morning_overviews_for_all_users_task(
             if not time_matches:
                 continue
 
-            ro_repos = ro_repo_factory.create(user.id)
+            ro_repos = ro_repo_factory.create(user)
             push_notification_repo: PushNotificationRepositoryReadOnlyProtocol = (
                 ro_repos.push_notification_ro_repo
             )
@@ -295,16 +314,22 @@ async def evaluate_morning_overview_task(
     try:
         resolved_handler: _NotificationHandler[MorningOverviewCommand]
         if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(f"User not found for morning overview task {user_id}")
+                return
             resolved_handler = get_morning_overview_handler(
-                user_id=user_id,
+                user=user,
                 uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
                 ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
             )
         else:
             resolved_handler = handler
+            user = resolved_handler.user
 
         try:
-            await resolved_handler.handle(MorningOverviewCommand(user_id=user_id))
+            await resolved_handler.handle(MorningOverviewCommand(user=user))
             logger.debug(f"Morning overview evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
             logger.exception(f"Error evaluating morning overview for user {user_id}")

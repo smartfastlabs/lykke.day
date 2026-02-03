@@ -37,6 +37,7 @@ from lykke.application.repositories import (
     UserRepositoryReadOnlyProtocol,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.domain.entities.base import BaseEntityObject
 
 if TYPE_CHECKING:
@@ -210,11 +211,11 @@ class UnitOfWorkFactory(Protocol):
     depending on infrastructure implementations.
     """
 
-    def create(self, user_id: UUID) -> UnitOfWorkProtocol:
+    def create(self, user: UserEntity) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
 
         Args:
-            user_id: The UUID of the user to scope the unit of work to.
+            user: The user entity to scope the unit of work to.
 
         Returns:
             A new UnitOfWork instance (not yet entered).
@@ -263,11 +264,11 @@ class ReadOnlyRepositoryFactory(Protocol):
     the ability to perform writes.
     """
 
-    def create(self, user_id: UUID) -> ReadOnlyRepositories:
+    def create(self, user: UserEntity) -> ReadOnlyRepositories:
         """Create read-only repositories for the given user.
 
         Args:
-            user_id: The UUID of the user to scope the repositories to.
+            user: The user entity to scope the repositories to.
 
         Returns:
             Read-only repositories scoped to the user.

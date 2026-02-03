@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.events.handlers.task_status_logger import TaskStatusLoggerHandler
+from lykke.domain.entities import UserEntity
 from lykke.domain.events.task_events import TaskCompletedEvent, TaskStatusChangedEvent
 from tests.support.dobles import create_read_only_repos_double
 
@@ -15,7 +16,8 @@ from tests.support.dobles import create_read_only_repos_double
 @pytest.mark.asyncio
 async def test_task_status_logger_handles_events() -> None:
     user_id = uuid4()
-    handler = TaskStatusLoggerHandler(create_read_only_repos_double(), user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = TaskStatusLoggerHandler(create_read_only_repos_double(), user)
 
     await handler.handle(
         TaskStatusChangedEvent(

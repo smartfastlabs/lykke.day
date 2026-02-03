@@ -11,7 +11,11 @@ from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity, PushSubscriptionEntity
+from lykke.domain.entities import (
+    PushNotificationEntity,
+    PushSubscriptionEntity,
+    UserEntity,
+)
 
 
 def _is_invalid_subscription_error(error: Exception) -> bool:
@@ -52,7 +56,7 @@ class SendPushNotificationHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         web_push_gateway: WebPushGatewayProtocol,
     ) -> None:
         """Initialize SendPushNotificationHandler.
@@ -60,10 +64,10 @@ class SendPushNotificationHandler(
         Args:
             ro_repos: Read-only repositories
             uow_factory: Unit of work factory
-            user_id: User ID for scoping
+            user: User entity for scoping
             web_push_gateway: Web push notification gateway
         """
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._web_push_gateway = web_push_gateway
 
     async def handle(self, command: SendPushNotificationCommand) -> None:
@@ -130,8 +134,6 @@ class SendPushNotificationHandler(
                     invalid_subscriptions.append(subscription)
 
         # Create PushNotificationEntity to track this send attempt
-        # Use the user_id from the first subscription (all should be for the same user)
-        user_id = command.subscriptions[0].user_id
         all_subscription_ids = successful_subscription_ids + failed_subscription_ids
 
         if not all_subscription_ids:
@@ -150,13 +152,13 @@ class SendPushNotificationHandler(
             error_message = None
 
         # Create and save the notification entity
-        async with self.new_uow(user_id) as uow:
+        async with self.new_uow() as uow:
             if invalid_subscriptions:
                 for invalid in invalid_subscriptions:
                     await uow.delete(invalid)
             notification = PushNotificationEntity(
                 id=notification_id,
-                user_id=user_id,
+                user_id=self.user.id,
                 push_subscription_ids=all_subscription_ids,
                 content=content_str,
                 status=status,

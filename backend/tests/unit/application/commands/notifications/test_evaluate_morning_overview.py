@@ -120,15 +120,29 @@ def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
     )
 
 
+def _build_user(
+    user_id: Any,
+    *,
+    settings: value_objects.UserSetting | None = None,
+) -> UserEntity:
+    return UserEntity(
+        id=user_id,
+        email="test@example.com",
+        hashed_password="!",
+        settings=settings,
+    )
+
+
 @pytest.mark.asyncio
 async def test_morning_overview_skips_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     user_id = uuid4()
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -144,7 +158,7 @@ async def test_morning_overview_skips_when_disabled(
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", False)
 
-    await handler.handle(MorningOverviewCommand(user_id=user_id))
+    await handler.handle(MorningOverviewCommand(user=handler_user))
 
     assert called is False
 
@@ -160,10 +174,11 @@ async def test_morning_overview_handles_user_lookup_errors(
         raise RuntimeError("missing user")
 
     user_repo.get = raise_get
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -171,7 +186,7 @@ async def test_morning_overview_handles_user_lookup_errors(
     )
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
-    await handler.handle(MorningOverviewCommand(user_id=user_id))
+    await handler.handle(MorningOverviewCommand(user=handler_user))
 
 
 @pytest.mark.asyncio
@@ -186,10 +201,11 @@ async def test_morning_overview_skips_without_llm_provider(
         return user
 
     user_repo.get = return_user
+    handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -197,7 +213,7 @@ async def test_morning_overview_skips_without_llm_provider(
     )
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
-    await handler.handle(MorningOverviewCommand(user_id=user_id))
+    await handler.handle(MorningOverviewCommand(user=handler_user))
 
 
 @pytest.mark.asyncio
@@ -219,10 +235,11 @@ async def test_morning_overview_skips_without_time(
         return user
 
     user_repo.get = return_user
+    handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -238,7 +255,7 @@ async def test_morning_overview_skips_without_time(
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
-    await handler.handle(MorningOverviewCommand(user_id=user_id))
+    await handler.handle(MorningOverviewCommand(user=handler_user))
 
     assert called is False
 
@@ -263,10 +280,11 @@ async def test_morning_overview_runs_llm_when_configured(
         return user
 
     user_repo.get = return_user
+    handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -282,7 +300,7 @@ async def test_morning_overview_runs_llm_when_configured(
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
-    await handler.handle(MorningOverviewCommand(user_id=user_id))
+    await handler.handle(MorningOverviewCommand(user=handler_user))
 
     assert called is True
 
@@ -319,10 +337,11 @@ async def test_morning_overview_build_prompt_input_includes_risk_data() -> None:
             )
         ]
     )
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(result=risk_result),
@@ -360,10 +379,11 @@ async def test_morning_overview_build_prompt_input_skips_unrated_tasks() -> None
         push_notifications=[],
     )
 
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -382,10 +402,11 @@ async def test_morning_overview_tool_creates_skipped_notification() -> None:
     uow = create_uow_double()
     push_subscription_repo = create_push_subscription_repo_double()
     send_recorder = _Recorder(commands=[])
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(uow),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -428,10 +449,11 @@ async def test_morning_overview_tool_skips_when_llm_declines() -> None:
     uow = create_uow_double()
     push_subscription_repo = create_push_subscription_repo_double()
     send_recorder = _Recorder(commands=[])
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(uow),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -463,10 +485,11 @@ async def test_morning_overview_tool_sends_notification() -> None:
         return [subscription]
 
     push_subscription_repo.all = return_subscriptions
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
@@ -507,10 +530,11 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
 
     send_recorder.handle = raise_send
 
+    handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        handler_user,
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),

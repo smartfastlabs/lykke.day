@@ -242,7 +242,7 @@ class SqlAlchemyUnitOfWork:
 
     def __init__(
         self,
-        user_id: UUID,
+        user: UserEntity,
         pubsub_gateway: PubSubGatewayProtocol,
         *,
         workers_to_schedule_factory: (
@@ -252,12 +252,12 @@ class SqlAlchemyUnitOfWork:
         """Initialize the unit of work for a specific user.
 
         Args:
-            user_id: The UUID of the user to scope repositories to.
+            user: The user entity to scope repositories to.
             pubsub_gateway: PubSub gateway for broadcasting events
             workers_to_schedule_factory: Optional callable that returns a fresh
                 WorkersToScheduleProtocol per UOW. When None, a no-op is used.
         """
-        self.user_id = user_id
+        self.user = user
         self._connection: AsyncConnection | None = None
         self._workers_token: Token[WorkersToScheduleProtocol | None] | None = None
         self._workers_to_schedule_factory = workers_to_schedule_factory
@@ -333,7 +333,7 @@ class SqlAlchemyUnitOfWork:
             self._token = set_transaction_connection(self._connection)
 
         # Initialize all repositories with user scoping (where applicable)
-        # UserRepository and AuthTokenRepository are not user-scoped
+        # UserRepository and SmsLoginCodeRepository are not user-scoped
         # Use cast to satisfy type checker - concrete repos implement both protocols
         # We assign the same instance to both ro and rw since they implement both
         user_repo = cast("UserRepositoryReadWriteProtocol", UserRepository())
@@ -341,7 +341,8 @@ class SqlAlchemyUnitOfWork:
         self._user_rw_repo = user_repo
 
         auth_token_repo = cast(
-            "AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository()
+            "AuthTokenRepositoryReadWriteProtocol",
+            AuthTokenRepository(user=self.user),
         )
         self.auth_token_ro_repo = cast(
             "AuthTokenRepositoryReadOnlyProtocol", auth_token_repo
@@ -356,7 +357,7 @@ class SqlAlchemyUnitOfWork:
         # All other repositories are user-scoped
         calendar_repo = cast(
             "CalendarRepositoryReadWriteProtocol",
-            CalendarRepository(user_id=self.user_id),
+            CalendarRepository(user=self.user),
         )
         self.calendar_ro_repo = cast(
             "CalendarRepositoryReadOnlyProtocol", calendar_repo
@@ -364,14 +365,14 @@ class SqlAlchemyUnitOfWork:
         self._calendar_rw_repo = calendar_repo
 
         day_repo = cast(
-            "DayRepositoryReadWriteProtocol", DayRepository(user_id=self.user_id)
+            "DayRepositoryReadWriteProtocol", DayRepository(user=self.user)
         )
         self.day_ro_repo = cast("DayRepositoryReadOnlyProtocol", day_repo)
         self._day_rw_repo = day_repo
 
         day_template_repo = cast(
             "DayTemplateRepositoryReadWriteProtocol",
-            DayTemplateRepository(user_id=self.user_id),
+            DayTemplateRepository(user=self.user),
         )
         self.day_template_ro_repo = cast(
             "DayTemplateRepositoryReadOnlyProtocol", day_template_repo
@@ -380,7 +381,7 @@ class SqlAlchemyUnitOfWork:
 
         calendar_entry_repo = cast(
             "CalendarEntryRepositoryReadWriteProtocol",
-            CalendarEntryRepository(user_id=self.user_id),
+            CalendarEntryRepository(user=self.user),
         )
         self.calendar_entry_ro_repo = cast(
             "CalendarEntryRepositoryReadOnlyProtocol", calendar_entry_repo
@@ -389,7 +390,7 @@ class SqlAlchemyUnitOfWork:
 
         calendar_entry_series_repo = cast(
             "CalendarEntrySeriesRepositoryReadWriteProtocol",
-            CalendarEntrySeriesRepository(user_id=self.user_id),
+            CalendarEntrySeriesRepository(user=self.user),
         )
         self.calendar_entry_series_ro_repo = cast(
             "CalendarEntrySeriesRepositoryReadOnlyProtocol",
@@ -399,7 +400,7 @@ class SqlAlchemyUnitOfWork:
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadWriteProtocol",
-            PushSubscriptionRepository(user_id=self.user_id),
+            PushSubscriptionRepository(user=self.user),
         )
         self.push_subscription_ro_repo = cast(
             "PushSubscriptionRepositoryReadOnlyProtocol", push_subscription_repo
@@ -408,7 +409,7 @@ class SqlAlchemyUnitOfWork:
 
         routine_definition_repo = cast(
             "RoutineDefinitionRepositoryReadWriteProtocol",
-            RoutineDefinitionRepository(user_id=self.user_id),
+            RoutineDefinitionRepository(user=self.user),
         )
         self.routine_definition_ro_repo = cast(
             "RoutineDefinitionRepositoryReadOnlyProtocol", routine_definition_repo
@@ -417,21 +418,21 @@ class SqlAlchemyUnitOfWork:
 
         routine_repo = cast(
             "RoutineRepositoryReadWriteProtocol",
-            RoutineRepository(user_id=self.user_id),
+            RoutineRepository(user=self.user),
         )
         self.routine_ro_repo = cast("RoutineRepositoryReadOnlyProtocol", routine_repo)
         self._routine_rw_repo = routine_repo
 
         tactic_repo = cast(
             "TacticRepositoryReadWriteProtocol",
-            TacticRepository(user_id=self.user_id),
+            TacticRepository(user=self.user),
         )
         self.tactic_ro_repo = cast("TacticRepositoryReadOnlyProtocol", tactic_repo)
         self._tactic_rw_repo = tactic_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadWriteProtocol",
-            TaskDefinitionRepository(user_id=self.user_id),
+            TaskDefinitionRepository(user=self.user),
         )
         self.task_definition_ro_repo = cast(
             "TaskDefinitionRepositoryReadOnlyProtocol", task_definition_repo
@@ -440,14 +441,14 @@ class SqlAlchemyUnitOfWork:
 
         task_repo = cast(
             "TaskRepositoryReadWriteProtocol",
-            TaskRepository(user_id=self.user_id),
+            TaskRepository(user=self.user),
         )
         self.task_ro_repo = cast("TaskRepositoryReadOnlyProtocol", task_repo)
         self._task_rw_repo = task_repo
 
         time_block_definition_repo = cast(
             "TimeBlockDefinitionRepositoryReadWriteProtocol",
-            TimeBlockDefinitionRepository(user_id=self.user_id),
+            TimeBlockDefinitionRepository(user=self.user),
         )
         self.time_block_definition_ro_repo = cast(
             "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
@@ -456,14 +457,14 @@ class SqlAlchemyUnitOfWork:
 
         trigger_repo = cast(
             "TriggerRepositoryReadWriteProtocol",
-            TriggerRepository(user_id=self.user_id),
+            TriggerRepository(user=self.user),
         )
         self.trigger_ro_repo = cast("TriggerRepositoryReadOnlyProtocol", trigger_repo)
         self._trigger_rw_repo = trigger_repo
 
         usecase_config_repo = cast(
             "UseCaseConfigRepositoryReadWriteProtocol",
-            UseCaseConfigRepository(user_id=self.user_id),
+            UseCaseConfigRepository(user=self.user),
         )
         self.usecase_config_ro_repo = cast(
             "UseCaseConfigRepositoryReadOnlyProtocol", usecase_config_repo
@@ -473,7 +474,7 @@ class SqlAlchemyUnitOfWork:
         # Chatbot-related repositories
         bot_personality_repo = cast(
             "BotPersonalityRepositoryReadWriteProtocol",
-            BotPersonalityRepository(user_id=self.user_id),
+            BotPersonalityRepository(user=self.user),
         )
         self.bot_personality_ro_repo = cast(
             "BotPersonalityRepositoryReadOnlyProtocol", bot_personality_repo
@@ -482,7 +483,7 @@ class SqlAlchemyUnitOfWork:
 
         brain_dump_repo = cast(
             "BrainDumpRepositoryReadWriteProtocol",
-            BrainDumpRepository(user_id=self.user_id),
+            BrainDumpRepository(user=self.user),
         )
         self.brain_dump_ro_repo = cast(
             "BrainDumpRepositoryReadOnlyProtocol", brain_dump_repo
@@ -491,21 +492,21 @@ class SqlAlchemyUnitOfWork:
 
         message_repo = cast(
             "MessageRepositoryReadWriteProtocol",
-            MessageRepository(user_id=self.user_id),
+            MessageRepository(user=self.user),
         )
         self.message_ro_repo = cast("MessageRepositoryReadOnlyProtocol", message_repo)
         self._message_rw_repo = message_repo
 
         factoid_repo = cast(
             "FactoidRepositoryReadWriteProtocol",
-            FactoidRepository(user_id=self.user_id),
+            FactoidRepository(user=self.user),
         )
         self.factoid_ro_repo = cast("FactoidRepositoryReadOnlyProtocol", factoid_repo)
         self._factoid_rw_repo = factoid_repo
 
         # AuditLogRepository is read-only (immutable entities)
         # Even though it's read-only in protocol, the implementation has put() for creates
-        audit_log_repo = AuditLogRepository(user_id=self.user_id)
+        audit_log_repo = AuditLogRepository(user=self.user)
         self.audit_log_ro_repo = cast(
             "AuditLogRepositoryReadOnlyProtocol", audit_log_repo
         )
@@ -513,7 +514,7 @@ class SqlAlchemyUnitOfWork:
 
         push_notification_repo = cast(
             "PushNotificationRepositoryReadWriteProtocol",
-            PushNotificationRepository(user_id=self.user_id),
+            PushNotificationRepository(user=self.user),
         )
         self.push_notification_ro_repo = cast(
             "PushNotificationRepositoryReadOnlyProtocol", push_notification_repo
@@ -838,7 +839,7 @@ class SqlAlchemyUnitOfWork:
                 for event in events:
                     # Check if event implements AuditableDomainEvent protocol
                     if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
-                        audit_log = event.to_audit_log(self.user_id)
+                        audit_log = event.to_audit_log(self.user.id)
                         # Override date with entity date to ensure consistency
                         audit_log.date = entity_date
                         audit_log.meta = _attach_entity_snapshot(
@@ -873,7 +874,7 @@ class SqlAlchemyUnitOfWork:
                                     meta = {}
 
                             audit_log = AuditLogEntity(
-                                user_id=self.user_id,
+                                user_id=self.user.id,
                                 activity_type=type(event).__name__,
                                 entity_id=entity.id,
                                 entity_type=entity_type,
@@ -945,8 +946,7 @@ class SqlAlchemyUnitOfWork:
         if self._user_timezone_cache is not _UNSET:
             return cast("str | None", self._user_timezone_cache)
         try:
-            user = await self.user_ro_repo.get(self.user_id)
-            timezone = user.settings.timezone if user.settings else None
+            timezone = self.user.settings.timezone if self.user.settings else None
         except Exception:
             timezone = None
         self._user_timezone_cache = timezone
@@ -1063,7 +1063,7 @@ class SqlAlchemyUnitOfWork:
                 # Publish to user-specific domain-events channel
                 # Note: We publish to the user_id from the UnitOfWork context
                 await self._pubsub_gateway.publish_to_user_channel(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     channel_type="domain-events",
                     message=message_with_meta,
                 )
@@ -1090,7 +1090,7 @@ class SqlAlchemyUnitOfWork:
                     "stored_at": stored_at,
                 }
                 await self._pubsub_gateway.append_to_user_stream(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     stream_type="entity-changes",
                     message=message_with_meta,
                     maxlen=10000,
@@ -1235,17 +1235,17 @@ class SqlAlchemyUnitOfWorkFactory:
         self._pubsub_gateway = pubsub_gateway
         self._workers_to_schedule_factory = workers_to_schedule_factory
 
-    def create(self, user_id: UUID) -> UnitOfWorkProtocol:
+    def create(self, user: UserEntity) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
 
         Args:
-            user_id: The UUID of the user to scope the unit of work to.
+            user: The user entity to scope the unit of work to.
 
         Returns:
             A new UnitOfWork instance (not yet entered).
         """
         return SqlAlchemyUnitOfWork(
-            user_id=user_id,
+            user=user,
             pubsub_gateway=self._pubsub_gateway,
             workers_to_schedule_factory=self._workers_to_schedule_factory,
         )
@@ -1258,142 +1258,143 @@ class SqlAlchemyReadOnlyRepositories:
     Each repository manages its own database connections for read operations.
     """
 
-    def __init__(self, user_id: UUID) -> None:
+    def __init__(self, user: UserEntity) -> None:
         """Initialize read-only repositories for a specific user.
 
         Args:
-            user_id: The UUID of the user to scope repositories to.
+            user: The user entity to scope repositories to.
         """
-        self.user_id = user_id
+        self.user = user
 
         # Initialize all read-only repositories with user scoping (where applicable)
-        # UserRepository and AuthTokenRepository are not user-scoped
+        # UserRepository and SmsLoginCodeRepository are not user-scoped
         user_repo = cast("UserRepositoryReadOnlyProtocol", UserRepository())
         self.user_ro_repo = user_repo
 
         auth_token_repo = cast(
-            "AuthTokenRepositoryReadOnlyProtocol", AuthTokenRepository()
+            "AuthTokenRepositoryReadOnlyProtocol",
+            AuthTokenRepository(user=self.user),
         )
         self.auth_token_ro_repo = auth_token_repo
 
         # All other repositories are user-scoped
         calendar_repo = cast(
             "CalendarRepositoryReadOnlyProtocol",
-            CalendarRepository(user_id=self.user_id),
+            CalendarRepository(user=self.user),
         )
         self.calendar_ro_repo = calendar_repo
 
         day_repo = cast(
-            "DayRepositoryReadOnlyProtocol", DayRepository(user_id=self.user_id)
+            "DayRepositoryReadOnlyProtocol", DayRepository(user=self.user)
         )
         self.day_ro_repo = day_repo
 
         day_template_repo = cast(
             "DayTemplateRepositoryReadOnlyProtocol",
-            DayTemplateRepository(user_id=self.user_id),
+            DayTemplateRepository(user=self.user),
         )
         self.day_template_ro_repo = day_template_repo
 
         calendar_entry_repo = cast(
             "CalendarEntryRepositoryReadOnlyProtocol",
-            CalendarEntryRepository(user_id=self.user_id),
+            CalendarEntryRepository(user=self.user),
         )
         self.calendar_entry_ro_repo = calendar_entry_repo
 
         calendar_entry_series_repo = cast(
             "CalendarEntrySeriesRepositoryReadOnlyProtocol",
-            CalendarEntrySeriesRepository(user_id=self.user_id),
+            CalendarEntrySeriesRepository(user=self.user),
         )
         self.calendar_entry_series_ro_repo = calendar_entry_series_repo
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadOnlyProtocol",
-            PushSubscriptionRepository(user_id=self.user_id),
+            PushSubscriptionRepository(user=self.user),
         )
         self.push_subscription_ro_repo = push_subscription_repo
 
         routine_definition_repo = cast(
             "RoutineDefinitionRepositoryReadOnlyProtocol",
-            RoutineDefinitionRepository(user_id=self.user_id),
+            RoutineDefinitionRepository(user=self.user),
         )
         self.routine_definition_ro_repo = routine_definition_repo
 
         routine_repo = cast(
             "RoutineRepositoryReadOnlyProtocol",
-            RoutineRepository(user_id=self.user_id),
+            RoutineRepository(user=self.user),
         )
         self.routine_ro_repo = routine_repo
 
         tactic_repo = cast(
             "TacticRepositoryReadOnlyProtocol",
-            TacticRepository(user_id=self.user_id),
+            TacticRepository(user=self.user),
         )
         self.tactic_ro_repo = tactic_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadOnlyProtocol",
-            TaskDefinitionRepository(user_id=self.user_id),
+            TaskDefinitionRepository(user=self.user),
         )
         self.task_definition_ro_repo = task_definition_repo
 
         task_repo = cast(
-            "TaskRepositoryReadOnlyProtocol", TaskRepository(user_id=self.user_id)
+            "TaskRepositoryReadOnlyProtocol", TaskRepository(user=self.user)
         )
         self.task_ro_repo = task_repo
 
         time_block_definition_repo = cast(
             "TimeBlockDefinitionRepositoryReadOnlyProtocol",
-            TimeBlockDefinitionRepository(user_id=self.user_id),
+            TimeBlockDefinitionRepository(user=self.user),
         )
         self.time_block_definition_ro_repo = time_block_definition_repo
 
         trigger_repo = cast(
             "TriggerRepositoryReadOnlyProtocol",
-            TriggerRepository(user_id=self.user_id),
+            TriggerRepository(user=self.user),
         )
         self.trigger_ro_repo = trigger_repo
 
         usecase_config_repo = cast(
             "UseCaseConfigRepositoryReadOnlyProtocol",
-            UseCaseConfigRepository(user_id=self.user_id),
+            UseCaseConfigRepository(user=self.user),
         )
         self.usecase_config_ro_repo = usecase_config_repo
 
         # Chatbot-related repositories
         bot_personality_repo = cast(
             "BotPersonalityRepositoryReadOnlyProtocol",
-            BotPersonalityRepository(user_id=self.user_id),
+            BotPersonalityRepository(user=self.user),
         )
         self.bot_personality_ro_repo = bot_personality_repo
 
         brain_dump_repo = cast(
             "BrainDumpRepositoryReadOnlyProtocol",
-            BrainDumpRepository(user_id=self.user_id),
+            BrainDumpRepository(user=self.user),
         )
         self.brain_dump_ro_repo = brain_dump_repo
 
         message_repo = cast(
             "MessageRepositoryReadOnlyProtocol",
-            MessageRepository(user_id=self.user_id),
+            MessageRepository(user=self.user),
         )
         self.message_ro_repo = message_repo
 
         factoid_repo = cast(
             "FactoidRepositoryReadOnlyProtocol",
-            FactoidRepository(user_id=self.user_id),
+            FactoidRepository(user=self.user),
         )
         self.factoid_ro_repo = factoid_repo
 
         # AuditLogRepository is read-only (immutable entities)
         audit_log_repo = cast(
             "AuditLogRepositoryReadOnlyProtocol",
-            AuditLogRepository(user_id=self.user_id),
+            AuditLogRepository(user=self.user),
         )
         self.audit_log_ro_repo = audit_log_repo
 
         push_notification_repo = cast(
             "PushNotificationRepositoryReadOnlyProtocol",
-            PushNotificationRepository(user_id=self.user_id),
+            PushNotificationRepository(user=self.user),
         )
         self.push_notification_ro_repo = push_notification_repo
 
@@ -1407,13 +1408,13 @@ class SqlAlchemyReadOnlyRepositories:
 class SqlAlchemyReadOnlyRepositoryFactory:
     """Factory for creating SqlAlchemyReadOnlyRepositories instances."""
 
-    def create(self, user_id: UUID) -> ReadOnlyRepositories:
+    def create(self, user: UserEntity) -> ReadOnlyRepositories:
         """Create read-only repositories for the given user.
 
         Args:
-            user_id: The UUID of the user to scope the repositories to.
+            user: The user entity to scope the repositories to.
 
         Returns:
             Read-only repositories scoped to the user.
         """
-        return SqlAlchemyReadOnlyRepositories(user_id=user_id)
+        return SqlAlchemyReadOnlyRepositories(user=user)

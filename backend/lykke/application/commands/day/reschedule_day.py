@@ -13,7 +13,7 @@ from lykke.application.commands.day.schedule_day import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity
+from lykke.domain.entities import DayEntity, UserEntity
 
 
 @dataclass(frozen=True)
@@ -33,10 +33,10 @@ class RescheduleDayHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         schedule_day_handler: ScheduleDayHandler,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self.schedule_day_handler = schedule_day_handler
 
     async def handle(self, command: RescheduleDayCommand) -> value_objects.DayContext:
@@ -58,7 +58,7 @@ class RescheduleDayHandler(
 
         async with self.new_uow() as uow:
             # Step 1: Get the existing Day entity
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
             logger.info(f"Found existing day for {command.date}")
 

@@ -39,7 +39,7 @@ async def test_audit_log_broadcast_on_commit(test_user: UserEntity) -> None:
         )
 
         # Commit the entity using UnitOfWork with PubSub gateway
-        uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)
+        uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=pubsub_gateway)
         async with uow:
             await uow.create(audit_log)
 
@@ -92,7 +92,7 @@ async def test_multiple_audit_logs_broadcast(test_user: UserEntity) -> None:
         )
 
         # Commit both entities in one transaction
-        uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)
+        uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=pubsub_gateway)
         async with uow:
             await uow.create(audit_log1)
             await uow.create(audit_log2)
@@ -139,12 +139,14 @@ async def test_no_broadcast_without_pubsub_gateway(test_user: UserEntity) -> Non
     )
 
     # Commit with StubPubSubGateway (no broadcasting)
-    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
+    uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=StubPubSubGateway())
     async with uow:
         await uow.create(audit_log)
 
     # Verify the entity was saved to database
-    uow_read = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
+    uow_read = SqlAlchemyUnitOfWork(
+        user=test_user, pubsub_gateway=StubPubSubGateway()
+    )
     async with uow_read:
         saved_log = await uow_read.audit_log_ro_repo.get(audit_log.id)
         assert saved_log.id == audit_log.id
@@ -172,7 +174,7 @@ async def test_broadcast_only_on_successful_commit(test_user: UserEntity) -> Non
         )
 
         # Try to commit but raise an exception before commit
-        uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)
+        uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=pubsub_gateway)
         try:
             async with uow:
                 await uow.create(audit_log)
@@ -220,7 +222,7 @@ async def test_user_isolation_in_broadcast(test_user: UserEntity) -> None:
             entity_type="task",
         )
 
-        uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)
+        uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=pubsub_gateway)
         async with uow:
             await uow.create(audit_log)
 

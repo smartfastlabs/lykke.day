@@ -36,7 +36,7 @@ class RecordTaskActionHandler(BaseCommandHandler[RecordTaskActionCommand, TaskEn
             task = await uow.task_ro_repo.get(command.task_id)
 
             # Get the Day aggregate root using the task's scheduled_date
-            day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             # Use Day aggregate root method to record action

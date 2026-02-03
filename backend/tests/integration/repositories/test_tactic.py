@@ -81,7 +81,7 @@ async def test_user_isolation(tactic_repo, test_user, create_test_user):
     await tactic_repo.put(tactic)
 
     user2 = await create_test_user()
-    tactic_repo2 = TacticRepository(user_id=user2.id)
+    tactic_repo2 = TacticRepository(user=user2)
 
     with pytest.raises(NotFoundError):
         await tactic_repo2.get(tactic.id)

@@ -18,6 +18,7 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
+    UserEntity,
 )
 from tests.support.dobles import (
     create_day_repo_double,
@@ -141,7 +142,8 @@ async def test_record_routine_action_only_updates_tasks_not_punted_or_completed(
 
     action = value_objects.Action(type=action_type)
 
-    routine_handler = RecordRoutineActionHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    routine_handler = RecordRoutineActionHandler(ro_repos, uow_factory, user)
     result = await routine_handler.handle(
         RecordRoutineActionCommand(routine_id=routine.id, action=action)
     )
@@ -209,7 +211,8 @@ async def test_record_routine_definition_action_only_updates_tasks_not_punted_or
 
     action = value_objects.Action(type=action_type)
 
-    handler = RecordRoutineDefinitionActionHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = RecordRoutineDefinitionActionHandler(ro_repos, uow_factory, user)
     result = await handler.handle(
         RecordRoutineDefinitionActionCommand(
             routine_definition_id=routine_definition_id,

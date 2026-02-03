@@ -24,6 +24,7 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
+    UserEntity,
 )
 from lykke.domain.events.calendar_entry_series_events import (
     CalendarEntrySeriesUpdatedEvent,
@@ -54,7 +55,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
         """Initialize SyncCalendarHandler.
@@ -62,10 +63,10 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         Args:
             ro_repos: Read-only repositories (from BaseCommandHandler)
             uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user_id: User ID (from BaseCommandHandler)
+            user: User entity (from BaseCommandHandler)
             google_gateway: Google Calendar gateway
         """
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._google_gateway = google_gateway
 
     async def handle(self, command: SyncCalendarCommand) -> CalendarEntity:
@@ -108,8 +109,9 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             if calendar.sync_subscription
             else None
         )
-        user = await uow.user_ro_repo.get(self.user_id)
-        user_timezone = user.settings.timezone if user.settings else None
+        user_timezone = (
+            self.user.settings.timezone if self.user.settings else None
+        )
 
         (
             fetched_entries,
@@ -485,7 +487,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
 
 @dataclass(frozen=True)
 class SyncAllCalendarsCommand(Command):
-    """Command to sync all calendars (takes no args, uses handler's user_id)."""
+    """Command to sync all calendars (takes no args, uses handler's user)."""
 
 
 class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None]):
@@ -495,7 +497,7 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         sync_calendar_handler: SyncCalendarHandler,
     ) -> None:
         """Initialize SyncAllCalendarsHandler.
@@ -503,10 +505,10 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         Args:
             ro_repos: Read-only repositories (from BaseCommandHandler)
             uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user_id: User ID (from BaseCommandHandler)
+            user: User entity (from BaseCommandHandler)
             sync_calendar_handler: Handler for syncing a single calendar
         """
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._sync_calendar_handler = sync_calendar_handler
 
     async def handle(self, command: SyncAllCalendarsCommand) -> None:

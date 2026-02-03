@@ -1,5 +1,4 @@
 from typing import Annotated, Any
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request, Response
 from loguru import logger
@@ -21,6 +20,7 @@ from .dependencies.services import (
     get_read_only_repository_factory,
     get_unit_of_work_factory,
 )
+from .dependencies.user import get_system_user
 
 router = APIRouter()
 
@@ -59,8 +59,9 @@ async def twilio_sms_webhook(
     from_number = normalize_phone_number(from_number)
     to_number = normalize_phone_number(to_number) if to_number else None
 
+    system_user = get_system_user()
     query_factory = QueryHandlerFactory(
-        user_id=uuid4(), ro_repo_factory=ro_repo_factory
+        user=system_user, ro_repo_factory=ro_repo_factory
     )
     user_handler = query_factory.create(GetUserByPhoneHandler)
     user = await user_handler.handle(GetUserByPhoneQuery(phone_number=from_number))
@@ -69,7 +70,7 @@ async def twilio_sms_webhook(
         return Response(status_code=200)
 
     factory = CommandHandlerFactory(
-        user_id=user.id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

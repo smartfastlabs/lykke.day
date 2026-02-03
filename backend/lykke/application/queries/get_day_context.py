@@ -66,7 +66,7 @@ class GetDayContextHandler(
         Returns:
             A DayContext with all related data
         """
-        day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+        day_id = DayEntity.id_from_date_and_user(date, self.user.id)
 
         start_of_day = datetime.combine(date, time.min, tzinfo=UTC)
         end_of_day = start_of_day + timedelta(days=1)
@@ -231,7 +231,7 @@ class GetDayContextHandler(
             if routine_definition.id in routine_definition_ids:
                 routines.append(
                     RoutineEntity.from_definition(
-                        routine_definition, date, self.user_id
+                        routine_definition, date, self.user.id
                     )
                 )
         return routines

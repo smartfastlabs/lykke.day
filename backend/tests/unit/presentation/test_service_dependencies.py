@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.services import (
@@ -71,7 +72,8 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
 
     # Verify the factory has the pubsub_gateway configured
     # by checking that it passes it through when creating a UoW
-    uow = factory.create(user_id=uuid4())
+    user = UserEntity(email="test@example.com", hashed_password="!")
+    uow = factory.create(user=user)
 
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
@@ -93,7 +95,8 @@ def test_unit_of_work_factory_requires_pubsub_gateway():
     factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=stub_gateway)
 
     # Create a UoW
-    uow = factory.create(user_id=uuid4())
+    user = UserEntity(email="test@example.com", hashed_password="!")
+    uow = factory.create(user=user)
 
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")

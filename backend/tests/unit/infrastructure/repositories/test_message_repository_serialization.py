@@ -4,12 +4,13 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity
+from lykke.domain.entities import MessageEntity, UserEntity
 from lykke.infrastructure.repositories.message import MessageRepository
 
 
 def test_message_repository_roundtrip_type_and_llm_run_result() -> None:
-    repo = MessageRepository(user_id=uuid4())
+    user = UserEntity(email="test@example.com", hashed_password="!")
+    repo = MessageRepository(user=user)
     user_id = uuid4()
 
     message = MessageEntity(

@@ -155,7 +155,7 @@ async def day_context_handler_websocket(
     ],
 ) -> GetDayContextHandler:
     """Get a GetDayContextHandler instance for WebSocket handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
     return factory.create(GetDayContextHandler)
 
 
@@ -179,7 +179,7 @@ async def day_context_part_handlers_websocket(
     ],
 ) -> DayContextPartHandlers:
     """Get DayContext part handlers for WebSocket handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
     return DayContextPartHandlers(
         day=factory.create(GetDayEntityHandler),
         tasks=factory.create(GetDayTasksHandler),
@@ -198,7 +198,7 @@ async def incremental_changes_handler_websocket(
     ],
 ) -> GetIncrementalChangesHandler:
     """Get a GetIncrementalChangesHandler instance for WebSocket handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
     return factory.create(GetIncrementalChangesHandler)
 
 
@@ -213,7 +213,7 @@ async def get_schedule_day_handler_websocket(
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance for WebSocket handlers."""
     factory = CommandHandlerFactory(
-        user_id=user.id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

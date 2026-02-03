@@ -49,7 +49,7 @@ EVALUATION_WINDOW = timedelta(minutes=1)
 class CalendarEntryNotificationCommand(Command):
     """Command to evaluate calendar entry reminders for a user."""
 
-    user_id: UUID
+    user: UserEntity
     triggered_by: str | None = None
 
 
@@ -62,17 +62,17 @@ class CalendarEntryNotificationHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         send_push_notification_handler: SendPushNotificationHandler,
         sms_gateway: SMSProviderProtocol,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._send_push_notification_handler = send_push_notification_handler
         self._sms_gateway = sms_gateway
 
     async def handle(self, command: CalendarEntryNotificationCommand) -> None:
         _ = command.triggered_by
-        user = await self.user_ro_repo.get(self.user_id)
+        user = self.user
         settings = user.settings.calendar_entry_notification_settings
         if not settings.enabled or not settings.rules:
             return
@@ -84,7 +84,7 @@ class CalendarEntryNotificationHandler(
         ]
         if not rules:
             logger.debug(
-                f"No calendar entry notification rules found for user {self.user_id}"
+                f"No calendar entry notification rules found for user {self.user.id}"
             )
             return
 
@@ -128,12 +128,12 @@ class CalendarEntryNotificationHandler(
             scheduled_for = entry.starts_at - timedelta(minutes=rule.minutes_before)
             if not self._within_window(now, scheduled_for):
                 logger.debug(
-                    f"Skipping calendar entry `{entry.name}` for user {self.user_id} because it's not within the window: {scheduled_for} is not within {now} + {EVALUATION_WINDOW}"
+                    f"Skipping calendar entry `{entry.name}` for user {self.user.id} because it's not within the window: {scheduled_for} is not within {now} + {EVALUATION_WINDOW}"
                 )
                 continue
             triggered_by = self._build_triggered_by(entry, rule)
             logger.debug(
-                f"Evaluating calendar entry `{entry.name}` for user {self.user_id} with rule {rule.channel.value}: {scheduled_for} is within {now} + {EVALUATION_WINDOW}"
+                f"Evaluating calendar entry `{entry.name}` for user {self.user.id} with rule {rule.channel.value}: {scheduled_for} is within {now} + {EVALUATION_WINDOW}"
             )
             await self._handle_rule(entry, rule, user, scheduled_for, triggered_by)
 
@@ -216,7 +216,7 @@ class CalendarEntryNotificationHandler(
         content_str = json.dumps(filtered_content)
         async with self.new_uow() as uow:
             notification = PushNotificationEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 push_subscription_ids=[],
                 content=content_str,
                 status="skipped",
@@ -243,7 +243,7 @@ class CalendarEntryNotificationHandler(
 
         message = self._build_message(entry, rule, user.settings.timezone, triggered_by)
         outgoing = MessageEntity(
-            user_id=self.user_id,
+            user_id=self.user.id,
             role=value_objects.MessageRole.ASSISTANT,
             type=value_objects.MessageType.SMS_OUTBOUND,
             content=message,
@@ -258,7 +258,7 @@ class CalendarEntryNotificationHandler(
         outgoing.create()
         outgoing.add_event(
             MessageSentEvent(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 message_id=outgoing.id,
                 role=outgoing.role.value,
                 content_preview=outgoing.get_content_preview(),
@@ -287,7 +287,7 @@ class CalendarEntryNotificationHandler(
             f"{entry.id}:{entry.starts_at.isoformat()}:{rule.minutes_before}:{rule.channel.value}",
         )
 
-        day_id = DayEntity.id_from_date_and_user(local_dt.date(), self.user_id)
+        day_id = DayEntity.id_from_date_and_user(local_dt.date(), self.user.id)
         try:
             day = await self.day_ro_repo.get(day_id)
         except Exception:  # pylint: disable=broad-except
@@ -299,7 +299,7 @@ class CalendarEntryNotificationHandler(
 
         day.add_event(
             AlarmTriggeredEvent(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 day_id=day_id,
                 date=local_dt.date(),
                 alarm_id=alarm_id,

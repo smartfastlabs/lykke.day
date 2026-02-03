@@ -56,7 +56,7 @@ async def test_task_completed_event_auto_creates_audit_log(
     updated_task = day.record_task_action(task, action)
 
     # Commit via UOW - audit log should be auto-created
-    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
+    uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=StubPubSubGateway())
     async with uow:
         uow.add(day)
         uow.add(updated_task)
@@ -114,7 +114,7 @@ async def test_task_punt_event_auto_creates_audit_log(
     updated_task = day.record_task_action(task, action)
 
     # Commit via UOW - audit log should be auto-created
-    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
+    uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=StubPubSubGateway())
     async with uow:
         uow.add(day)
         uow.add(updated_task)
@@ -150,7 +150,7 @@ async def test_audit_log_entity_does_not_trigger_more_audit_logs(
     )
 
     # Commit via UOW - should not create additional audit logs
-    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
+    uow = SqlAlchemyUnitOfWork(user=test_user, pubsub_gateway=StubPubSubGateway())
     async with uow:
         await uow.create(audit_log)
 

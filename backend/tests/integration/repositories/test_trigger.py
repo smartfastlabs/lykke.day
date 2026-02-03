@@ -81,7 +81,7 @@ async def test_user_isolation(trigger_repo, test_user, create_test_user):
     await trigger_repo.put(trigger)
 
     user2 = await create_test_user()
-    trigger_repo2 = TriggerRepository(user_id=user2.id)
+    trigger_repo2 = TriggerRepository(user=user2)
 
     with pytest.raises(NotFoundError):
         await trigger_repo2.get(trigger.id)

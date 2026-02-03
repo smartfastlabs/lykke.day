@@ -10,11 +10,14 @@ from lykke.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarEntrySeriesRepository,
     CalendarRepository,
+    UserRepository,
 )
 
 
 async def create_calendar_for_user(user_id: UUID, calendar_id: UUID) -> CalendarEntity:
-    auth_token_repo = AuthTokenRepository()
+    user_repo = UserRepository()
+    user = await user_repo.get(user_id)
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         user_id=user_id,
         platform="google",
@@ -22,7 +25,9 @@ async def create_calendar_for_user(user_id: UUID, calendar_id: UUID) -> Calendar
     )
     auth_token = await auth_token_repo.put(auth_token)
 
-    calendar_repo = CalendarRepository(user_id=user_id)
+    user_repo = UserRepository()
+    user = await user_repo.get(user_id)
+    calendar_repo = CalendarRepository(user=user)
     calendar = CalendarEntity(
         id=calendar_id,
         user_id=user_id,
@@ -37,7 +42,7 @@ async def create_calendar_for_user(user_id: UUID, calendar_id: UUID) -> Calendar
 @pytest.mark.asyncio
 async def test_list_calendar_entry_series(authenticated_client):
     client, user = await authenticated_client()
-    repo = CalendarEntrySeriesRepository(user_id=user.id)
+    repo = CalendarEntrySeriesRepository(user=user)
     calendar_id = uuid4()
     await create_calendar_for_user(user.id, calendar_id)
     series = CalendarEntrySeriesEntity(
@@ -62,7 +67,7 @@ async def test_list_calendar_entry_series(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_and_update_calendar_entry_series(authenticated_client):
     client, user = await authenticated_client()
-    repo = CalendarEntrySeriesRepository(user_id=user.id)
+    repo = CalendarEntrySeriesRepository(user=user)
     calendar_id = uuid4()
     await create_calendar_for_user(user.id, calendar_id)
     series = CalendarEntrySeriesEntity(
@@ -98,7 +103,7 @@ async def test_get_and_update_calendar_entry_series(authenticated_client):
 @pytest.mark.asyncio
 async def test_search_calendar_entry_series_by_calendar(authenticated_client):
     client, user = await authenticated_client()
-    repo = CalendarEntrySeriesRepository(user_id=user.id)
+    repo = CalendarEntrySeriesRepository(user=user)
     target_calendar_id = uuid4()
     other_calendar_id = uuid4()
 

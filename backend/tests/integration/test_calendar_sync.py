@@ -30,7 +30,7 @@ async def test_calendar(test_user, create_calendar):
 @pytest.fixture
 def calendar_entry_repo(test_user):
     """Create a calendar entry repository."""
-    return CalendarEntryRepository(user_id=test_user.id)
+    return CalendarEntryRepository(user=test_user)
 
 
 @pytest.mark.asyncio
@@ -51,7 +51,7 @@ async def test_sync_creates_new_events(test_user, test_calendar, calendar_entry_
 
     # Save the event using repository
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user.id)
+    uow = uow_factory.create(test_user)
 
     async with uow:
         event.create()
@@ -86,7 +86,7 @@ async def test_sync_updates_existing_events(test_user, test_calendar, calendar_e
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user.id)
+    uow = uow_factory.create(test_user)
 
     # Create initial event
     async with uow:
@@ -140,7 +140,7 @@ async def test_sync_deletes_cancelled_events(test_user, test_calendar, calendar_
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user.id)
+    uow = uow_factory.create(test_user)
 
     # Create event
     async with uow:
@@ -193,7 +193,7 @@ async def test_upsert_with_same_platform_id(
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user.id)
+    uow = uow_factory.create(test_user)
 
     # Create first version
     async with uow:

@@ -13,6 +13,7 @@ from lykke.application.worker_schedule import (
     set_current_workers_to_schedule,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.presentation.workers import tasks as worker_tasks
 from tests.support.dobles import (
     create_read_only_repos_double,
@@ -40,7 +41,8 @@ async def test_receive_sms_sets_message_type_to_inbound() -> None:
     uow = create_uow_double()
     uow_factory = create_uow_factory_double(uow)
 
-    handler = ReceiveSmsMessageHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = ReceiveSmsMessageHandler(ro_repos, uow_factory, user)
 
     workers_to_schedule = _WorkersToSchedule()
     token = set_current_workers_to_schedule(workers_to_schedule)

@@ -14,7 +14,12 @@ from lykke.application.commands.message import (
 )
 from lykke.application.llm import LLMRunResult
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity, MessageEntity
+from lykke.domain.entities import (
+    DayEntity,
+    DayTemplateEntity,
+    MessageEntity,
+    UserEntity,
+)
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
@@ -71,7 +76,7 @@ async def test_process_inbound_sms_records_llm_run_result_on_message() -> None:
     handler = ProcessInboundSmsHandler(
         ro_repos,
         uow_factory,
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         _LLMGatewayFactory(),
         object(),
         object(),

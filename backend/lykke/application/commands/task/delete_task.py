@@ -26,6 +26,6 @@ class DeleteTaskHandler(BaseCommandHandler[DeleteTaskCommand, None]):
         """
         async with self.new_uow() as uow:
             task = await uow.task_ro_repo.get(command.task_id)
-            if task.user_id != self.user_id:
+            if task.user_id != self.user.id:
                 raise NotFoundError(f"Task {command.task_id} not found")
             await uow.delete(task)

@@ -10,7 +10,7 @@ from lykke.application.commands.calendar_entry import (
     UpdateCalendarEntryCommand,
     UpdateCalendarEntryHandler,
 )
-from lykke.domain.entities import CalendarEntryEntity
+from lykke.domain.entities import CalendarEntryEntity, UserEntity
 from lykke.domain.events.calendar_entry_events import CalendarEntryUpdatedEvent
 from lykke.domain.value_objects import CalendarEntryUpdateObject
 from lykke.domain.value_objects.task import (
@@ -49,7 +49,11 @@ async def test_update_calendar_entry_attendance_status():
     )
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateCalendarEntryHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateCalendarEntryHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     update_object = CalendarEntryUpdateObject(
         attendance_status=CalendarEntryAttendanceStatus.ATTENDING
@@ -93,7 +97,11 @@ async def test_update_calendar_entry_name():
     )
     uow = create_uow_double(calendar_entry_repo=calendar_entry_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateCalendarEntryHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateCalendarEntryHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     update_object = CalendarEntryUpdateObject(name="Updated Name")
 

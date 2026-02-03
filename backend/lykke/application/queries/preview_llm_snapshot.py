@@ -28,7 +28,7 @@ from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity
+from lykke.domain.entities import MessageEntity, UserEntity
 
 
 @dataclass(frozen=True)
@@ -46,11 +46,11 @@ class PreviewLLMSnapshotHandler(
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
-        user_id: UUID,
+        user: UserEntity,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         llm_gateway_factory: LLMGatewayFactoryProtocol,
     ) -> None:
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._llm_gateway_factory = llm_gateway_factory
 
@@ -65,7 +65,7 @@ class PreviewLLMSnapshotHandler(
         }:
             return None
 
-        user = await self.user_ro_repo.get(self.user_id)
+        user = self.user
         if not user.settings or not user.settings.llm_provider:
             return None
 
@@ -89,7 +89,7 @@ class PreviewLLMSnapshotHandler(
             extra_template_vars: dict[str, Any] = {"tools_prompt": tools_prompt}
         else:
             inbound_message = MessageEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 role=value_objects.MessageRole.USER,
                 type=value_objects.MessageType.SMS_INBOUND,
                 content="Reminder: call the vet tomorrow at 9am.",
@@ -132,7 +132,7 @@ class PreviewLLMSnapshotHandler(
             ask_prompt,
             tools,
             metadata={
-                "user_id": str(self.user_id),
+                "user_id": str(self.user.id),
                 "handler": "preview_llm_snapshot",
                 "usecase": query.usecase,
                 "llm_provider": user.settings.llm_provider.value,

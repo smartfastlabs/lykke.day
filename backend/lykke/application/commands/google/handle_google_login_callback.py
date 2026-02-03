@@ -11,7 +11,7 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.exceptions import AuthenticationError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
 from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects.update import (
@@ -47,10 +47,10 @@ class HandleGoogleLoginCallbackHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._google_gateway = google_gateway
 
     async def handle(
@@ -75,13 +75,13 @@ class HandleGoogleLoginCallbackHandler(
                     existing_auth_token = await uow.auth_token_ro_repo.get(
                         command.auth_token_id
                     )
-                    if existing_auth_token.user_id != self.user_id:
+                    if existing_auth_token.user_id != self.user.id:
                         raise AuthenticationError(
                             "Auth token does not belong to user"
                         )
                     logger.info(
                         f"Re-authenticating specific auth token {existing_auth_token.id} "
-                        f"for user {self.user_id}"
+                        f"for user {self.user.id}"
                     )
                 except AuthenticationError:
                     raise
@@ -111,7 +111,7 @@ class HandleGoogleLoginCallbackHandler(
                         )
                         logger.info(
                             f"Matched existing auth token {existing_auth_token.id} "
-                            f"via calendar {matching_calendar.id} for user {self.user_id}"
+                            f"via calendar {matching_calendar.id} for user {self.user.id}"
                         )
                     except Exception as exc:
                         logger.warning(
@@ -119,7 +119,7 @@ class HandleGoogleLoginCallbackHandler(
                         )
 
             auth_token_data = AuthTokenEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 client_id=flow.credentials.client_id,
                 client_secret=flow.credentials.client_secret,
                 expires_at=flow.credentials.expiry,
@@ -134,7 +134,7 @@ class HandleGoogleLoginCallbackHandler(
                 auth_token_data.id = existing_auth_token.id
                 auth_token_data.add_event(
                     EntityUpdatedEvent(
-                        user_id=self.user_id,
+                        user_id=self.user.id,
                         update_object=AuthTokenUpdateObject(
                             token=auth_token_data.token,
                             refresh_token=auth_token_data.refresh_token,
@@ -179,12 +179,12 @@ class HandleGoogleLoginCallbackHandler(
                     uow.add(updated)
                     logger.info(
                         f"Updating existing calendar {existing_calendar.id} "
-                        f"(platform_id: {platform_id}) for user {self.user_id}"
+                        f"(platform_id: {platform_id}) for user {self.user.id}"
                     )
                     continue
 
                 new_calendar = CalendarEntity(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     name=google_calendar["summary"],
                     platform="google",
                     platform_id=platform_id,
@@ -192,7 +192,7 @@ class HandleGoogleLoginCallbackHandler(
                 )
                 await uow.create(new_calendar)
                 logger.info(
-                    f"Creating new calendar (platform_id: {platform_id}) for user {self.user_id}"
+                    f"Creating new calendar (platform_id: {platform_id}) for user {self.user.id}"
                 )
 
         return HandleGoogleLoginCallbackResult(

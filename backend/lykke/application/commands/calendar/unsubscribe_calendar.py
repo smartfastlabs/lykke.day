@@ -6,7 +6,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-from lykke.domain.entities import CalendarEntity
+from lykke.domain.entities import CalendarEntity, UserEntity
 
 
 @dataclass(frozen=True)
@@ -25,10 +25,10 @@ class UnsubscribeCalendarHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._google_gateway = google_gateway
 
     async def handle(self, command: UnsubscribeCalendarCommand) -> CalendarEntity:

@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass
 from typing import Any
-from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.domain.entities import UserEntity
 from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.value_objects import UseCaseConfigQuery
@@ -14,7 +14,7 @@ from lykke.domain.value_objects import UseCaseConfigQuery
 class CreateUseCaseConfigCommand(Command):
     """Command to create or update a usecase config."""
 
-    user_id: UUID
+    user: UserEntity
     usecase: str
     config: dict[str, Any]
 
@@ -26,7 +26,7 @@ class CreateUseCaseConfigHandler(
 
     async def handle(self, command: CreateUseCaseConfigCommand) -> UseCaseConfigEntity:
         """Create or update a usecase config."""
-        async with self.new_uow(command.user_id) as uow:
+        async with self.new_uow(command.user) as uow:
             # Check if config already exists
             existing = await uow.usecase_config_ro_repo.search(
                 UseCaseConfigQuery(usecase=command.usecase)
@@ -58,7 +58,7 @@ class CreateUseCaseConfigHandler(
             else:
                 # Create new config
                 new_config = UseCaseConfigEntity(
-                    user_id=command.user_id,
+                    user_id=command.user.id,
                     usecase=command.usecase,
                     config=command.config,
                 )

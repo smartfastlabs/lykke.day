@@ -32,7 +32,7 @@ class EvaluateTimingStatusHandler(
     async def handle(self, command: EvaluateTimingStatusCommand) -> None:
         async with self.new_uow() as uow:
             try:
-                user = await uow.user_ro_repo.get(self.user_id)
+                user = self.user
                 user_timezone = user.settings.timezone if user.settings else None
             except Exception:
                 user_timezone = None
@@ -67,7 +67,7 @@ class EvaluateTimingStatusHandler(
                     continue
 
                 task_event = TaskTimingStatusChangedEvent(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     task_id=task.id,
                     old_timing_status=previous_status.status,
                     new_timing_status=current_status.status,
@@ -103,7 +103,7 @@ class EvaluateTimingStatusHandler(
                     continue
 
                 routine_event = RoutineTimingStatusChangedEvent(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     routine_id=routine.id,
                     old_timing_status=previous_status.status,
                     new_timing_status=current_status.status,

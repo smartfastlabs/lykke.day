@@ -22,6 +22,7 @@ from .dependencies.services import (
     get_read_only_repository_factory,
     get_unit_of_work_factory,
 )
+from .dependencies.user import build_synthetic_user
 
 router = APIRouter()
 
@@ -39,8 +40,9 @@ def get_early_access_command_handler_factory(
     ],
 ) -> CommandHandlerFactory:
     """Create a CommandHandlerFactory for early access requests."""
+    synthetic_user = build_synthetic_user(synthetic_user_id)
     return CommandHandlerFactory(
-        user_id=synthetic_user_id,
+        user=synthetic_user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

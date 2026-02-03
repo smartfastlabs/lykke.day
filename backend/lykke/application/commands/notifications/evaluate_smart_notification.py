@@ -32,14 +32,14 @@ from lykke.core.config import settings
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity
+from lykke.domain.entities import PushNotificationEntity, UserEntity
 
 
 @dataclass(frozen=True)
 class SmartNotificationCommand(Command):
     """Command to evaluate day context and send smart notification if warranted."""
 
-    user_id: UUID
+    user: UserEntity
     triggered_by: str | None = None  # "scheduled", "task_status_change", etc.
 
 
@@ -56,7 +56,7 @@ class SmartNotificationHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         send_push_notification_handler: SendPushNotificationHandler,
@@ -66,11 +66,11 @@ class SmartNotificationHandler(
         Args:
             ro_repos: Read-only repositories
             uow_factory: Unit of work factory for creating write transactions
-            user_id: User ID for scoping
+            user: User entity for scoping
             get_llm_prompt_context_handler: Handler for prompt context
             send_push_notification_handler: Handler for sending push notifications
         """
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._send_push_notification_handler = send_push_notification_handler
@@ -133,7 +133,7 @@ class SmartNotificationHandler(
             """Decide whether to send a smart notification."""
             if not should_notify:
                 logger.debug(
-                    f"LLM decided not to send notification for user {self.user_id}",
+                    f"LLM decided not to send notification for user {self.user.id}",
                 )
                 return None
             decision = value_objects.NotificationDecision(
@@ -142,7 +142,7 @@ class SmartNotificationHandler(
                 reason=reason,
             )
             logger.debug(
-                f"LLM decided to send {decision.priority} priority notification for user {self.user_id}",
+                f"LLM decided to send {decision.priority} priority notification for user {self.user.id}",
             )
             if decision.priority not in ["high", "medium"]:
                 return
@@ -157,7 +157,7 @@ class SmartNotificationHandler(
             ]
             if recent_delivered:
                 logger.debug(
-                    f"Skipping smart notification for user {self.user_id} due to cooldown window",
+                    f"Skipping smart notification for user {self.user.id} due to cooldown window",
                 )
                 return None
 
@@ -179,12 +179,12 @@ class SmartNotificationHandler(
                 subscriptions = await self.push_subscription_ro_repo.all()
                 if not subscriptions:
                     logger.debug(
-                        f"No push subscriptions found for user {self.user_id}",
+                        f"No push subscriptions found for user {self.user.id}",
                     )
                     content_str = json.dumps(filtered_content)
-                    async with self._uow_factory.create(self.user_id) as uow:
+                    async with self._uow_factory.create(self.user) as uow:
                         notification = PushNotificationEntity(
-                            user_id=self.user_id,
+                            user_id=self.user.id,
                             push_subscription_ids=[],
                             content=content_str,
                             status="skipped",
@@ -217,11 +217,11 @@ class SmartNotificationHandler(
                     )
                 )
                 logger.info(
-                    f"Sent smart notification to {len(subscriptions)} subscription(s) for user {self.user_id}",
+                    f"Sent smart notification to {len(subscriptions)} subscription(s) for user {self.user.id}",
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    f"Failed to send push notification for user {self.user_id}: {exc}",
+                    f"Failed to send push notification for user {self.user.id}: {exc}",
                 )
                 logger.exception(exc)
             return None

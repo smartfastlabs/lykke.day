@@ -95,7 +95,7 @@ async def update_usecase_config(
 
     await create_handler.handle(
         CreateUseCaseConfigCommand(
-            user_id=user.id,
+            user=user,
             usecase=usecase,
             config=config_dict,
         )

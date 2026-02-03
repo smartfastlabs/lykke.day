@@ -16,6 +16,7 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
+    UserEntity,
 )
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class ResetCalendarDataCommand(Command):
-    """Command to reset calendar data (takes no args, uses handler's user_id)."""
+    """Command to reset calendar data (takes no args, uses handler's user)."""
 
 
 class ResetCalendarDataHandler(
@@ -46,10 +47,10 @@ class ResetCalendarDataHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._google_gateway = google_gateway
 
     async def handle(self, command: ResetCalendarDataCommand) -> list[CalendarEntity]:
@@ -113,7 +114,7 @@ class ResetCalendarDataHandler(
         channel_id = str(uuid.uuid4())
         client_state = secrets.token_urlsafe(32)
         base_url = settings.API_BASE_URL.rstrip("/")
-        webhook_url = f"{base_url}/google/webhook/{self.user_id}/{calendar.id}"
+        webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
         subscription = await self._google_gateway.subscribe_to_calendar(
             calendar=calendar,

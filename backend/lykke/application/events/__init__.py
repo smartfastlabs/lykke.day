@@ -6,7 +6,7 @@ This module provides:
 - Auto-registration of all event handlers
 """
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 from lykke.application.unit_of_work import (
@@ -14,6 +14,7 @@ from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
 )
+from lykke.domain.entities import UserEntity
 
 from .handlers import (
     DomainEventHandler,
@@ -26,11 +27,12 @@ from .signals import domain_event_signal, send_domain_events
 def register_all_handlers(
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
+    user_loader: Callable[[UUID], Awaitable[UserEntity | None]] | None = None,
     handler_factory: Callable[
         [
             type[DomainEventHandler],
             ReadOnlyRepositories,
-            UUID,
+            UserEntity,
             UnitOfWorkFactory | None,
         ],
         DomainEventHandler,
@@ -52,6 +54,7 @@ def register_all_handlers(
     DomainEventHandler.register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
+        user_loader=user_loader,
         handler_factory=handler_factory,
     )
 

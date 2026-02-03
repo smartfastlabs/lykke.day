@@ -45,12 +45,12 @@ class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_object
         """
         async with self.new_uow() as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             timezone = ZoneInfo("UTC")
             try:
-                user = await self.user_ro_repo.get(self.user_id)
+                user = self.user
             except NotFoundError:
                 user = None
             if user and user.settings.timezone:

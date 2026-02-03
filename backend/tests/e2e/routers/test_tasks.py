@@ -33,7 +33,7 @@ async def test_complete_task_action(authenticated_client, test_date):
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
-    task_repo = TaskRepository(user_id=user.id)
+    task_repo = TaskRepository(user=user)
     test_task = TaskEntity(
         id=uuid4(),
         user_id=user.id,
@@ -75,7 +75,7 @@ async def test_punt_task_action(authenticated_client, test_date):
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
-    task_repo = TaskRepository(user_id=user.id)
+    task_repo = TaskRepository(user=user)
     test_task = TaskEntity(
         id=uuid4(),
         user_id=user.id,
@@ -116,7 +116,7 @@ async def test_snooze_task_action(authenticated_client, test_date):
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
-    task_repo = TaskRepository(user_id=user.id)
+    task_repo = TaskRepository(user=user)
     test_task = TaskEntity(
         id=uuid4(),
         user_id=user.id,

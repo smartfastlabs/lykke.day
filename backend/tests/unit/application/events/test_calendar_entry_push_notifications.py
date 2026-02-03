@@ -14,7 +14,11 @@ from lykke.application.events.handlers.calendar_entry_push_notifications import 
 )
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntryEntity, PushSubscriptionEntity
+from lykke.domain.entities import (
+    CalendarEntryEntity,
+    PushSubscriptionEntity,
+    UserEntity,
+)
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
@@ -75,7 +79,7 @@ async def test_calendar_entry_handler_skips_without_subscriptions() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -108,7 +112,7 @@ async def test_calendar_entry_handler_returns_without_uow_factory() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=None,
         web_push_gateway=web_push_gateway,
     )
@@ -153,7 +157,7 @@ async def test_calendar_entry_handler_loads_entry_and_sends() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -189,7 +193,7 @@ async def test_calendar_entry_handler_uses_snapshot_on_delete() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -232,7 +236,7 @@ async def test_calendar_entry_handler_handles_missing_entry() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -255,7 +259,7 @@ async def test_calendar_entry_handler_ignores_unknown_event() -> None:
             push_subscription_repo=create_push_subscription_repo_double(),
             calendar_entry_repo=create_calendar_entry_repo_double(),
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -284,7 +288,7 @@ async def test_calendar_entry_handler_logs_when_entry_data_missing() -> None:
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )
@@ -322,7 +326,7 @@ async def test_calendar_entry_handler_handles_payload_errors(
             push_subscription_repo=push_subscription_repo,
             calendar_entry_repo=calendar_entry_repo,
         ),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         uow_factory=create_uow_factory_double(create_uow_double()),
         web_push_gateway=web_push_gateway,
     )

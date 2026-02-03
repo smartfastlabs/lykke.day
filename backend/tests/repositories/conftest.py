@@ -42,7 +42,7 @@ async def test_user():
 @pytest_asyncio.fixture
 async def test_auth_token(test_user):
     """Create an auth token for the test user."""
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=test_user)
     auth_token = AuthTokenEntity(
         user_id=test_user.id,
         platform="google",
@@ -54,7 +54,7 @@ async def test_auth_token(test_user):
 @pytest_asyncio.fixture
 async def test_calendar(test_user, test_auth_token):
     """Create a calendar for the test user."""
-    calendar_repo = CalendarRepository(user_id=test_user.id)
+    calendar_repo = CalendarRepository(user=test_user)
     calendar = CalendarEntity(
         user_id=test_user.id,
         name="Test Calendar",

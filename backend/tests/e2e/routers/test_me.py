@@ -124,11 +124,11 @@ async def test_update_today_high_level_plan_persists(authenticated_client):
     # Create today's day so reschedule can run
     today = get_current_date()
     template_slug = user.settings.template_defaults[today.weekday()]
-    template_repo = DayTemplateRepository(user_id=user.id)
+    template_repo = DayTemplateRepository(user=user)
     template = await template_repo.search_one(
         value_objects.DayTemplateQuery(slug=template_slug)
     )
-    day_repo = DayRepository(user_id=user.id)
+    day_repo = DayRepository(user=user)
     await day_repo.put(
         DayEntity.create_for_date(today, user_id=user.id, template=template)
     )
@@ -155,7 +155,7 @@ async def test_update_today_high_level_plan_persists(authenticated_client):
     assert data["high_level_plan"]["text"] == payload["text"]
     assert data["high_level_plan"]["intentions"] == payload["intentions"]
     assert data["status"] == "STARTED"
-    repo = DayRepository(user_id=user.id)
+    repo = DayRepository(user=user)
     updated_day = await repo.get(day_id)
 
     assert updated_day.high_level_plan is not None

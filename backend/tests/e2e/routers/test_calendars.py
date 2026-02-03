@@ -14,7 +14,7 @@ async def test_list_calendars(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first (calendar depends on it)
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -25,7 +25,7 @@ async def test_list_calendars(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create a calendar via repository
-    calendar_repo = CalendarRepository(user_id=user.id)
+    calendar_repo = CalendarRepository(user=user)
     calendar = CalendarEntity(
         user_id=user.id,
         name="Test Calendar",
@@ -54,7 +54,7 @@ async def test_get_calendar(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -65,7 +65,7 @@ async def test_get_calendar(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create a calendar via repository
-    calendar_repo = CalendarRepository(user_id=user.id)
+    calendar_repo = CalendarRepository(user=user)
     calendar = CalendarEntity(
         user_id=user.id,
         name="Get Test Calendar",
@@ -102,7 +102,7 @@ async def test_create_calendar(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -136,7 +136,7 @@ async def test_update_calendar(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -180,7 +180,7 @@ async def test_update_calendar_not_found(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -209,7 +209,7 @@ async def test_delete_calendar(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -258,7 +258,7 @@ async def test_list_calendars_pagination(authenticated_client):
     client, user = await authenticated_client()
 
     # Create an auth token first
-    auth_token_repo = AuthTokenRepository()
+    auth_token_repo = AuthTokenRepository(user=user)
     auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
@@ -269,7 +269,7 @@ async def test_list_calendars_pagination(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create multiple calendars
-    calendar_repo = CalendarRepository(user_id=user.id)
+    calendar_repo = CalendarRepository(user=user)
     for i in range(3):
         calendar = CalendarEntity(
             user_id=user.id,

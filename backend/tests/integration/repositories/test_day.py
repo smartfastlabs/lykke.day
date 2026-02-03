@@ -212,7 +212,7 @@ async def test_user_isolation(
 
     # Create another user
     user2 = await create_test_user()
-    day_repo2 = day_repo.__class__(user_id=user2.id)
+    day_repo2 = day_repo.__class__(user=user2)
 
     # User2 should not see user1's day
     with pytest.raises(NotFoundError):

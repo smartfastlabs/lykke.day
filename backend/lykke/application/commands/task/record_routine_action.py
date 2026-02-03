@@ -36,7 +36,7 @@ class RecordRoutineActionHandler(
         async with self.new_uow() as uow:
             routine = await uow.routine_ro_repo.get(command.routine_id)
 
-            day_id = DayEntity.id_from_date_and_user(routine.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(routine.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             tasks = await uow.task_ro_repo.search(

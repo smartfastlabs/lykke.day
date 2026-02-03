@@ -88,7 +88,7 @@ async def test_user_isolation(task_definition_repo, test_user, create_test_user)
 
     # Create another user
     user2 = await create_test_user()
-    task_definition_repo2 = TaskDefinitionRepository(user_id=user2.id)
+    task_definition_repo2 = TaskDefinitionRepository(user=user2)
 
     # User2 should not see user1's task definition
     with pytest.raises(NotFoundError):

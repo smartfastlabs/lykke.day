@@ -35,7 +35,7 @@ class AddRoutineDefinitionToDayHandler(
         """
         async with self.new_uow() as uow:
             # Ensure day exists for the given date
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             await uow.day_ro_repo.get(day_id)
 
             routine_definition = await uow.routine_definition_ro_repo.get(
@@ -50,7 +50,7 @@ class AddRoutineDefinitionToDayHandler(
             )
             if not existing_routines:
                 routine = RoutineEntity.from_definition(
-                    routine_definition, command.date, self.user_id
+                    routine_definition, command.date, self.user.id
                 )
                 await uow.create(routine)
 
@@ -73,7 +73,7 @@ class AddRoutineDefinitionToDayHandler(
                     or routine_definition.time_window
                 )
                 task = TaskEntity(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     scheduled_date=command.date,
                     name=(
                         routine_definition_task.name

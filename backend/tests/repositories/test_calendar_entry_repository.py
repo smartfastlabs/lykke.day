@@ -20,9 +20,9 @@ USER_TIMEZONE = "America/Chicago"
 
 @pytest_asyncio.fixture
 async def calendar_entry_repo(test_date, test_user, test_calendar):
-    repo = CalendarEntryRepository(user_id=test_user.id)
+    repo = CalendarEntryRepository(user=test_user)
 
-    calendar_repo = CalendarRepository(user_id=test_user.id)
+    calendar_repo = CalendarRepository(user=test_user)
     other_calendar = CalendarEntity(
         user_id=test_user.id,
         name="Other Calendar",
@@ -154,7 +154,7 @@ async def test_put(test_calendar_entry, test_user, clear_repos):
     test_calendar_entry.user_id = recreated_user.id
 
     # Create calendar_entry_repo after user is recreated
-    calendar_entry_repo = CalendarEntryRepository(user_id=recreated_user.id)
+    calendar_entry_repo = CalendarEntryRepository(user=recreated_user)
 
     results = await calendar_entry_repo.search(
         CalendarEntryQuery(date=test_calendar_entry.date)

@@ -3,7 +3,6 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import UTC, date as datetime_date, datetime, timedelta
-from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.queries.get_day_context import GetDayContextHandler
@@ -14,7 +13,12 @@ from lykke.application.repositories import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.domain import value_objects
-from lykke.domain.entities import FactoidEntity, MessageEntity, PushNotificationEntity
+from lykke.domain.entities import (
+    FactoidEntity,
+    MessageEntity,
+    PushNotificationEntity,
+    UserEntity,
+)
 
 _RECENT_MESSAGES_LIMIT = 20
 _RECENT_PUSH_NOTIFICATIONS_LIMIT = 20
@@ -40,17 +44,17 @@ class GetLLMPromptContextHandler(
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
-        user_id: UUID,
+        user: UserEntity,
         get_day_context_handler: GetDayContextHandler,
     ) -> None:
         """Initialize the handler.
 
         Args:
             ro_repos: Read-only repositories
-            user_id: The user ID for scoping
+            user: The user entity for scoping
             get_day_context_handler: Handler for base day context
         """
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)
         self._get_day_context_handler = get_day_context_handler
 
     async def handle(

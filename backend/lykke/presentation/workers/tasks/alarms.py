@@ -61,9 +61,10 @@ async def trigger_alarms_for_user_task(
 
         try:
             user = await user_repo.get(user_id)
-            timezone = user.settings.timezone if user.settings else None
         except Exception:
-            timezone = None
+            logger.warning(f"User not found for alarm evaluation {user_id}")
+            return
+        timezone = user.settings.timezone if user.settings else None
 
         current_date_provider = current_date_provider or get_current_date
         current_datetime_provider = current_datetime_provider or get_current_datetime
@@ -98,13 +99,13 @@ async def trigger_alarms_for_user_task(
                     value_objects.AlarmStatus.TRIGGERED,
                 )
 
-        async with uow_factory.create(user_id) as uow:
+        async with uow_factory.create(user) as uow:
             for day_date, snoozed_only in (
                 (target_date, False),
                 (previous_date, True),
             ):
                 try:
-                    day_id = DayEntity.id_from_date_and_user(day_date, user_id)
+                    day_id = DayEntity.id_from_date_and_user(day_date, user.id)
                     day = await uow.day_ro_repo.get(day_id)
                 except Exception as exc:
                     logger.debug(

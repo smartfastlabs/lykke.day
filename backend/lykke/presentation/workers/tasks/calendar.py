@@ -12,6 +12,7 @@ from lykke.application.commands.calendar import (
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
@@ -22,18 +23,33 @@ from .common import (
     get_sync_all_calendars_handler,
     get_sync_calendar_handler,
     get_unit_of_work_factory,
+    load_user,
 )
 
 
-class _CalendarHandler(Protocol):
-    async def handle(self, command: object) -> None: ...
+class _SyncAllCalendarsHandler(Protocol):
+    user: UserEntity
+
+    async def handle(self, command: SyncAllCalendarsCommand) -> object: ...
+
+
+class _SyncCalendarHandler(Protocol):
+    user: UserEntity
+
+    async def handle(self, command: SyncCalendarCommand) -> object: ...
+
+
+class _SubscribeCalendarHandler(Protocol):
+    user: UserEntity
+
+    async def handle(self, command: SubscribeCalendarCommand) -> object: ...
 
 
 @broker.task  # type: ignore[untyped-decorator]
 async def sync_calendar_task(
     user_id: UUID,
     *,
-    handler: _CalendarHandler | None = None,
+    handler: _SyncAllCalendarsHandler | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     google_gateway: GoogleCalendarGatewayProtocol | None = None,
@@ -50,14 +66,24 @@ async def sync_calendar_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        sync_handler = handler or get_sync_all_calendars_handler(
-            user_id=user_id,
-            uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-            ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-            google_gateway=google_gateway or get_google_gateway(),
-        )
+        resolved_handler: _SyncAllCalendarsHandler
+        if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(f"User not found for calendar sync task {user_id}")
+                return
 
-        await sync_handler.handle(SyncAllCalendarsCommand())
+            resolved_handler = get_sync_all_calendars_handler(
+                user=user,
+                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+                google_gateway=google_gateway or get_google_gateway(),
+            )
+        else:
+            resolved_handler = handler
+
+        await resolved_handler.handle(SyncAllCalendarsCommand())
 
         logger.info(f"Calendar sync completed for user {user_id}")
     finally:
@@ -69,7 +95,7 @@ async def sync_single_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
     *,
-    handler: _CalendarHandler | None = None,
+    handler: _SyncCalendarHandler | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     google_gateway: GoogleCalendarGatewayProtocol | None = None,
@@ -89,14 +115,26 @@ async def sync_single_calendar_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        sync_handler = handler or get_sync_calendar_handler(
-            user_id=user_id,
-            uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-            ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-            google_gateway=google_gateway or get_google_gateway(),
-        )
+        resolved_handler: _SyncCalendarHandler
+        if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(
+                    f"User not found for single calendar sync task {user_id}"
+                )
+                return
 
-        await sync_handler.handle(SyncCalendarCommand(calendar_id=calendar_id))
+            resolved_handler = get_sync_calendar_handler(
+                user=user,
+                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+                google_gateway=google_gateway or get_google_gateway(),
+            )
+        else:
+            resolved_handler = handler
+
+        await resolved_handler.handle(SyncCalendarCommand(calendar_id=calendar_id))
 
         logger.info(
             f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
@@ -110,7 +148,7 @@ async def resubscribe_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
     *,
-    handler: _CalendarHandler | None = None,
+    handler: _SubscribeCalendarHandler | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     google_gateway: GoogleCalendarGatewayProtocol | None = None,
@@ -131,18 +169,32 @@ async def resubscribe_calendar_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        subscribe_handler = handler or get_subscribe_calendar_handler(
-            user_id=user_id,
-            uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-            ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-            google_gateway=google_gateway or get_google_gateway(),
-        )
+        resolved_handler: _SubscribeCalendarHandler
+        user: UserEntity
+        if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(
+                    f"User not found for calendar resubscription task {user_id}"
+                )
+                return
+
+            resolved_handler = get_subscribe_calendar_handler(
+                user=user,
+                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+                google_gateway=google_gateway or get_google_gateway(),
+            )
+        else:
+            resolved_handler = handler
+            user = handler.user
 
         ro_factory = ro_repo_factory or get_read_only_repository_factory()
-        ro_repos = ro_factory.create(user_id)
+        ro_repos = ro_factory.create(user)
         calendar = await ro_repos.calendar_ro_repo.get(calendar_id)
 
-        await subscribe_handler.handle(SubscribeCalendarCommand(calendar=calendar))
+        await resolved_handler.handle(SubscribeCalendarCommand(calendar=calendar))
 
         logger.info(
             f"Calendar resubscription completed for user {user_id}, calendar {calendar_id}"

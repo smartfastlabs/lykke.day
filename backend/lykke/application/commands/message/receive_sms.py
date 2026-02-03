@@ -31,7 +31,7 @@ class ReceiveSmsMessageHandler(
         """Store the inbound message and emit domain events."""
         async with self.new_uow() as uow:
             message = MessageEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 role=value_objects.MessageRole.USER,
                 type=value_objects.MessageType.SMS_INBOUND,
                 content=command.body,
@@ -46,7 +46,7 @@ class ReceiveSmsMessageHandler(
             message.create()
             message.add_event(
                 MessageReceivedEvent(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     message_id=message.id,
                     role=message.role.value,
                     content_preview=message.get_content_preview(),
@@ -58,7 +58,7 @@ class ReceiveSmsMessageHandler(
             workers_to_schedule = get_current_workers_to_schedule()
             if workers_to_schedule is None:
                 logger.warning(
-                    f"No post-commit worker scheduler available for user {self.user_id} message {message.id}",
+                    f"No post-commit worker scheduler available for user {self.user.id} message {message.id}",
                 )
                 return message
 
@@ -66,7 +66,7 @@ class ReceiveSmsMessageHandler(
 
             worker = worker_tasks.get_worker(worker_tasks.process_inbound_sms_message_task)
             workers_to_schedule.schedule(
-                worker, user_id=self.user_id, message_id=message.id
+                worker, user_id=self.user.id, message_id=message.id
             )
 
             return message

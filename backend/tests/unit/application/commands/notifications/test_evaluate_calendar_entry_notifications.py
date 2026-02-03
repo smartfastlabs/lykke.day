@@ -163,12 +163,12 @@ async def test_calendar_entry_push_sends_notification() -> None:
     handler = CalendarEntryNotificationHandler(
         ro_repos,
         uow_factory,
-        user_id,
+        user,
         recorder,
         _SmsGateway(),
     )
 
-    await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
+    await handler.handle(CalendarEntryNotificationCommand(user=user))
 
     assert len(recorder.commands) == 1
     command = recorder.commands[0]
@@ -224,12 +224,12 @@ async def test_calendar_entry_push_dedupes_on_triggered_by() -> None:
     handler = CalendarEntryNotificationHandler(
         ro_repos,
         uow_factory,
-        user_id,
+        user,
         recorder,
         _SmsGateway(),
     )
 
-    await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
+    await handler.handle(CalendarEntryNotificationCommand(user=user))
 
     assert recorder.commands == []
 
@@ -269,12 +269,12 @@ async def test_calendar_entry_text_creates_message_and_sends_sms() -> None:
     handler = CalendarEntryNotificationHandler(
         ro_repos,
         uow_factory,
-        user_id,
+        user,
         _Recorder(commands=[]),
         sms_gateway,
     )
 
-    await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
+    await handler.handle(CalendarEntryNotificationCommand(user=user))
 
     assert sms_gateway.sent
     assert uow.added
@@ -320,12 +320,12 @@ async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> No
     handler = CalendarEntryNotificationHandler(
         ro_repos,
         uow_factory,
-        user_id,
+        user,
         _Recorder(commands=[]),
         _SmsGateway(),
     )
 
-    await handler.handle(CalendarEntryNotificationCommand(user_id=user_id))
+    await handler.handle(CalendarEntryNotificationCommand(user=user))
 
     assert uow.added
     updated_day = uow.added[0]

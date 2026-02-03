@@ -5,14 +5,15 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity
+from lykke.domain.entities import PushNotificationEntity, UserEntity
 from lykke.infrastructure.repositories.push_notification import (
     PushNotificationRepository,
 )
 
 
 def test_push_notification_referenced_entities_json_serializable() -> None:
-    repo = PushNotificationRepository(user_id=uuid4())
+    user = UserEntity(email="test@example.com", hashed_password="!")
+    repo = PushNotificationRepository(user=user)
     user_id = uuid4()
     referenced_entities = [
         value_objects.LLMReferencedEntitySnapshot(

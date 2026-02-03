@@ -20,7 +20,7 @@ from lykke.application.repositories import (
 from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, RoutineEntity
+from lykke.domain.entities import DayEntity, RoutineEntity, UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
@@ -41,9 +41,9 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        super().__init__(ro_repos, user_id)
-        self._preview_tasks_handler = PreviewTasksHandler(ro_repos, user_id)
+    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
+        super().__init__(ro_repos, user)
+        self._preview_tasks_handler = PreviewTasksHandler(ro_repos, user)
 
     async def handle(self, query: PreviewDayQuery) -> value_objects.DayContext:
         """Handle preview day query."""
@@ -67,7 +67,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
         # Create preview day
         day = DayEntity.create_for_date(
             target_date,
-            user_id=self.user_id,
+            user_id=self.user.id,
             template=template,
         )
 
@@ -98,7 +98,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
 
         # Try to get from existing day
         try:
-            day_id = DayEntity.id_from_date_and_user(target_date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(target_date, self.user.id)
             existing_day = await self.day_ro_repo.get(day_id)
             if existing_day.template:
                 return existing_day.template
@@ -106,8 +106,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
             pass
 
         # Fall back to user's default template
-        user = await self.user_ro_repo.get(self.user_id)
-        template_slug = user.settings.template_defaults[target_date.weekday()]
+        template_slug = self.user.settings.template_defaults[target_date.weekday()]
         return await self.day_template_ro_repo.search_one(
             value_objects.DayTemplateQuery(slug=template_slug)
         )
@@ -122,7 +121,7 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
             ):
                 routines.append(
                     RoutineEntity.from_definition(
-                        routine_definition, target_date, self.user_id
+                        routine_definition, target_date, self.user.id
                     )
                 )
         return routines

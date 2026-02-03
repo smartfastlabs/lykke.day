@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         UseCaseConfigRepositoryReadOnlyProtocol,
         UserRepositoryReadOnlyProtocol,
     )
+    from lykke.domain.entities import UserEntity
     from lykke.domain import value_objects
 
 
@@ -76,7 +77,7 @@ class LLMHandlerMixin(ABC):
 
     name: str
     template_usecase: str
-    user_id: UUID
+    user: UserEntity
     user_ro_repo: UserRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     _llm_gateway_factory: LLMGatewayFactoryProtocol
@@ -98,15 +99,11 @@ class LLMHandlerMixin(ABC):
 
     async def run_llm(self) -> LLMRunResult | None:
         """Run the LLM flow for this handler."""
-        try:
-            user = await self.user_ro_repo.get(self.user_id)
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error(f"Failed to load user {self.user_id}: {exc}")
-            return None
+        user = self.user
 
         if not user.settings or not user.settings.llm_provider:
             logger.debug(
-                f"User {self.user_id} has no LLM provider configured, skipping"
+                f"User {self.user.id} has no LLM provider configured, skipping"
             )
             return None
 
@@ -118,7 +115,7 @@ class LLMHandlerMixin(ABC):
             prompt_input = await self.build_prompt_input(current_date)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(
-                f"Failed to load LLM prompt context for user {self.user_id}: {exc}"
+                f"Failed to load LLM prompt context for user {self.user.id}: {exc}"
             )
             return None
 
@@ -167,7 +164,7 @@ class LLMHandlerMixin(ABC):
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
         metadata = {
-            "user_id": str(self.user_id),
+            "user_id": str(self.user.id),
             "handler": self.name,
             "usecase": self.template_usecase,
             "llm_provider": llm_provider.value,

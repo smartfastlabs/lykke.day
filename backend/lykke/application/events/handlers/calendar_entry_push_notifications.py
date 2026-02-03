@@ -27,7 +27,7 @@ from .base import DomainEventHandler
 
 if TYPE_CHECKING:
     from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
-    from lykke.domain.entities import CalendarEntryEntity
+    from lykke.domain.entities import CalendarEntryEntity, UserEntity
 
 
 class CalendarEntryPushNotificationHandler(DomainEventHandler):
@@ -46,12 +46,12 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
-        user_id: UUID,
+        user: UserEntity,
         *,
         uow_factory: UnitOfWorkFactory | None = None,
         web_push_gateway: WebPushGatewayProtocol,
     ) -> None:
-        super().__init__(ro_repos=ro_repos, user_id=user_id, uow_factory=uow_factory)
+        super().__init__(ro_repos=ro_repos, user=user, uow_factory=uow_factory)
         self._web_push_gateway = web_push_gateway
 
     async def handle(self, event: DomainEvent) -> None:
@@ -130,7 +130,7 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
         send_handler = SendPushNotificationHandler(
             ro_repos=self._ro_repos,
             uow_factory=self._uow_factory,
-            user_id=user_id,
+            user=self.user,
             web_push_gateway=self._web_push_gateway,
         )
 

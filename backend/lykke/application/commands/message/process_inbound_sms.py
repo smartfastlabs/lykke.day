@@ -35,7 +35,7 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity
+from lykke.domain.entities import MessageEntity, UserEntity
 from lykke.domain.events.ai_chat_events import MessageSentEvent
 
 if TYPE_CHECKING:
@@ -63,7 +63,7 @@ class ProcessInboundSmsHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
@@ -71,7 +71,7 @@ class ProcessInboundSmsHandler(
         add_alarm_to_day_handler: AddAlarmToDayHandler,
         sms_gateway: SMSProviderProtocol,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler
@@ -188,7 +188,7 @@ class ProcessInboundSmsHandler(
             # Persist the outgoing message first (auditable), then send SMS.
             async with self.new_uow() as uow:
                 outgoing = MessageEntity(
-                    user_id=self.user_id,
+                    user_id=self.user.id,
                     role=value_objects.MessageRole.ASSISTANT,
                     type=value_objects.MessageType.SMS_OUTBOUND,
                     content=body,
@@ -202,7 +202,7 @@ class ProcessInboundSmsHandler(
                 outgoing.create()
                 outgoing.add_event(
                     MessageSentEvent(
-                        user_id=self.user_id,
+                        user_id=self.user.id,
                         message_id=outgoing.id,
                         role=outgoing.role.value,
                         content_preview=outgoing.get_content_preview(),

@@ -11,7 +11,7 @@ from lykke.application.commands.task import (
     CreateAdhocTaskHandler,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity
+from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
 from tests.support.dobles import (
     create_calendar_entry_repo_double,
     create_day_repo_double,
@@ -63,7 +63,8 @@ async def test_create_adhoc_task_sets_adhoc_fields():
         calendar_entry_repo=calendar_entry_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user)
 
     time_window = value_objects.TimeWindow(
         available_time=dt_time(9, 0),
@@ -128,7 +129,8 @@ async def test_create_adhoc_task_with_reminder_type():
         calendar_entry_repo=calendar_entry_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user_id)
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user)
 
     result = await handler.handle(
         CreateAdhocTaskCommand(

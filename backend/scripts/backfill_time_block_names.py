@@ -17,6 +17,7 @@ from lykke.infrastructure.database.tables import day_templates_tbl
 from lykke.infrastructure.repositories import (
     DayTemplateRepository,
     TimeBlockDefinitionRepository,
+    UserRepository,
 )
 
 
@@ -32,11 +33,13 @@ async def backfill_time_block_names() -> None:
 
         print(f"Found {len(user_ids)} users with day templates")
 
+        user_repo = UserRepository()
         for user_id in user_ids:
             print(f"\nProcessing user {user_id}...")
+            user = await user_repo.get(user_id)
 
-            day_template_repo = DayTemplateRepository(user_id=user_id)
-            time_block_def_repo = TimeBlockDefinitionRepository(user_id=user_id)
+            day_template_repo = DayTemplateRepository(user=user)
+            time_block_def_repo = TimeBlockDefinitionRepository(user=user)
 
             # Get all day templates for this user
             templates = await day_template_repo.all()

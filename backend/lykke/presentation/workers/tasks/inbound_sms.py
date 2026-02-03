@@ -14,6 +14,7 @@ from .common import (
     get_process_inbound_sms_handler,
     get_read_only_repository_factory,
     get_unit_of_work_factory,
+    load_user,
 )
 
 
@@ -38,11 +39,17 @@ async def process_inbound_sms_message_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        handler = handler or get_process_inbound_sms_handler(
-            user_id=user_id,
-            uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-            ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-        )
+        if handler is None:
+            try:
+                user = await load_user(user_id)
+            except Exception:
+                logger.warning(f"User not found for inbound SMS task {user_id}")
+                return
+            handler = get_process_inbound_sms_handler(
+                user=user,
+                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
+                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
+            )
 
         try:
             await handler.handle(ProcessInboundSmsCommand(message_id=message_id))

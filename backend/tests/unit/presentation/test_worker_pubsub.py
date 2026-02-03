@@ -15,6 +15,7 @@ from uuid import uuid4
 
 import pytest
 
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.workers import tasks
@@ -39,7 +40,8 @@ class TestWorkerPubSubGateway:
 
         # The factory should have a RedisPubSubGateway, not StubPubSubGateway
         # We check this by creating a UoW and inspecting its gateway
-        uow = factory.create(user_id=uuid4())
+        user = UserEntity(email="test@example.com", hashed_password="!")
+        uow = factory.create(user=user)
         assert hasattr(uow, "_pubsub_gateway")
         assert isinstance(uow._pubsub_gateway, RedisPubSubGateway), (
             "Worker UnitOfWork must use RedisPubSubGateway, not StubPubSubGateway. "
@@ -51,7 +53,8 @@ class TestWorkerPubSubGateway:
         custom_gateway = RedisPubSubGateway()
         factory = get_unit_of_work_factory(pubsub_gateway=custom_gateway)
 
-        uow = factory.create(user_id=uuid4())
+        user = UserEntity(email="test@example.com", hashed_password="!")
+        uow = factory.create(user=user)
         assert uow._pubsub_gateway is custom_gateway
 
     def test_stub_pubsub_gateway_does_nothing(self):
@@ -106,7 +109,8 @@ class TestSyncTaskPubSubBroadcast:
 
         try:
             factory = get_unit_of_work_factory(pubsub_gateway=gateway)
-            uow = factory.create(user_id=uuid4())
+            user = UserEntity(email="test@example.com", hashed_password="!")
+            uow = factory.create(user=user)
 
             # Verify the gateway is properly connected
             assert uow._pubsub_gateway is gateway
@@ -121,7 +125,8 @@ class TestSyncTaskPubSubBroadcast:
         never in production workers.
         """
         factory = get_unit_of_work_factory()
-        uow = factory.create(user_id=uuid4())
+        user = UserEntity(email="test@example.com", hashed_password="!")
+        uow = factory.create(user=user)
 
         # The gateway should NOT be a StubPubSubGateway
         assert not isinstance(uow._pubsub_gateway, StubPubSubGateway), (

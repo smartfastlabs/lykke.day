@@ -39,7 +39,7 @@ class RecordRoutineDefinitionActionHandler(
         """
         async with self.new_uow() as uow:
             # Get the Day aggregate root
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             # Find all tasks for this routine definition on today's date

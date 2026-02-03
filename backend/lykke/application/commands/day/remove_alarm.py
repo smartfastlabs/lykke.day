@@ -40,7 +40,7 @@ class RemoveAlarmFromDayHandler(
         """
         async with self.new_uow() as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             # Remove the alarm (this emits a domain event)

@@ -37,7 +37,7 @@ async def test_usecase_config_can_be_created_through_uow(test_user):
 
     # Create UoW and add the entity - this should not raise ValueError
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         # This will fail if UseCaseConfigEntity is not in _ENTITY_REPO_MAP
         created_config = await uow.create(config)
         assert created_config.id is not None
@@ -45,7 +45,7 @@ async def test_usecase_config_can_be_created_through_uow(test_user):
         assert created_config.config == {"user_amendments": ["Test amendment"]}
 
     # Verify the entity was persisted by reading it back
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         retrieved = await uow.usecase_config_ro_repo.search(
             UseCaseConfigQuery(usecase="notification")
         )
@@ -73,7 +73,7 @@ async def test_usecase_config_can_be_added_through_uow(test_user):
 
     # Add through UoW - this should not raise ValueError
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         # This will fail if UseCaseConfigEntity is not in _ENTITY_REPO_MAP
         added_config = uow.add(config)
         assert added_config.id is not None
@@ -96,7 +96,7 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         created = await uow.create(config)
         config_id = created.id
 
@@ -114,12 +114,12 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
         EntityUpdatedEvent(update_object=BaseUpdateObject(), user_id=user_id)
     )
 
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         # This should work if entity is registered
         uow.add(updated_config)
 
     # Verify update
-    async with uow_factory.create(user_id) as uow:
+    async with uow_factory.create(test_user) as uow:
         retrieved = await uow.usecase_config_ro_repo.search(
             UseCaseConfigQuery(usecase="notification")
         )

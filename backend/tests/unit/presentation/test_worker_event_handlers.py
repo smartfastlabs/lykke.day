@@ -19,9 +19,10 @@ def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
         *,
         ro_repo_factory: object,
         uow_factory: object,
+        user_loader: object | None = None,
         handler_factory: object | None = None,
     ) -> None:
-        _ = handler_factory
+        _ = (handler_factory, user_loader)
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.set_register_handlers_override(register_all_handlers)

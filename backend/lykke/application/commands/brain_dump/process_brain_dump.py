@@ -27,6 +27,7 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
@@ -55,13 +56,13 @@ class ProcessBrainDumpHandler(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        user: UserEntity,
         llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
         record_task_action_handler: RecordTaskActionHandler,
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(ro_repos, uow_factory, user)
         self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler

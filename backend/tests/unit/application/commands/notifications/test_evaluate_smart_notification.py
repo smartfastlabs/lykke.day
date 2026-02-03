@@ -24,6 +24,7 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
+    UserEntity,
 )
 from tests.support.dobles import (
     create_push_subscription_repo_double,
@@ -112,6 +113,10 @@ def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
     )
 
 
+def _build_user(user_id: Any) -> UserEntity:
+    return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+
+
 @pytest.mark.asyncio
 async def test_smart_handle_skips_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
@@ -120,7 +125,7 @@ async def test_smart_handle_skips_when_disabled(
     handler = SmartNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _Recorder(commands=[]),
@@ -135,7 +140,7 @@ async def test_smart_handle_skips_when_disabled(
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", False)
 
-    await handler.handle(SmartNotificationCommand(user_id=user_id))
+    await handler.handle(SmartNotificationCommand(user=_build_user(user_id)))
 
     assert called is False
 
@@ -148,7 +153,7 @@ async def test_smart_handle_runs_llm_when_enabled(
     handler = SmartNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _Recorder(commands=[]),
@@ -164,7 +169,9 @@ async def test_smart_handle_runs_llm_when_enabled(
     monkeypatch.setattr(settings, "SMART_NOTIFICATIONS_ENABLED", True)
 
     await handler.handle(
-        SmartNotificationCommand(user_id=user_id, triggered_by="scheduled")
+        SmartNotificationCommand(
+            user=_build_user(user_id), triggered_by="scheduled"
+        )
     )
 
     assert called is True
@@ -178,7 +185,7 @@ async def test_smart_build_prompt_input() -> None:
     handler = SmartNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _Recorder(commands=[]),
@@ -197,7 +204,7 @@ async def test_smart_tool_skips_low_priority() -> None:
     handler = SmartNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
@@ -223,7 +230,7 @@ async def test_smart_tool_skips_when_llm_declines() -> None:
     handler = SmartNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
@@ -256,7 +263,7 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
             push_subscription_repo=push_subscription_repo,
         ),
         create_uow_factory_double(uow),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _Recorder(commands=[]),
@@ -313,7 +320,7 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
             push_subscription_repo=push_subscription_repo,
         ),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
@@ -370,7 +377,7 @@ async def test_smart_tool_skips_when_recent_notification_sent() -> None:
             push_subscription_repo=push_subscription_repo,
         ),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
@@ -416,7 +423,7 @@ async def test_smart_tool_handles_send_errors() -> None:
             push_subscription_repo=push_subscription_repo,
         ),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        _build_user(user_id),
         _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,

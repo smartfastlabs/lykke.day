@@ -29,15 +29,8 @@ import type { DayTemplate, Task } from "@/types/api";
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
 const KioskPage: Component = () => {
-  const {
-    day,
-    tasks,
-    events,
-    reminders,
-    routines,
-    alarms,
-    isConnected,
-  } = useStreamingData();
+  const { day, tasks, events, reminders, routines, alarms, isConnected } =
+    useStreamingData();
   const [now, setNow] = createSignal(new Date());
   const { weather, weatherError } = useWeatherSnapshot();
   const { activeAlarm, alarmVideoUrl, setFullscreenContainerRef } =

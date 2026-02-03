@@ -26,7 +26,7 @@ def query_handler_factory(
     ],
 ) -> QueryHandlerFactory:
     """Create a QueryHandlerFactory for HTTP routes."""
-    return QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    return QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
 
 
 def query_handler_factory_websocket(
@@ -36,7 +36,7 @@ def query_handler_factory_websocket(
     ],
 ) -> QueryHandlerFactory:
     """Create a QueryHandlerFactory for WebSocket routes."""
-    return QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
+    return QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
 
 
 def command_handler_factory(
@@ -48,7 +48,7 @@ def command_handler_factory(
 ) -> CommandHandlerFactory:
     """Create a CommandHandlerFactory for HTTP routes."""
     return CommandHandlerFactory(
-        user_id=user.id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -65,7 +65,7 @@ def command_handler_factory_websocket(
 ) -> CommandHandlerFactory:
     """Create a CommandHandlerFactory for WebSocket routes."""
     return CommandHandlerFactory(
-        user_id=user.id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

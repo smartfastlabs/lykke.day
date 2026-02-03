@@ -9,6 +9,7 @@ import pytest
 from lykke.application.events.handlers.user_forgot_password_logger import (
     UserForgotPasswordLoggerHandler,
 )
+from lykke.domain.entities import UserEntity
 from lykke.domain.events.user_events import UserForgotPasswordEvent
 from tests.support.dobles import create_read_only_repos_double
 
@@ -17,7 +18,8 @@ from tests.support.dobles import create_read_only_repos_double
 async def test_user_forgot_password_logger_handles_event() -> None:
     user_id = uuid4()
     handler = UserForgotPasswordLoggerHandler(
-        create_read_only_repos_double(), user_id
+        create_read_only_repos_double(),
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
     )
 
     event = UserForgotPasswordEvent(
@@ -35,7 +37,8 @@ async def test_user_forgot_password_logger_handles_event() -> None:
 async def test_user_forgot_password_logger_ignores_unrelated_event() -> None:
     user_id = uuid4()
     handler = UserForgotPasswordLoggerHandler(
-        create_read_only_repos_double(), user_id
+        create_read_only_repos_double(),
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
     )
 
     class _OtherEvent:

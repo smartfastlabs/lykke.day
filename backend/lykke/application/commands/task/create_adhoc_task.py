@@ -35,12 +35,12 @@ class CreateAdhocTaskHandler(BaseCommandHandler[CreateAdhocTaskCommand, TaskEnti
         """
         async with self.new_uow() as uow:
             day_id = DayEntity.id_from_date_and_user(
-                command.scheduled_date, self.user_id
+                command.scheduled_date, self.user.id
             )
             await uow.day_ro_repo.get(day_id)
 
             task = TaskEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 scheduled_date=command.scheduled_date,
                 name=command.name,
                 status=value_objects.TaskStatus.NOT_STARTED,

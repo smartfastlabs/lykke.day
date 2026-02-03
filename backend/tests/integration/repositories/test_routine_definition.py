@@ -124,7 +124,7 @@ async def test_user_isolation(
 
     # Create another user
     user2 = await create_test_user()
-    routine_repo2 = RoutineDefinitionRepository(user_id=user2.id)
+    routine_repo2 = RoutineDefinitionRepository(user=user2)
 
     # User2 should not see user1's routine
     with pytest.raises(NotFoundError):

@@ -36,7 +36,7 @@ class UpdateAlarmStatusHandler(BaseCommandHandler[UpdateAlarmStatusCommand, Alar
             NotFoundError: If the day doesn't exist
         """
         async with self.new_uow() as uow:
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
             day = await uow.day_ro_repo.get(day_id)
 
             updated_alarm = day.update_alarm_status(

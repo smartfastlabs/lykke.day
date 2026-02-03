@@ -8,6 +8,7 @@ from uuid import UUID
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
@@ -65,8 +66,14 @@ def get_user_repository() -> UserRepositoryReadOnlyProtocol:
     return cast("UserRepositoryReadOnlyProtocol", UserRepository())
 
 
+async def load_user(user_id: UUID) -> UserEntity:
+    """Load a user entity by ID for worker tasks."""
+    user_repo = get_user_repository()
+    return await user_repo.get(user_id)
+
+
 def get_sync_all_calendars_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
     google_gateway: GoogleCalendarGatewayProtocol,
@@ -76,7 +83,7 @@ def get_sync_all_calendars_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
         google_gateway_provider=lambda: google_gateway,
@@ -85,7 +92,7 @@ def get_sync_all_calendars_handler(
 
 
 def get_sync_calendar_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
     google_gateway: GoogleCalendarGatewayProtocol,
@@ -95,7 +102,7 @@ def get_sync_calendar_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
         google_gateway_provider=lambda: google_gateway,
@@ -104,7 +111,7 @@ def get_sync_calendar_handler(
 
 
 def get_subscribe_calendar_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
     google_gateway: GoogleCalendarGatewayProtocol,
@@ -114,7 +121,7 @@ def get_subscribe_calendar_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
         google_gateway_provider=lambda: google_gateway,
@@ -123,7 +130,7 @@ def get_subscribe_calendar_handler(
 
 
 def get_schedule_day_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ScheduleDayHandler:
@@ -132,7 +139,7 @@ def get_schedule_day_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -140,7 +147,7 @@ def get_schedule_day_handler(
 
 
 def get_smart_notification_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> SmartNotificationHandler:
@@ -149,7 +156,7 @@ def get_smart_notification_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -157,7 +164,7 @@ def get_smart_notification_handler(
 
 
 def get_morning_overview_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> MorningOverviewHandler:
@@ -166,7 +173,7 @@ def get_morning_overview_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -174,7 +181,7 @@ def get_morning_overview_handler(
 
 
 def get_calendar_entry_notification_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> CalendarEntryNotificationHandler:
@@ -183,7 +190,7 @@ def get_calendar_entry_notification_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -191,7 +198,7 @@ def get_calendar_entry_notification_handler(
 
 
 def get_process_brain_dump_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ProcessBrainDumpHandler:
@@ -200,7 +207,7 @@ def get_process_brain_dump_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
@@ -208,7 +215,7 @@ def get_process_brain_dump_handler(
 
 
 def get_process_inbound_sms_handler(
-    user_id: UUID,
+    user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ProcessInboundSmsHandler:
@@ -217,7 +224,7 @@ def get_process_inbound_sms_handler(
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
-        user_id=user_id,
+        user=user,
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

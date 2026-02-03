@@ -14,6 +14,7 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
+    UserEntity,
 )
 from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
 from tests.support.dobles import (
@@ -29,6 +30,10 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+def _make_user(user_id):
+    return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
 
 
 @pytest.mark.asyncio
@@ -108,7 +113,9 @@ async def test_schedule_day_creates_day_and_tasks():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act
     result = await handler.handle(
@@ -205,7 +212,9 @@ async def test_schedule_day_returns_existing_day_without_creating():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     result = await handler.handle(
         ScheduleDayCommand(date=task_date, template_id=template.id)
@@ -276,7 +285,9 @@ async def test_schedule_day_deletes_existing_tasks():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act
     await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
@@ -350,7 +361,9 @@ async def test_schedule_day_raises_error_if_no_template():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act & Assert
     with pytest.raises(ValueError, match="Day template is required to schedule"):
@@ -416,7 +429,9 @@ async def test_schedule_day_uses_template_id_if_provided():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act
     result = await handler.handle(
@@ -517,7 +532,9 @@ async def test_schedule_day_copies_timeblocks_from_template():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act
     result = await handler.handle(
@@ -616,7 +633,9 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     # Act
     result = await handler.handle(
@@ -706,7 +725,9 @@ async def test_schedule_day_copies_alarms_from_template():
     )
     allow(preview_handler).preview_day.and_return(day_context)
 
-    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    handler = ScheduleDayHandler(
+        ro_repos, uow_factory, _make_user(user_id), preview_handler
+    )
 
     result = await handler.handle(
         ScheduleDayCommand(date=task_date, template_id=template.id)

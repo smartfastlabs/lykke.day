@@ -15,7 +15,7 @@ from lykke.application.commands.google import (
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity, CalendarEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
 from lykke.domain.value_objects import CalendarQuery
 from lykke.domain.value_objects.sync import SyncSubscription
 from tests.support.dobles import (
@@ -145,7 +145,7 @@ async def test_handle_google_login_callback_updates_auth_token_and_calendars(
     handler = HandleGoogleLoginCallbackHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=user_id,
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         google_gateway=gateway,
     )
 

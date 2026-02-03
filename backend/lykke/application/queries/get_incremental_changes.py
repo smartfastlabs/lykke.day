@@ -8,6 +8,7 @@ from uuid import UUID
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas.mappers import (
     map_calendar_entry_to_schema,
     map_day_to_schema,
@@ -35,9 +36,9 @@ class GetIncrementalChangesHandler(
 ):
     """Gets incremental changes since a timestamp, filtered to entities for a specific date."""
 
-    def __init__(self, ro_repos: Any, user_id: UUID) -> None:
+    def __init__(self, ro_repos: Any, user: UserEntity) -> None:
         """Initialize the handler with read-only repositories."""
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)
         # Access audit_log_ro_repo from ro_repos (not exposed by BaseQueryHandler)
         self.audit_log_ro_repo = ro_repos.audit_log_ro_repo
         self.task_ro_repo = ro_repos.task_ro_repo
@@ -71,8 +72,7 @@ class GetIncrementalChangesHandler(
 
         user_timezone = None
         try:
-            user = await self.user_ro_repo.get(self.user_id)
-            user_timezone = user.settings.timezone if user.settings else None
+            user_timezone = self.user.settings.timezone if self.user.settings else None
         except Exception:
             user_timezone = None
 

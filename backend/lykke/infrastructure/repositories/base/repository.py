@@ -16,6 +16,7 @@ from sqlalchemy.sql import Select
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import get_transaction_connection
@@ -476,15 +477,17 @@ class UserScopedBaseRepository(
         QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
     """
 
-    user_id: UUID  # Override to make non-optional
+    user: UserEntity
+    user_id: UUID  # Retained for internal scoping logic
 
-    def __init__(self, user_id: UUID) -> None:
+    def __init__(self, user: UserEntity) -> None:
         """Initialize repository with required user scoping.
 
         Args:
-            user_id: Required user ID. All queries will be filtered by this user ID.
+            user: Required user entity. All queries will be filtered by this user.
         """
-        super().__init__(user_id=user_id)
+        self.user = user
+        super().__init__(user_id=user.id)
 
     @property
     def _is_user_scoped(self) -> bool:

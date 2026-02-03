@@ -12,7 +12,7 @@ from lykke.application.commands.push_subscription import (
     SendPushNotificationHandler,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import PushSubscriptionEntity
+from lykke.domain.entities import PushSubscriptionEntity, UserEntity
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
@@ -36,7 +36,7 @@ async def test_send_push_notification_skips_without_subscriptions() -> None:
     handler = SendPushNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         create_web_push_gateway_double(),
     )
 
@@ -60,7 +60,7 @@ async def test_send_push_notification_tracks_success() -> None:
     handler = SendPushNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         web_push_gateway,
     )
 
@@ -99,7 +99,7 @@ async def test_send_push_notification_tracks_partial_failures() -> None:
     handler = SendPushNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         web_push_gateway,
     )
 
@@ -131,7 +131,7 @@ async def test_send_push_notification_tracks_all_failures() -> None:
     handler = SendPushNotificationHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         web_push_gateway,
     )
 

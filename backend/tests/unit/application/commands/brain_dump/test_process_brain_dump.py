@@ -16,7 +16,12 @@ from lykke.application.commands.brain_dump import (
 )
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.domain import value_objects
-from lykke.domain.entities import BrainDumpEntity, DayEntity, DayTemplateEntity
+from lykke.domain.entities import (
+    BrainDumpEntity,
+    DayEntity,
+    DayTemplateEntity,
+    UserEntity,
+)
 from lykke.domain.events.day_events import BrainDumpTypeChangedEvent
 from tests.support.dobles import (
     create_brain_dump_repo_double,
@@ -120,7 +125,7 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
     handler = ProcessBrainDumpHandler(
         ro_repos,
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         _LLMGatewayFactory(),
         object(),
         task_recorder,
@@ -188,7 +193,7 @@ async def test_process_brain_dump_update_task_records_action() -> None:
     handler = ProcessBrainDumpHandler(
         ro_repos,
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
@@ -254,7 +259,7 @@ async def test_process_brain_dump_update_reminder_records_task_action() -> None:
     handler = ProcessBrainDumpHandler(
         ro_repos,
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
@@ -319,7 +324,7 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     handler = ProcessBrainDumpHandler(
         ro_repos,
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),

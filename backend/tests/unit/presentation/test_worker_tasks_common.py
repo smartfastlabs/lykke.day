@@ -15,9 +15,10 @@ def test_register_worker_event_handlers() -> None:
         *,
         ro_repo_factory: object,
         uow_factory: object,
+        user_loader: object | None = None,
         handler_factory: object | None = None,
     ) -> None:
-        _ = handler_factory
+        _ = (handler_factory, user_loader)
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.register_worker_event_handlers(
@@ -44,9 +45,10 @@ def test_register_worker_event_handlers_logs() -> None:
         *,
         ro_repo_factory: object,
         uow_factory: object,
+        user_loader: object | None = None,
         handler_factory: object | None = None,
     ) -> None:
-        _ = handler_factory
+        _ = (handler_factory, user_loader)
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.register_worker_event_handlers(

@@ -1,7 +1,7 @@
 """Base class for domain event handlers."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import ClassVar
 from uuid import UUID
 
@@ -15,6 +15,7 @@ from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
 )
+from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import DomainEvent
 
 
@@ -36,7 +37,7 @@ class DomainEventHandler(ABC, BaseHandler):
             preview_day_handler: PreviewDayHandler
 
             async def handle(self, event: DomainEvent) -> None:
-                # user_id is always available as self.user_id
+                # user entity is always available as self.user
                 # Access repositories and handlers directly (same pattern as BaseCommandHandler)
                 tasks = await self.task_ro_repo.search(...)
                 preview = await self.preview_day_handler.preview_day(...)
@@ -61,12 +62,15 @@ class DomainEventHandler(ABC, BaseHandler):
             [
                 type["DomainEventHandler"],
                 ReadOnlyRepositories,
-                UUID,
+                UserEntity,
                 UnitOfWorkFactory | None,
             ],
             "DomainEventHandler",
         ]
         | None
+    ] = None
+    _class_user_loader: ClassVar[
+        Callable[[UUID], Awaitable[UserEntity | None]] | None
     ] = None
 
     def __init_subclass__(cls, **kwargs: object) -> None:
@@ -79,11 +83,11 @@ class DomainEventHandler(ABC, BaseHandler):
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
-        user_id: UUID,
+        user: UserEntity,
         uow_factory: UnitOfWorkFactory | None = None,
     ) -> None:
         """Initialize the event handler with explicit dependencies."""
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)
         self._uow_factory = uow_factory
 
     @classmethod
@@ -131,6 +135,16 @@ class DomainEventHandler(ABC, BaseHandler):
         if user_id is None:
             # Skip events without user_id
             return
+        if cls._class_user_loader is None:
+            logger.warning(
+                "No user loader set; cannot instantiate handler for user events"
+            )
+            return
+
+        user = await cls._class_user_loader(user_id)
+        if user is None:
+            logger.warning(f"User not found for event; user_id={user_id}")
+            return
 
         # Create handler instances for all handlers that handle this event type
         for handler_class in cls._handler_classes:
@@ -143,18 +157,18 @@ class DomainEventHandler(ABC, BaseHandler):
                     )
                     continue  # Skip if factories not set up
 
-                ro_repos = cls._class_ro_repo_factory.create(user_id)
+                ro_repos = cls._class_ro_repo_factory.create(user)
                 if cls._class_handler_factory is not None:
                     handler_instance = cls._class_handler_factory(
                         handler_class,
                         ro_repos,
-                        user_id,
+                        user,
                         cls._class_uow_factory,
                     )
                 else:
                     handler_instance = handler_class(
                         ro_repos=ro_repos,
-                        user_id=user_id,
+                        user=user,
                         uow_factory=cls._class_uow_factory,
                     )
                 await handler_instance.handle(event_obj)
@@ -164,11 +178,12 @@ class DomainEventHandler(ABC, BaseHandler):
         cls,
         ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
         uow_factory: UnitOfWorkFactory | None = None,
+        user_loader: Callable[[UUID], Awaitable[UserEntity | None]] | None = None,
         handler_factory: Callable[
             [
                 type["DomainEventHandler"],
                 ReadOnlyRepositories,
-                UUID,
+                UserEntity,
                 UnitOfWorkFactory | None,
             ],
             "DomainEventHandler",
@@ -190,6 +205,7 @@ class DomainEventHandler(ABC, BaseHandler):
         # Store factories as class variables for use when creating handler instances
         cls._class_ro_repo_factory = ro_repo_factory
         cls._class_uow_factory = uow_factory
+        cls._class_user_loader = user_loader
         cls._class_handler_factory = handler_factory
 
         # Connect the dispatcher to all event types handled by any registered handler

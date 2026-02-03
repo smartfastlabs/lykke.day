@@ -165,7 +165,7 @@ async def test_user_isolation(
 
     # Create another user
     user2 = await create_test_user()
-    time_block_definition_repo2 = TimeBlockDefinitionRepository(user_id=user2.id)
+    time_block_definition_repo2 = TimeBlockDefinitionRepository(user=user2)
 
     # User2 should not see user1's time block definition
     with pytest.raises(NotFoundError):

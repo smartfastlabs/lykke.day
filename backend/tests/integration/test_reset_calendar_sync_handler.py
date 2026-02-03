@@ -168,19 +168,19 @@ async def test_reset_calendar_sync_unsubscribes_deletes_future_events_and_resubs
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    ro_repos = SqlAlchemyReadOnlyRepositories(user=test_user)
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     sync_calendar_handler = SyncCalendarHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
     )
 
     handler = ResetCalendarSyncHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
         sync_calendar_handler=sync_calendar_handler,
     )
@@ -322,19 +322,19 @@ async def test_reset_calendar_sync_handles_multiple_calendars(
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    ro_repos = SqlAlchemyReadOnlyRepositories(user=test_user)
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     sync_calendar_handler = SyncCalendarHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
     )
 
     handler = ResetCalendarSyncHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
         sync_calendar_handler=sync_calendar_handler,
     )
@@ -420,19 +420,19 @@ async def test_reset_calendar_sync_handles_no_subscribed_calendars(
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    ro_repos = SqlAlchemyReadOnlyRepositories(user=test_user)
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     sync_calendar_handler = SyncCalendarHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
     )
 
     handler = ResetCalendarSyncHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=test_user.id,
+        user=test_user,
         google_gateway=google_gateway,
         sync_calendar_handler=sync_calendar_handler,
     )

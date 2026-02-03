@@ -169,6 +169,7 @@ def mock_uow_factory(mock_uow):
 
 def test_sync_calendar_changes_with_new_events(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -200,7 +201,7 @@ def test_sync_calendar_changes_with_new_events(
     SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 
@@ -210,6 +211,7 @@ def test_sync_calendar_changes_with_new_events(
 
 def test_sync_calendar_changes_with_updated_events(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -254,6 +256,7 @@ def test_sync_calendar_changes_with_updated_events(
 
 def test_sync_calendar_changes_with_deleted_events(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -298,6 +301,7 @@ def test_sync_calendar_changes_with_deleted_events(
 
 def test_sync_calendar_changes_filters_far_future_events(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -327,6 +331,7 @@ def test_sync_calendar_changes_filters_far_future_events(
 
 def test_sync_calendar_changes_handles_missing_deleted_events(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -357,6 +362,7 @@ def test_sync_calendar_changes_handles_missing_deleted_events(
 
 def test_sync_calendar_changes_updates_sync_token(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -412,6 +418,7 @@ def test_google_event_conversion_includes_series(test_user_id):
 @pytest.mark.asyncio
 async def test_sync_calendar_series_updates_cascade_entries_once(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -496,7 +503,7 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
     handler = SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 
@@ -525,6 +532,7 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
 @pytest.mark.asyncio
 async def test_sync_calendar_series_deletion_cascades_entries_once(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -618,7 +626,7 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
     handler = SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 
@@ -652,6 +660,7 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
 @pytest.mark.asyncio
 async def test_sync_calendar_series_cancelled_master_ends_series(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -718,7 +727,7 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
     handler = SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 
@@ -741,6 +750,7 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
 @pytest.mark.asyncio
 async def test_sync_calendar_series_creation_emits_single_notification(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -804,7 +814,7 @@ async def test_sync_calendar_series_creation_emits_single_notification(
     handler = SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 
@@ -825,6 +835,7 @@ async def test_sync_calendar_series_creation_emits_single_notification(
 @pytest.mark.asyncio
 async def test_sync_calendar_instance_level_single_entry_emits_notification(
     test_user_id,
+    test_user,
     test_calendar,
     mock_ro_repos,
     mock_uow_factory,
@@ -876,7 +887,7 @@ async def test_sync_calendar_instance_level_single_entry_emits_notification(
     handler = SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        user=test_user,
         google_gateway=mock_google_gateway,
     )
 

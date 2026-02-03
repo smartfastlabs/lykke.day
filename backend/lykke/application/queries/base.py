@@ -6,11 +6,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
 
+from lykke.domain.entities import UserEntity
+
 from lykke.application.base_handler import BaseHandler
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from lykke.application.unit_of_work import ReadOnlyRepositories
     from lykke.domain.entities.day_template import DayTemplateEntity
 
@@ -42,7 +42,7 @@ class QueryHandler(ABC, Generic[QueryT, ResultT]):
             def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
                 self._ro_repos = ro_repos
 
-            async def run(self, user_id: UUID, template_id: UUID) -> "DayTemplateEntity":
+            async def run(self, user: UserEntity, template_id: UUID) -> "DayTemplateEntity":
                 return await self._ro_repos.day_template_ro_repo.get(template_id)
     """
 
@@ -68,6 +68,6 @@ class BaseQueryHandler(
     - Implement async def handle(self, query: QueryT) -> ResultT
     """
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
         """Initialize the query handler with its dependencies."""
-        super().__init__(ro_repos, user_id)
+        super().__init__(ro_repos, user)

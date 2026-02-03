@@ -43,7 +43,7 @@ class VerifyGoogleWebhookHandler(
             calendar = await self.calendar_ro_repo.get(query.calendar_id)
         except NotFoundError:
             logger.warning(
-                f"Calendar {query.calendar_id} not found for user {self.user_id}"
+                f"Calendar {query.calendar_id} not found for user {self.user.id}"
             )
             return VerifyGoogleWebhookResult(should_sync=False)
 

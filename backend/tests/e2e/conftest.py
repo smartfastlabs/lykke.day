@@ -52,12 +52,11 @@ def setup_test_user_day_template():
         )
         test_user = await user_repo.put(test_user)
 
-        test_user_id = test_user.id
-        day_template_repo = DayTemplateRepository(user_id=test_user_id)
+        day_template_repo = DayTemplateRepository(user=test_user)
 
         # Create default template (UUID will be auto-generated)
         default_template = DayTemplateEntity(
-            user_id=test_user_id,
+            user_id=test_user.id,
             slug="default",
         )
         await day_template_repo.put(default_template)
@@ -79,12 +78,14 @@ async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
     This is used instead of the removed HTTP endpoint to ensure days exist
     before creating tasks or testing other functionality.
     """
+    user_repo = UserRepository()
+    user = await user_repo.get(user_id)
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    ro_repos = ro_repo_factory.create(user_id)
-    preview_handler = PreviewDayHandler(ro_repos, user_id)
+    ro_repos = ro_repo_factory.create(user)
+    preview_handler = PreviewDayHandler(ro_repos, user)
     schedule_handler = ScheduleDayHandler(
-        ro_repos, uow_factory, user_id, preview_handler
+        ro_repos, uow_factory, user, preview_handler
     )
     await schedule_handler.handle(ScheduleDayCommand(date=date))
 
@@ -131,12 +132,12 @@ def create_entity_with_uow(test_client):
     2. Audit logs are broadcast to Redis for WebSocket tests
     """
 
-    async def _create_entity(entity, user_id):
+    async def _create_entity(entity, user):
         """Create an entity through the UOW.
 
         Args:
             entity: The entity to create (with create() already called)
-            user_id: The user ID for the UOW
+            user: The user entity for the UOW
         """
         # Get Redis pool from app state
         redis_pool = getattr(test_client.app.state, "redis_pool", None)
@@ -144,7 +145,7 @@ def create_entity_with_uow(test_client):
         uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
 
         # Use UOW to create entity
-        async with uow_factory.create(user_id) as uow:
+        async with uow_factory.create(user) as uow:
             # Entity should already have EntityCreatedEvent from create()
             # If not, call create() on it
             if not hasattr(entity, "_events") or not entity._events:
@@ -170,13 +171,16 @@ def create_entity_with_audit_log():
             entity: The entity to create
             user_id: The user ID
         """
+        user_repo = UserRepository()
+        user = await user_repo.get(user_id)
+
         # Get the appropriate repository for the entity
         if hasattr(entity, "scheduled_date"):
             # Task entity
-            repo = TaskRepository(user_id=user_id)
+            repo = TaskRepository(user=user)
         elif hasattr(entity, "platform"):
             # Calendar entry
-            repo = CalendarEntryRepository(user_id=user_id)
+            repo = CalendarEntryRepository(user=user)
         else:
             raise ValueError(f"Unknown entity type: {type(entity)}")
 
@@ -208,7 +212,7 @@ def create_entity_with_audit_log():
                 }
             },
         )
-        audit_log_repo = AuditLogRepository(user_id=user_id)
+        audit_log_repo = AuditLogRepository(user=user)
         await audit_log_repo.put(audit_log)
 
         return entity

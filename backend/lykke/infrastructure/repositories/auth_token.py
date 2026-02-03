@@ -5,26 +5,19 @@ from sqlalchemy.sql import Select
 from lykke.domain.entities import AuthTokenEntity
 from lykke.infrastructure.database.tables import auth_tokens_tbl
 
-from .base import AuthTokenQuery, BaseRepository
+from .base import AuthTokenQuery, UserScopedBaseRepository
 
 
-class AuthTokenRepository(BaseRepository[AuthTokenEntity, AuthTokenQuery]):
-    """AuthTokenRepository is NOT user-scoped - it can be used for any user's auth tokens."""
+class AuthTokenRepository(UserScopedBaseRepository[AuthTokenEntity, AuthTokenQuery]):
+    """AuthTokenRepository is user-scoped to the current user."""
 
     Object = AuthTokenEntity
     table = auth_tokens_tbl
     QueryClass = AuthTokenQuery
 
-    def __init__(self) -> None:
-        """Initialize AuthTokenRepository without user scoping."""
-        super().__init__()
-
     def build_query(self, query: AuthTokenQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
-
-        if query.user_id is not None:
-            stmt = stmt.where(self.table.c.user_id == query.user_id)
 
         if query.platform is not None:
             stmt = stmt.where(self.table.c.platform == query.platform)

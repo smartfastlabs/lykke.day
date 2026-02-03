@@ -10,6 +10,7 @@ from dobles import InstanceDouble, allow
 
 from lykke.application.events.handlers.base import DomainEventHandler
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import DomainEvent
 from tests.support.dobles import create_read_only_repos_double
 
@@ -69,7 +70,13 @@ async def test_dispatch_skips_event_without_uuid_user_id() -> None:
     )
     allow(ro_factory).create.and_return(ro_repos)
 
-    DomainEventHandler.register_all_handlers(ro_repo_factory=ro_factory)
+    async def user_loader(user_id: UUID) -> UserEntity:
+        return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+
+    DomainEventHandler.register_all_handlers(
+        ro_repo_factory=ro_factory,
+        user_loader=user_loader,
+    )
 
     event = _TestEvent(user_id="not-a-uuid", payload="ping")  # type: ignore[arg-type]
     await DomainEventHandler._dispatch_event(sender=None, event=event)
@@ -87,7 +94,14 @@ async def test_dispatch_warns_when_ro_repo_factory_missing() -> None:
         async def handle(self, event: DomainEvent) -> None:
             raise AssertionError("Should not be called without ro_repo_factory")
 
-    DomainEventHandler.register_all_handlers(ro_repo_factory=None, uow_factory=None)
+    async def user_loader(user_id: UUID) -> UserEntity:
+        return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+
+    DomainEventHandler.register_all_handlers(
+        ro_repo_factory=None,
+        uow_factory=None,
+        user_loader=user_loader,
+    )
     event = _TestEvent(user_id=uuid4(), payload="ping")
 
     await DomainEventHandler._dispatch_event(sender=None, event=event)
@@ -114,9 +128,13 @@ async def test_dispatch_event_creates_handler_instances() -> None:
         f"{UnitOfWorkFactory.__module__}.{UnitOfWorkFactory.__name__}"
     )
 
+    async def user_loader(user_id: UUID) -> UserEntity:
+        return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+
     DomainEventHandler.register_all_handlers(
         ro_repo_factory=ro_factory,
         uow_factory=uow_factory,
+        user_loader=user_loader,
     )
 
     event = _TestEvent(user_id=user_id, payload="ping")

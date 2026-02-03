@@ -31,6 +31,7 @@ from .dependencies.services import (
     get_read_only_repository_factory,
     get_unit_of_work_factory,
 )
+from .dependencies.user import get_system_user
 
 router = APIRouter()
 
@@ -66,14 +67,13 @@ def _get_verify_handler(
     ],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> VerifySmsLoginCodeHandler:
-    from uuid import uuid4
-
-    ro_repos = ro_repo_factory.create(uuid4())
+    system_user = get_system_user()
+    ro_repos = ro_repo_factory.create(system_user)
     sms_repo = _get_sms_login_code_repo()
     return VerifySmsLoginCodeHandler(
         ro_repos=ro_repos,
         uow_factory=uow_factory,
-        user_id=uuid4(),
+        user=system_user,
         sms_login_code_repo=cast("SmsLoginCodeRepositoryReadWriteProtocol", sms_repo),
     )
 

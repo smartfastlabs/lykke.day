@@ -64,7 +64,7 @@ async def test_user_isolation(
     await setup_day_templates
     # Create another user
     user2 = await create_test_user()
-    day_template_repo2 = DayTemplateRepository(user_id=user2.id)
+    day_template_repo2 = DayTemplateRepository(user=user2)
 
     # User2 should not see user1's templates
     with pytest.raises(NotFoundError):

@@ -153,7 +153,7 @@ async def test_schedule_day_copies_template_alarms(authenticated_client):
     target_date = get_current_date(user.settings.timezone)
     await schedule_day_for_user(user.id, target_date)
 
-    day_repo = DayRepository(user_id=user.id)
+    day_repo = DayRepository(user=user)
     day_id = DayEntity.id_from_date_and_user(target_date, user.id)
     scheduled_day = await day_repo.get(day_id)
 
@@ -249,7 +249,7 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="routine-test",
@@ -258,7 +258,7 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
     day_template = await day_template_repo.put(day_template)
 
     # Create a routine definition
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -287,7 +287,7 @@ async def test_add_duplicate_routine_definition_to_day_template(authenticated_cl
     client, user = await authenticated_client()
 
     # Create a day template with a routine definition already attached
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -299,7 +299,7 @@ async def test_add_duplicate_routine_definition_to_day_template(authenticated_cl
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
 
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="duplicate-test",
@@ -322,7 +322,7 @@ async def test_remove_routine_definition_from_day_template(authenticated_client)
     client, user = await authenticated_client()
 
     # Create a routine definition
-    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition_repo = RoutineDefinitionRepository(user=user)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -335,7 +335,7 @@ async def test_remove_routine_definition_from_day_template(authenticated_client)
     routine_definition = await routine_definition_repo.put(routine_definition)
 
     # Create a day template with the routine definition attached
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-test",
@@ -361,7 +361,7 @@ async def test_remove_nonexistent_routine_definition_from_day_template(
     client, user = await authenticated_client()
 
     # Create a day template without any routine definitions
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-nonexistent-test",
@@ -386,7 +386,7 @@ async def test_add_time_block_to_day_template_persists_to_database(
     client, user = await authenticated_client()
 
     # Create a day template
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="time-block-test",
@@ -395,7 +395,7 @@ async def test_add_time_block_to_day_template_persists_to_database(
     day_template = await day_template_repo.put(day_template)
 
     # Create a time block definition
-    time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
+    time_block_def_repo = TimeBlockDefinitionRepository(user=user)
     time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -439,7 +439,7 @@ async def test_remove_time_block_from_day_template_persists_to_database(
     client, user = await authenticated_client()
 
     # Create a time block definition
-    time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
+    time_block_def_repo = TimeBlockDefinitionRepository(user=user)
     time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
@@ -451,7 +451,7 @@ async def test_remove_time_block_from_day_template_persists_to_database(
     time_block_def = await time_block_def_repo.put(time_block_def)
 
     # Create a day template with a time block
-    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template_repo = DayTemplateRepository(user=user)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-time-block-test",

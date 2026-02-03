@@ -32,7 +32,7 @@ async def test_update_user_updates_fields_and_settings():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     uow = create_uow_double(user_repo=user_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
+    handler = UpdateUserHandler(ro_repos, uow_factory, user)
 
     update_data = UserUpdateObject(
         phone_number="(978) 844-4177",
@@ -63,7 +63,7 @@ async def test_update_user_skips_none_fields():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     uow = create_uow_double(user_repo=user_repo)
     uow_factory = create_uow_factory_double(uow)
-    handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
+    handler = UpdateUserHandler(ro_repos, uow_factory, user)
 
     update_data = UserUpdateObject(
         phone_number=None,

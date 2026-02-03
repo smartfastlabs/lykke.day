@@ -137,7 +137,7 @@ async def update_day(
 ) -> DaySchema:
     """Update a day."""
     update_day_handler = command_factory.create(UpdateDayHandler)
-    ro_repos = ro_repo_factory.create(user.id)
+    ro_repos = ro_repo_factory.create(user)
     day = await ro_repos.day_ro_repo.get(day_id)
 
     status = update_data.status
@@ -556,18 +556,18 @@ async def days_context_websocket(
     await websocket.accept()
 
     try:
-        user_id = day_context_handler.user_id
+        user_id = day_context_handler.user.id
         logger.info(f"Days context WebSocket connection established for user {user_id}")
 
         ack = WebSocketConnectionAckSchema(user_id=user_id)
         await send_ws_message(websocket, ack.model_dump(mode="json"))
 
         user_timezone = None
-        try:
-            user = await day_context_handler.user_ro_repo.get(user_id)
-            user_timezone = user.settings.timezone if user.settings else None
-        except Exception:
-            user_timezone = None
+        user_timezone = (
+            day_context_handler.user.settings.timezone
+            if day_context_handler.user.settings
+            else None
+        )
         today_date = get_current_date(user_timezone)
         date_state = {"value": today_date}
         subscription_state: dict[str, set[str]] = {"topics": set()}
@@ -716,7 +716,7 @@ async def _handle_client_messages(
                     ) = await _read_change_stream_since(
                         pubsub_gateway=pubsub_gateway,
                         get_incremental_changes_handler=get_incremental_changes_handler,
-                        user_id=get_day_context_handler.user_id,
+                        user_id=get_day_context_handler.user.id,
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
                         since_stream_id=since_stream_id or "0-0",
@@ -755,7 +755,7 @@ async def _handle_client_messages(
                         part_handlers=day_context_part_handlers,
                         schedule_day_handler=schedule_day_handler,
                         pubsub_gateway=pubsub_gateway,
-                        user_id=get_day_context_handler.user_id,
+                        user_id=get_day_context_handler.user.id,
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
                         parts=parts,
@@ -823,7 +823,7 @@ async def _handle_realtime_domain_events(
                         part_handlers=day_context_part_handlers,
                         schedule_day_handler=schedule_day_handler,
                         pubsub_gateway=pubsub_gateway,
-                        user_id=day_context_handler.user_id,
+                        user_id=day_context_handler.user.id,
                         date_value=next_date,
                         user_timezone=user_timezone,
                         parts=list(DAY_CONTEXT_PART_ORDER),
@@ -955,7 +955,7 @@ async def _handle_change_stream_events(
     stream_state: dict[str, str],
 ) -> None:
     """Handle real-time entity change stream events."""
-    user_id = get_incremental_changes_handler.user_id
+    user_id = get_incremental_changes_handler.user.id
     while True:
         try:
             entries = await pubsub_gateway.read_user_stream(

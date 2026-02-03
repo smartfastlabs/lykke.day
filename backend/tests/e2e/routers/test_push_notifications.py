@@ -13,7 +13,7 @@ async def test_search_push_notifications_filters_by_sent_at(
     authenticated_client,
 ):
     client, user = await authenticated_client()
-    repo = PushNotificationRepository(user_id=user.id)
+    repo = PushNotificationRepository(user=user)
 
     now = datetime.now(UTC)
     in_range = PushNotificationEntity(

@@ -24,14 +24,14 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
   });
 
   const weekday = createMemo(() =>
-    new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date())
+    new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date()),
   );
 
   const monthDay = createMemo(() =>
     new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
-    }).format(date())
+    }).format(date()),
   );
 
   const planTitle = createMemo(() => {
@@ -98,7 +98,10 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                     title="Edit day"
                     class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
                   >
-                    <Icon icon={faPenToSquare} class="w-4 h-4 fill-amber-600/70" />
+                    <Icon
+                      icon={faPenToSquare}
+                      class="w-4 h-4 fill-amber-600/70"
+                    />
                   </a>
                   <button
                     type="button"
@@ -116,7 +119,10 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                   </Show>
                 </div>
               </div>
-              <TimeBlocksSummary timeBlocks={timeBlocks()} dayDate={dayDate()} />
+              <TimeBlocksSummary
+                timeBlocks={timeBlocks()}
+                dayDate={dayDate()}
+              />
             </div>
             {props.children}
           </div>

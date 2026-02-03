@@ -21,7 +21,8 @@ async def test_get_user_by_phone_returns_user_when_found():
     allow(user_repo).search_one_or_none.and_return(user)
 
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
-    handler = GetUserByPhoneHandler(ro_repos=ro_repos, user_id=uuid4())
+    system_user = UserEntity(email="system@example.com", hashed_password="!")
+    handler = GetUserByPhoneHandler(ro_repos=ro_repos, user=system_user)
 
     result = await handler.handle(GetUserByPhoneQuery(phone_number="+15551234567"))
 
@@ -34,7 +35,8 @@ async def test_get_user_by_phone_returns_none_when_missing():
     allow(user_repo).search_one_or_none.and_return(None)
 
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
-    handler = GetUserByPhoneHandler(ro_repos=ro_repos, user_id=uuid4())
+    system_user = UserEntity(email="system@example.com", hashed_password="!")
+    handler = GetUserByPhoneHandler(ro_repos=ro_repos, user=system_user)
 
     result = await handler.handle(GetUserByPhoneQuery(phone_number="+15550000000"))
 

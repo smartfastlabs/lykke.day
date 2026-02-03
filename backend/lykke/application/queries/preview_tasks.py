@@ -68,7 +68,7 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
                         or routine_definition.time_window
                     )
                     task = TaskEntity(
-                        user_id=self.user_id,
+                        user_id=self.user.id,
                         name=(
                             routine_definition_task.name
                             or f"ROUTINE DEFINITION: {routine_definition.name}"

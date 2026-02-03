@@ -18,6 +18,7 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
+    UserEntity,
 )
 from lykke.domain.value_objects.sync import SyncSubscription
 from tests.support.dobles import (
@@ -84,7 +85,7 @@ async def test_reset_calendar_data_skips_unsubscribed_calendars() -> None:
     handler = ResetCalendarDataHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         google_gateway,
     )
 
@@ -160,7 +161,7 @@ async def test_reset_calendar_data_refreshes_subscriptions() -> None:
     handler = ResetCalendarDataHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         google_gateway,
     )
 
@@ -193,7 +194,7 @@ async def test_reset_calendar_data_rejects_unknown_platform() -> None:
     handler = ResetCalendarDataHandler(
         create_read_only_repos_double(),
         create_uow_factory_double(uow),
-        user_id,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
         create_google_gateway_double(),
     )
 

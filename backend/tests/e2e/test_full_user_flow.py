@@ -78,7 +78,8 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # Note: In production, this would be created by SheppardManager, but for e2e test
     # we create it directly since there's no API endpoint for template creation
     user_id = UUID(user_id_str)
-    day_template_repo = DayTemplateRepository(user_id=user_id)
+    user = await user_repo.get(user_id)
+    day_template_repo = DayTemplateRepository(user=user)
     default_template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
@@ -99,7 +100,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert user_from_db_after.id == user_id
 
     # Verify day was created in database
-    day_repo = DayRepository(user_id=user_id)
+    day_repo = DayRepository(user=user)
     days = await day_repo.all()
     assert len(days) > 0, "At least one day should exist after scheduling"
 
@@ -121,7 +122,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     )
 
     # Verify day template exists in database
-    day_template_repo = DayTemplateRepository(user_id=user_id)
+    day_template_repo = DayTemplateRepository(user=user)
     templates = await day_template_repo.all()
     assert len(templates) > 0, "At least one day template should exist"
 

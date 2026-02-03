@@ -19,6 +19,7 @@ from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
+from lykke.infrastructure.repositories import UserRepository
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
@@ -175,9 +176,14 @@ async def google_webhook(
         f"state={x_goog_resource_state}"
     )
 
-    query_factory = QueryHandlerFactory(
-        user_id=user_id, ro_repo_factory=ro_repo_factory
-    )
+    user_repo = UserRepository()
+    try:
+        user = await user_repo.get(user_id)
+    except Exception:
+        logger.warning(f"Received Google webhook for unknown user {user_id}")
+        return Response(status_code=200)
+
+    query_factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
     handler = query_factory.create(VerifyGoogleWebhookHandler)
     result = await handler.handle(
         VerifyGoogleWebhookQuery(

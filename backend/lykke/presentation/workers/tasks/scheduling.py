@@ -20,6 +20,7 @@ from .common import (
     get_schedule_day_handler,
     get_unit_of_work_factory,
     get_user_repository,
+    load_user,
 )
 
 
@@ -67,17 +68,19 @@ async def schedule_user_day_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
+        try:
+            user = await load_user(user_id)
+        except Exception:
+            logger.warning(f"User not found for scheduling task {user_id}")
+            return
+
         schedule_handler = handler or get_schedule_day_handler(
-            user_id=user_id,
+            user=user,
             uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
             ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
         )
 
-        try:
-            user = await user_repo.get(user_id)
-            timezone = user.settings.timezone if user.settings else None
-        except Exception:
-            timezone = None
+        timezone = user.settings.timezone if user.settings else None
 
         # Use user's timezone for "today"
         current_date_provider = current_date_provider or get_current_date

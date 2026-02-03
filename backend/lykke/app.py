@@ -1,5 +1,6 @@
 import os
 import sys
+from uuid import UUID
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
@@ -15,8 +16,10 @@ from lykke.core.config import settings
 from lykke.core.exceptions import BaseError
 from lykke.core.observability import init_sentry_fastapi
 from lykke.core.utils import youtube
+from lykke.domain.entities import UserEntity
 from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
 from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -68,9 +71,17 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
         pubsub_gateway=pubsub_gateway,
         workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
     )
+    async def _load_user(user_id: UUID) -> UserEntity | None:
+        user_repo = UserRepository()
+        try:
+            return await user_repo.get(user_id)
+        except Exception:
+            return None
+
     register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
+        user_loader=_load_user,
         handler_factory=build_domain_event_handler,
     )
     from lykke.application.events.handlers.base import DomainEventHandler

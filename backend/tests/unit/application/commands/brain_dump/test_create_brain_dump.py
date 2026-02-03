@@ -80,7 +80,7 @@ async def test_create_brain_dump_creates_item():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user_id)
+    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user)
 
     workers_to_schedule = _WorkersToSchedule()
     token = set_current_workers_to_schedule(workers_to_schedule)
@@ -142,7 +142,7 @@ async def test_create_brain_dump_day_not_found():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user_id)
+    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user)
 
     with pytest.raises(NotFoundError, match="Day"):
         await handler.handle(

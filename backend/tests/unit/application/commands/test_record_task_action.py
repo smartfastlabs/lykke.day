@@ -94,7 +94,11 @@ async def test_record_task_action_adds_task_and_day_to_uow():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
+    handler = RecordTaskActionHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     # Create action
     action = value_objects.Action(
@@ -181,7 +185,11 @@ async def test_record_task_action_raises_domain_events():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
+    handler = RecordTaskActionHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     action = value_objects.Action(
         type=value_objects.ActionType.COMPLETE,
@@ -263,7 +271,11 @@ async def test_record_task_action_raises_if_day_missing():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
+    handler = RecordTaskActionHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     action = value_objects.Action(
         type=value_objects.ActionType.COMPLETE,
@@ -333,7 +345,11 @@ async def test_record_task_action_punt_updates_status():
         user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
-    handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
+    handler = RecordTaskActionHandler(
+        ro_repos,
+        uow_factory,
+        UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+    )
 
     action = value_objects.Action(
         type=value_objects.ActionType.PUNT,
