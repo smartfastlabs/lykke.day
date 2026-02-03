@@ -164,5 +164,3 @@ async def test_record_routine_action_only_updates_tasks_not_punted_or_completed(
     assert len(uow.added) == 2
     assert any(isinstance(e, DayEntity) for e in uow.added)
     assert any(isinstance(e, TaskEntity) and e.id == ready_task.id for e in uow.added)
-
-

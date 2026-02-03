@@ -16,7 +16,7 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
-from lykke.application.commands.day import AddAlarmToDayHandler
+from lykke.application.commands.day import AddAlarmToDayHandler, UpdateDayHandler
 from lykke.application.commands.day.reschedule_day import RescheduleDayHandler
 from lykke.application.commands.day.schedule_day import ScheduleDayHandler
 from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
@@ -197,6 +197,18 @@ def _build_reschedule_day_handler(
     )
 
 
+def _build_update_day_handler(
+    factory: CommandHandlerFactory,
+) -> UpdateDayHandler:
+    return UpdateDayHandler(
+        user=factory.user,
+        command_factory=factory,
+        uow_factory=factory.uow_factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
+    )
+
+
 def _build_sync_calendar_handler(
     factory: CommandHandlerFactory,
 ) -> SyncCalendarHandler:
@@ -372,6 +384,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
 ] = {
     ScheduleDayHandler: _build_schedule_day_handler,
     RescheduleDayHandler: _build_reschedule_day_handler,
+    UpdateDayHandler: _build_update_day_handler,
     SyncCalendarHandler: _build_sync_calendar_handler,
     SyncAllCalendarsHandler: _build_sync_all_calendars_handler,
     SubscribeCalendarHandler: _build_subscribe_calendar_handler,
@@ -409,6 +422,7 @@ class CommandHandlerFactory:
         registry: dict[type[BaseCommandHandler], CommandHandlerProvider] | None = None,
     ) -> None:
         self.user = user
+        self._ro_repo_factory = ro_repo_factory
         self.uow_factory = uow_factory
         self._ro_repos = ro_repos or ro_repo_factory.create(user)
         self.query_factory = query_factory or QueryHandlerFactory(
@@ -435,6 +449,10 @@ class CommandHandlerFactory:
     @property
     def ro_repos(self) -> ReadOnlyRepositories:
         return self._ro_repos
+
+    @property
+    def ro_repo_factory(self) -> ReadOnlyRepositoryFactory:
+        return self._ro_repo_factory
 
     @property
     def google_gateway(self) -> GoogleCalendarGatewayProtocol:

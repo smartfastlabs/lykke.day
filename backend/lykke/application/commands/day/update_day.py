@@ -4,8 +4,17 @@ from dataclasses import dataclass
 from datetime import date
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.handler_factory_protocols import (
+    CommandHandlerFactoryProtocol,
+    GatewayFactoryProtocol,
+)
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+)
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity
+from lykke.domain.entities import DayEntity, UserEntity
 from lykke.domain.events.day_events import DayUpdatedEvent
 from lykke.domain.value_objects import DayUpdateObject
 
@@ -20,6 +29,27 @@ class UpdateDayCommand(Command):
 
 class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
     """Updates a day's status or template."""
+
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+
+    def __init__(
+        self,
+        *,
+        user: UserEntity,
+        command_factory: CommandHandlerFactoryProtocol | None,
+        uow_factory: UnitOfWorkFactory,
+        gateway_factory: GatewayFactoryProtocol | None,
+        repository_factory: ReadOnlyRepositoryFactory,
+    ) -> None:
+        super().__init__(
+            ro_repos=None,
+            uow_factory=uow_factory,
+            user=user,
+            command_factory=command_factory,
+            gateway_factory=gateway_factory,
+            repository_factory=repository_factory,
+        )
 
     async def handle(self, command: UpdateDayCommand) -> DayEntity:
         """Update a day's status and/or template.
@@ -36,7 +66,7 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
         async with self.new_uow() as uow:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await uow.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(day_id)
 
             update_data = command.update_data
             # Apply status transition if requested
@@ -45,7 +75,7 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
 
             # Update template if requested
             if update_data.template_id is not None:
-                template = await uow.day_template_ro_repo.get(update_data.template_id)
+                template = await self.day_template_ro_repo.get(update_data.template_id)
                 day.update_template(template)
 
             # Update other fields if provided

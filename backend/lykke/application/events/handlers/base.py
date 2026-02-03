@@ -87,7 +87,7 @@ class DomainEventHandler(ABC, BaseHandler):
         uow_factory: UnitOfWorkFactory | None = None,
     ) -> None:
         """Initialize the event handler with explicit dependencies."""
-        super().__init__(ro_repos, user)
+        super().__init__(ro_repos, user, uow_factory=uow_factory)
         self._uow_factory = uow_factory
 
     @classmethod

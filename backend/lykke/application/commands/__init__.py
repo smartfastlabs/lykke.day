@@ -61,6 +61,8 @@ from .task import (
 from .timing_status import EvaluateTimingStatusCommand, EvaluateTimingStatusHandler
 
 __all__ = [
+    "CalendarEntryNotificationCommand",
+    "CalendarEntryNotificationHandler",
     "CreateAdhocTaskCommand",
     "CreateAdhocTaskHandler",
     "CreateBrainDumpCommand",
@@ -84,16 +86,14 @@ __all__ = [
     "RecordRoutineActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
-    "RescheduleTaskCommand",
-    "RescheduleTaskHandler",
     "RescheduleDayCommand",
     "RescheduleDayHandler",
+    "RescheduleTaskCommand",
+    "RescheduleTaskHandler",
     "ScheduleDayCommand",
     "ScheduleDayHandler",
     "SmartNotificationCommand",
     "SmartNotificationHandler",
-    "CalendarEntryNotificationCommand",
-    "CalendarEntryNotificationHandler",
     "SyncAllCalendarsCommand",
     "SyncAllCalendarsHandler",
     "SyncCalendarCommand",

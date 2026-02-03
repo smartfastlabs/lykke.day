@@ -2,7 +2,15 @@
 
 from typing import TYPE_CHECKING, Any
 
-from lykke.application.unit_of_work import ReadOnlyRepositories
+from lykke.application.handler_factory_protocols import (
+    CommandHandlerFactoryProtocol,
+    GatewayFactoryProtocol,
+)
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositories,
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
 from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
@@ -76,7 +84,21 @@ class BaseHandler:
     user_ro_repo: "UserRepositoryReadOnlyProtocol"
     sms_login_code_ro_repo: "SmsLoginCodeRepositoryReadOnlyProtocol"
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user: UserEntity) -> None:
+    command_factory: CommandHandlerFactoryProtocol | None
+    gateway_factory: GatewayFactoryProtocol | None
+    _uow_factory: UnitOfWorkFactory | None
+    _repository_factory: ReadOnlyRepositoryFactory | None
+
+    def __init__(
+        self,
+        ro_repos: ReadOnlyRepositories | None,
+        user: UserEntity,
+        *,
+        command_factory: CommandHandlerFactoryProtocol | None = None,
+        uow_factory: UnitOfWorkFactory | None = None,
+        gateway_factory: GatewayFactoryProtocol | None = None,
+        repository_factory: ReadOnlyRepositoryFactory | None = None,
+    ) -> None:
         """Initialize the handler with its dependencies.
 
         Args:
@@ -84,6 +106,18 @@ class BaseHandler:
             user: The user entity for this handler instance
         """
         self.user = user
+        self.command_factory = command_factory
+        self.gateway_factory = gateway_factory
+        self._uow_factory = uow_factory
+        self._repository_factory = repository_factory
+
+        if ro_repos is None:
+            if repository_factory is None:
+                raise ValueError(
+                    "BaseHandler requires ro_repos or repository_factory."
+                )
+            ro_repos = repository_factory.create(user)
+
         self._ro_repos = ro_repos
 
     def __getattr__(self, name: str) -> Any:

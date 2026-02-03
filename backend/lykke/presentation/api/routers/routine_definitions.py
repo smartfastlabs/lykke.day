@@ -61,9 +61,7 @@ async def get_routine_definition(
     query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> RoutineDefinitionSchema:
     """Get a single routine definition by ID."""
-    get_routine_definition_handler = query_factory.create(
-        GetRoutineDefinitionHandler
-    )
+    get_routine_definition_handler = query_factory.create(GetRoutineDefinitionHandler)
     routine_definition = await get_routine_definition_handler.handle(
         GetRoutineDefinitionQuery(routine_definition_id=uuid)
     )
@@ -100,9 +98,7 @@ async def create_routine_definition(
     create_routine_definition_handler = command_factory.create(
         CreateRoutineDefinitionHandler
     )
-    routine_definition = create_schema_to_entity(
-        routine_definition_data, user.id
-    )
+    routine_definition = create_schema_to_entity(routine_definition_data, user.id)
     created = await create_routine_definition_handler.handle(
         CreateRoutineDefinitionCommand(routine_definition=routine_definition)
     )
@@ -212,5 +208,3 @@ async def remove_routine_definition_task(
         )
     )
     return map_routine_definition_to_schema(updated)
-
-

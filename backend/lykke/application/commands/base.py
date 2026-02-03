@@ -5,8 +5,13 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 from lykke.application.base_handler import BaseHandler
+from lykke.application.handler_factory_protocols import (
+    CommandHandlerFactoryProtocol,
+    GatewayFactoryProtocol,
+)
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
+    ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
     UnitOfWorkProtocol,
 )
@@ -69,14 +74,27 @@ class BaseCommandHandler(
     - Implement async def handle(self, command: CommandT) -> ResultT
     """
 
+    _uow_factory: UnitOfWorkFactory
+
     def __init__(
         self,
-        ro_repos: ReadOnlyRepositories,
+        ro_repos: ReadOnlyRepositories | None,
         uow_factory: UnitOfWorkFactory,
         user: UserEntity,
+        *,
+        command_factory: CommandHandlerFactoryProtocol | None = None,
+        gateway_factory: GatewayFactoryProtocol | None = None,
+        repository_factory: ReadOnlyRepositoryFactory | None = None,
     ) -> None:
         """Initialize the command handler with its dependencies."""
-        super().__init__(ro_repos, user)
+        super().__init__(
+            ro_repos,
+            user,
+            command_factory=command_factory,
+            uow_factory=uow_factory,
+            gateway_factory=gateway_factory,
+            repository_factory=repository_factory,
+        )
         self._uow_factory = uow_factory
 
     def new_uow(self, user: UserEntity | None = None) -> UnitOfWorkProtocol:
