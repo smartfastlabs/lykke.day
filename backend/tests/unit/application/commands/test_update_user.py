@@ -1,7 +1,6 @@
 """Unit tests for UpdateUserHandler."""
 
 import pytest
-from dobles import allow
 
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.domain.entities import UserEntity
@@ -15,7 +14,6 @@ from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
 )
 
 
@@ -28,6 +26,14 @@ class _RepositoryFactory:
         return self._ro_repos
 
 
+class _FakeCurrentUserAccess:
+    last_updated: UserEntity | None = None
+
+    async def update_user(self, updated: UserEntity) -> UserEntity:
+        self.last_updated = updated
+        return updated
+
+
 @pytest.mark.asyncio
 async def test_update_user_updates_fields_and_settings():
     user = UserEntity(
@@ -35,17 +41,16 @@ async def test_update_user_updates_fields_and_settings():
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user.id).and_return(user)
-
-    ro_repos = create_read_only_repos_double(user_repo=user_repo)
-    uow = create_uow_double(user_repo=user_repo)
+    ro_repos = create_read_only_repos_double()
+    uow = create_uow_double()
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateUserHandler(
         user=user,
         uow_factory=uow_factory,
         repository_factory=_RepositoryFactory(ro_repos),
     )
+    fake_access = _FakeCurrentUserAccess()
+    handler.current_user_access = fake_access  # type: ignore[assignment]
 
     update_data = UserUpdateObject(
         phone_number="(978) 844-4177",
@@ -60,7 +65,7 @@ async def test_update_user_updates_fields_and_settings():
     assert updated.phone_number == "+19788444177"
     assert updated.status == UserStatus.NEW_LEAD
     assert updated.settings.template_defaults == ["a", "b", "c", "d", "e", "f", "g"]
-    assert uow.added == [updated]
+    assert fake_access.last_updated == updated
 
 
 @pytest.mark.asyncio
@@ -70,17 +75,16 @@ async def test_update_user_skips_none_fields():
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user.id).and_return(user)
-
-    ro_repos = create_read_only_repos_double(user_repo=user_repo)
-    uow = create_uow_double(user_repo=user_repo)
+    ro_repos = create_read_only_repos_double()
+    uow = create_uow_double()
     uow_factory = create_uow_factory_double(uow)
     handler = UpdateUserHandler(
         user=user,
         uow_factory=uow_factory,
         repository_factory=_RepositoryFactory(ro_repos),
     )
+    fake_access = _FakeCurrentUserAccess()
+    handler.current_user_access = fake_access  # type: ignore[assignment]
 
     update_data = UserUpdateObject(
         phone_number=None,
@@ -93,4 +97,4 @@ async def test_update_user_skips_none_fields():
     assert updated.phone_number == user.phone_number
     assert updated.status == user.status
     assert updated.settings.template_defaults == user.settings.template_defaults
-    assert uow.added == [updated]
+    assert fake_access.last_updated == updated

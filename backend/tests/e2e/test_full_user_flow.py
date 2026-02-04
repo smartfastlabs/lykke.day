@@ -20,8 +20,8 @@ from lykke.infrastructure.database.utils import reset_engine
 from lykke.infrastructure.repositories import (
     DayRepository,
     DayTemplateRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from tests.e2e.conftest import schedule_day_for_user
 
 
@@ -55,8 +55,8 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert user_id_str is not None
 
     # Verify user exists in database after registration
-    user_repo = UserRepository()
-    user_from_db = await user_repo.search_one(value_objects.UserQuery(email=email))
+    identity_access = UnauthenticatedIdentityAccess()
+    user_from_db = await identity_access.get_user_by_email(email)
     assert user_from_db is not None, "User should exist in database after registration"
     assert user_from_db.email == email
     assert user_from_db.hashed_password is not None, "Password hash should be set"
@@ -78,7 +78,8 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # Note: In production, this would be created by SheppardManager, but for e2e test
     # we create it directly since there's no API endpoint for template creation
     user_id = UUID(user_id_str)
-    user = await user_repo.get(user_id)
+    user = await identity_access.get_user_by_id(user_id)
+    assert user is not None
     day_template_repo = DayTemplateRepository(user=user)
     default_template = DayTemplateEntity(
         user_id=user_id,
@@ -93,9 +94,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # Step 4: Verify database state directly
 
     # Verify user in database
-    user_from_db_after = await user_repo.search_one(
-        value_objects.UserQuery(email=email)
-    )
+    user_from_db_after = await identity_access.get_user_by_email(email)
     assert user_from_db_after is not None
     assert user_from_db_after.id == user_id
 

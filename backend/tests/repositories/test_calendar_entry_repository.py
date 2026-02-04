@@ -12,8 +12,8 @@ from lykke.domain.value_objects.task import TaskFrequency
 from lykke.infrastructure.repositories import (
     CalendarEntryRepository,
     CalendarRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 USER_TIMEZONE = "America/Chicago"
 
@@ -146,9 +146,7 @@ async def test_bulk_delete_by_platform_ids(test_date, calendar_entry_repo):
 @pytest.mark.asyncio
 async def test_put(test_calendar_entry, test_user, clear_repos):
     # clear_repos clears everything, so we need to ensure the user exists again
-    user_repo = UserRepository()
-    # Re-create user after clear_repos (test_user fixture will be recreated, but we need to persist it)
-    recreated_user = await user_repo.put(test_user)
+    recreated_user = test_user
 
     # Update test_calendar_entry to use the recreated user's UUID
     test_calendar_entry.user_id = recreated_user.id

@@ -19,9 +19,9 @@ from tests.support.dobles import (
 )
 from tests.unit.presentation.worker_task_helpers import (
     build_user,
+    create_identity_access,
     create_gateway_recorder,
     create_task_recorder,
-    create_user_repo,
 )
 
 
@@ -29,10 +29,10 @@ from tests.unit.presentation.worker_task_helpers import (
 async def test_trigger_alarms_for_all_users_task_enqueues() -> None:
     users = [build_user(uuid4()), build_user(uuid4())]
     task, calls = create_task_recorder()
-    user_repo = create_user_repo(users)
+    identity_access = create_identity_access(users)
 
     await alarm_tasks.trigger_alarms_for_all_users_task(
-        user_repo=user_repo,
+        identity_access=identity_access,
         enqueue_task=task,
     )
 
@@ -68,7 +68,7 @@ async def test_trigger_alarms_for_user_task_triggers_alarm() -> None:
 
     await alarm_tasks.trigger_alarms_for_user_task(
         user_id=user_id,
-        user_repo=create_user_repo([build_user(user_id)]),
+        identity_access=create_identity_access([build_user(user_id)]),
         uow_factory=uow_factory,
         ro_repo_factory=ro_factory,
         pubsub_gateway=gateway,

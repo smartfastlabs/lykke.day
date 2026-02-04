@@ -6,14 +6,13 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.repositories import (
-    DayRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
-)
+from lykke.application.repositories import DayRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
-from lykke.infrastructure.repositories import DayRepository, UserRepository
+from lykke.infrastructure.repositories import DayRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
 from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
@@ -65,9 +64,9 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     return SqlAlchemyReadOnlyRepositoryFactory()
 
 
-def get_user_repository() -> UserRepositoryReadOnlyProtocol:
-    """Get a UserRepository instance (not user-scoped)."""
-    return cast("UserRepositoryReadOnlyProtocol", UserRepository())
+def get_identity_access() -> UnauthenticatedIdentityAccess:
+    """Get identity access for workers (cross-user lookups allowed)."""
+    return UnauthenticatedIdentityAccess()
 
 
 def get_day_repository(user_id: UUID) -> DayRepositoryReadOnlyProtocol:
@@ -80,8 +79,11 @@ def get_day_repository(user_id: UUID) -> DayRepositoryReadOnlyProtocol:
 
 async def load_user(user_id: UUID) -> UserEntity:
     """Load a user entity by ID for worker tasks."""
-    user_repo = get_user_repository()
-    return await user_repo.get(user_id)
+    identity_access = get_identity_access()
+    user = await identity_access.get_user_by_id(user_id)
+    if user is None:
+        raise NotFoundError(f"User with id {user_id} not found")
+    return user
 
 
 def get_sync_all_calendars_handler(

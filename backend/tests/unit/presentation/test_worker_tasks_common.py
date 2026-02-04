@@ -1,7 +1,7 @@
 """Unit tests for worker task helpers."""
 
 from lykke.infrastructure.gateways import GoogleCalendarGateway
-from lykke.infrastructure.repositories import UserRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.workers.tasks import (
     common as worker_common,
     registration as worker_registration,
@@ -34,8 +34,8 @@ def test_get_google_gateway_returns_concrete_gateway() -> None:
     assert isinstance(worker_common.get_google_gateway(), GoogleCalendarGateway)
 
 
-def test_get_user_repository_returns_repository() -> None:
-    assert isinstance(worker_common.get_user_repository(), UserRepository)
+def test_get_identity_access_returns_concrete_access() -> None:
+    assert isinstance(worker_common.get_identity_access(), UnauthenticatedIdentityAccess)
 
 
 def test_register_worker_event_handlers_logs() -> None:

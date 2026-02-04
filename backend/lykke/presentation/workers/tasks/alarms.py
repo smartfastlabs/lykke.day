@@ -10,7 +10,7 @@ from lykke.application.commands.day import (
     TriggerAlarmsForUserCommand,
     TriggerAlarmsForUserHandler,
 )
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
@@ -19,7 +19,7 @@ from .common import (
     get_read_only_repository_factory,
     get_trigger_alarms_for_user_handler,
     get_unit_of_work_factory,
-    get_user_repository,
+    get_identity_access,
 )
 
 
@@ -29,14 +29,16 @@ class _EnqueueTask(Protocol):
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
 async def trigger_alarms_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     enqueue_task: _EnqueueTask | None = None,
 ) -> None:
     """Trigger alarms for all users every minute."""
     logger.info("Starting alarm trigger evaluation for all users")
 
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     logger.info(f"Found {len(users)} users to evaluate alarms")
 
     task = enqueue_task or trigger_alarms_for_user_task
@@ -49,7 +51,9 @@ async def trigger_alarms_for_all_users_task(
 @broker.task  # type: ignore[untyped-decorator]
 async def trigger_alarms_for_user_task(
     user_id: UUID,
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     uow_factory: UnitOfWorkFactory | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
@@ -64,9 +68,8 @@ async def trigger_alarms_for_user_task(
         uow_factory = uow_factory or get_unit_of_work_factory(gateway)
         ro_repo_factory = ro_repo_factory or get_read_only_repository_factory()
 
-        try:
-            user = await user_repo.get(user_id)
-        except Exception:
+        user = await identity_access.get_user_by_id(user_id)
+        if user is None:
             logger.warning(f"User not found for alarm evaluation {user_id}")
             return
 

@@ -28,16 +28,8 @@ from tests.support.dobles import (
     create_trigger_repo_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
     create_web_push_gateway_double,
 )
-
-
-# Mocked repository fixtures
-@pytest.fixture
-def mock_user_repo():
-    """Mocked UserRepositoryReadOnlyProtocol for unit tests."""
-    return create_user_repo_double()
 
 
 @pytest.fixture
@@ -189,7 +181,6 @@ def mock_uow(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    mock_user_repo,
     mock_brain_dump_repo,
     mock_time_block_definition_repo,
     mock_tactic_repo,
@@ -210,7 +201,6 @@ def mock_uow(
         tactic_repo=mock_tactic_repo,
         task_definition_repo=mock_task_definition_repo,
         task_repo=mock_task_repo,
-        user_repo=mock_user_repo,
         brain_dump_repo=mock_brain_dump_repo,
         time_block_definition_repo=mock_time_block_definition_repo,
         trigger_repo=mock_trigger_repo,

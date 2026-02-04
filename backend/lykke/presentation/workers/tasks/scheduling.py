@@ -9,7 +9,7 @@ from loguru import logger
 from taskiq_dependencies import Depends
 
 from lykke.application.commands import ScheduleDayCommand
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.dates import get_current_date
 from lykke.infrastructure.gateways import RedisPubSubGateway
@@ -19,7 +19,7 @@ from .common import (
     get_read_only_repository_factory,
     get_schedule_day_handler,
     get_unit_of_work_factory,
-    get_user_repository,
+    get_identity_access,
     load_user,
 )
 
@@ -34,14 +34,16 @@ class _ScheduleDayHandler(Protocol):
 
 @broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
 async def schedule_all_users_day_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     enqueue_task: _EnqueueTask | None = None,
 ) -> None:
     """Load all users and enqueue daily scheduling tasks for each user."""
     logger.info("Starting daily schedule task for all users")
 
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     logger.info(f"Found {len(users)} users to schedule")
 
     task = enqueue_task or schedule_user_day_task
@@ -55,7 +57,6 @@ async def schedule_all_users_day_task(
 @broker.task  # type: ignore[untyped-decorator]
 async def schedule_user_day_task(
     user_id: UUID,
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
     handler: _ScheduleDayHandler | None = None,
     uow_factory: UnitOfWorkFactory | None = None,

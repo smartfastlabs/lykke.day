@@ -517,11 +517,6 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -640,11 +635,6 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -741,11 +731,6 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -828,11 +813,6 @@ async def test_sync_calendar_series_creation_emits_single_notification(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -900,11 +880,6 @@ async def test_sync_calendar_instance_level_single_entry_emits_notification(
 
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
-
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
         user=test_user,

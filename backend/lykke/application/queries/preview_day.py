@@ -15,7 +15,6 @@ from lykke.application.repositories import (
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
@@ -38,7 +37,6 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
     preview_tasks_handler: PreviewTasksHandler
 
     async def handle(self, query: PreviewDayQuery) -> value_objects.DayContext:

@@ -38,6 +38,7 @@ from lykke.application.gateways.llm_gateway_factory_protocol import (
 )
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
+from lykke.application.identity import CurrentUserAccessProtocol
 from lykke.application.queries import (
     ComputeTaskRiskHandler,
     GetDayContextHandler,
@@ -52,6 +53,7 @@ from lykke.infrastructure.gateways import (
     TwilioGateway,
     WebPushGateway,
 )
+from lykke.infrastructure.user_scoped import CurrentUserAccess
 
 if TYPE_CHECKING:
     from lykke.application.events.handlers import DomainEventHandler
@@ -610,4 +612,5 @@ class CommandHandlerFactory:
             WebPushGatewayProtocol: lambda: self.web_push_gateway,
             SMSProviderProtocol: lambda: self.sms_gateway,
             LLMGatewayFactoryProtocol: lambda: self.llm_gateway_factory,
+            CurrentUserAccessProtocol: lambda: CurrentUserAccess(user=self.user),
         }.get(gateway_type)

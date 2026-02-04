@@ -41,8 +41,6 @@ from lykke.application.repositories import (
     RoutineDefinitionRepositoryReadWriteProtocol,
     RoutineRepositoryReadOnlyProtocol,
     RoutineRepositoryReadWriteProtocol,
-    SmsLoginCodeRepositoryReadOnlyProtocol,
-    SmsLoginCodeRepositoryReadWriteProtocol,
     TacticRepositoryReadOnlyProtocol,
     TacticRepositoryReadWriteProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
@@ -55,8 +53,6 @@ from lykke.application.repositories import (
     TriggerRepositoryReadWriteProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
-    UserRepositoryReadOnlyProtocol,
-    UserRepositoryReadWriteProtocol,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -250,8 +246,6 @@ class ReadOnlyRepositories(Protocol):
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
-    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
 
 
 class ReadOnlyRepositoryFactory(Protocol):
@@ -300,8 +294,6 @@ class ReadWriteRepositories(Protocol):
     time_block_definition_rw_repo: TimeBlockDefinitionRepositoryReadWriteProtocol
     trigger_rw_repo: TriggerRepositoryReadWriteProtocol
     usecase_config_rw_repo: UseCaseConfigRepositoryReadWriteProtocol
-    user_rw_repo: UserRepositoryReadWriteProtocol
-    sms_login_code_rw_repo: SmsLoginCodeRepositoryReadWriteProtocol
 
 
 class ReadWriteRepositoryFactory(Protocol):

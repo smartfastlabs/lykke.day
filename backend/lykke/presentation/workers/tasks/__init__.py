@@ -15,6 +15,7 @@ from .calendar import (
 from .common import (
     get_calendar_entry_notification_handler,
     get_google_gateway,
+    get_identity_access,
     get_morning_overview_handler,
     get_process_brain_dump_handler,
     get_process_inbound_sms_handler,
@@ -25,7 +26,6 @@ from .common import (
     get_sync_all_calendars_handler,
     get_sync_calendar_handler,
     get_unit_of_work_factory,
-    get_user_repository,
 )
 from .inbound_sms import process_inbound_sms_message_task
 from .misc import example_triggered_task, heartbeat_task
@@ -73,6 +73,7 @@ __all__ = [
     "example_triggered_task",
     "get_calendar_entry_notification_handler",
     "get_google_gateway",
+    "get_identity_access",
     "get_morning_overview_handler",
     "get_process_brain_dump_handler",
     "get_process_inbound_sms_handler",
@@ -83,7 +84,6 @@ __all__ = [
     "get_sync_all_calendars_handler",
     "get_sync_calendar_handler",
     "get_unit_of_work_factory",
-    "get_user_repository",
     "get_worker",
     "heartbeat_task",
     "process_brain_dump_item_task",

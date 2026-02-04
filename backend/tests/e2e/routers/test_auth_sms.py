@@ -10,7 +10,7 @@ from lykke.core.utils.sms_code import hash_code
 from lykke.domain import value_objects
 from lykke.domain.entities.sms_login_code import SmsLoginCodeEntity
 from lykke.infrastructure.gateways import StubSMSGateway
-from lykke.infrastructure.repositories import SmsLoginCodeRepository, UserRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.api.routers.auth_sms import get_sms_gateway
 
 
@@ -51,7 +51,7 @@ async def test_sms_verify_sets_cookie_for_existing_user(test_client):
 
     # Create user first (avoids first-time user creation FK issues in test isolation)
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    user_repo = UserRepository()
+    identity_access = UnauthenticatedIdentityAccess()
     user = UserEntity(
         email=f"sms+{phone}@test.lykke.day",
         phone_number=phone,
@@ -61,7 +61,7 @@ async def test_sms_verify_sets_cookie_for_existing_user(test_client):
         is_verified=True,
         status=value_objects.UserStatus.ACTIVE,
     )
-    await user_repo.put(user)
+    await identity_access.create_user(user)
 
     # Insert code
     entity = SmsLoginCodeEntity(
@@ -69,8 +69,7 @@ async def test_sms_verify_sets_cookie_for_existing_user(test_client):
         code_hash=code_hash,
         expires_at=expires_at,
     )
-    repo = SmsLoginCodeRepository()
-    await repo.put(entity)
+    await identity_access.create_sms_login_code(entity)
 
     response = test_client.post(
         "/auth/sms/verify",

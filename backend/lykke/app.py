@@ -19,7 +19,7 @@ from lykke.core.utils import youtube
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
 from lykke.infrastructure.gateways import RedisPubSubGateway
-from lykke.infrastructure.repositories import UserRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -73,11 +73,8 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     )
 
     async def _load_user(user_id: UUID) -> UserEntity | None:
-        user_repo = UserRepository()
-        try:
-            return await user_repo.get(user_id)
-        except Exception:
-            return None
+        identity_access = UnauthenticatedIdentityAccess()
+        return await identity_access.get_user_by_id(user_id)
 
     register_all_handlers(
         ro_repo_factory=ro_repo_factory,

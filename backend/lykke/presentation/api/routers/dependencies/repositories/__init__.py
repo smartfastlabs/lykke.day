@@ -10,6 +10,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, Path
 
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.repositories import (
     AuthTokenRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
@@ -21,8 +22,8 @@ from lykke.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
     TimeBlockDefinitionRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.api.routers.dependencies.user import get_current_user
 
 
@@ -52,11 +53,15 @@ def get_time_block_definition_ro_repo(
 
 async def get_calendar_repo_by_user_id(
     user_id: Annotated[UUID, Path()],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(lambda: UnauthenticatedIdentityAccess())
+    ],
 ) -> CalendarRepositoryReadOnlyProtocol:
     """Get a user-scoped CalendarRepository using user_id from path (for webhooks)."""
-    user_repo = UserRepository()
     try:
-        user = await user_repo.get(user_id)
+        user = await identity_access.get_user_by_id(user_id)
     except Exception as exc:
         raise HTTPException(status_code=404, detail="User not found") from exc
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
     return cast("CalendarRepositoryReadOnlyProtocol", CalendarRepository(user=user))

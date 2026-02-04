@@ -8,8 +8,8 @@ from lykke.domain.entities.day import DayEntity
 from lykke.infrastructure.repositories import (
     DayRepository,
     DayTemplateRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 
 @pytest.mark.asyncio
@@ -108,8 +108,9 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     assert response.status_code == 200
 
     # Fetch fresh from repository to ensure persistence
-    repo = UserRepository()
-    updated_user = await repo.get(user.id)
+    identity_access = UnauthenticatedIdentityAccess()
+    updated_user = await identity_access.get_user_by_id(user.id)
+    assert updated_user is not None
 
     assert updated_user.settings.template_defaults == ["x"] * 7
     assert updated_user.phone_number == expected_e164

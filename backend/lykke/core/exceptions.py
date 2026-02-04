@@ -52,6 +52,13 @@ class DomainError(BaseError):
     _message = "Domain rule violation"
 
 
+class UserScopeRequiredError(BaseError):
+    """Error raised when a user-scoped dependency is constructed without a user."""
+
+    status_code = 500
+    _message = "User scope is required"
+
+
 __all__ = [
     "AuthenticationError",
     "AuthorizationError",
@@ -62,4 +69,5 @@ __all__ = [
     "PushNotificationError",
     "ServerError",
     "TokenExpiredError",
+    "UserScopeRequiredError",
 ]

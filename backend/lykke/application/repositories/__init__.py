@@ -61,10 +61,6 @@ from .routine_repository import (
     RoutineRepositoryReadOnlyProtocol,
     RoutineRepositoryReadWriteProtocol,
 )
-from .sms_login_code_repository import (
-    SmsLoginCodeRepositoryReadOnlyProtocol,
-    SmsLoginCodeRepositoryReadWriteProtocol,
-)
 from .tactic_repository import (
     TacticRepositoryReadOnlyProtocol,
     TacticRepositoryReadWriteProtocol,
@@ -88,10 +84,6 @@ from .trigger_repository import (
 from .usecase_config_repository import (
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
-)
-from .user_repository import (
-    UserRepositoryReadOnlyProtocol,
-    UserRepositoryReadWriteProtocol,
 )
 
 # Exported repository protocols (sorted alphabetically)
@@ -125,8 +117,6 @@ __all__ = [
     "RoutineDefinitionRepositoryReadWriteProtocol",
     "RoutineRepositoryReadOnlyProtocol",
     "RoutineRepositoryReadWriteProtocol",
-    "SmsLoginCodeRepositoryReadOnlyProtocol",
-    "SmsLoginCodeRepositoryReadWriteProtocol",
     "TacticRepositoryReadOnlyProtocol",
     "TacticRepositoryReadWriteProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",
@@ -139,6 +129,4 @@ __all__ = [
     "TriggerRepositoryReadWriteProtocol",
     "UseCaseConfigRepositoryReadOnlyProtocol",
     "UseCaseConfigRepositoryReadWriteProtocol",
-    "UserRepositoryReadOnlyProtocol",
-    "UserRepositoryReadWriteProtocol",
 ]

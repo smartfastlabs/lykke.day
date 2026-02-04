@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 
     from lykke.application.repositories import (
         UseCaseConfigRepositoryReadOnlyProtocol,
-        UserRepositoryReadOnlyProtocol,
     )
     from lykke.domain import value_objects
     from lykke.domain.entities import UserEntity
@@ -78,7 +77,6 @@ class LLMHandlerMixin(ABC):
     name: str
     template_usecase: str
     user: UserEntity
-    user_ro_repo: UserRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     _llm_snapshot_context: LLMRunSnapshotContext | None = None

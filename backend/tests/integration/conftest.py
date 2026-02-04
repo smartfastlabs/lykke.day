@@ -33,8 +33,8 @@ from lykke.infrastructure.repositories import (
     TaskRepository,
     TimeBlockDefinitionRepository,
     TriggerRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 
 @pytest_asyncio.fixture
@@ -59,8 +59,9 @@ async def create_test_user():
             settings=kwargs.pop("settings", UserSetting()),
             **kwargs,
         )
-        user_repo = UserRepository()
-        return await user_repo.put(user)
+        identity_access = UnauthenticatedIdentityAccess()
+        await identity_access.create_user(user)
+        return user
 
     return _create_user
 
@@ -109,12 +110,6 @@ def setup_day_templates(test_user):
 
 
 # Repository fixtures - all scoped to test_user
-@pytest_asyncio.fixture
-async def user_repo():
-    """UserRepository - not user-scoped."""
-    return UserRepository()
-
-
 @pytest_asyncio.fixture
 async def day_repo(test_user):
     """DayRepository scoped to test_user."""

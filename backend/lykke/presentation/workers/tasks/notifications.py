@@ -15,8 +15,8 @@ from lykke.application.commands.notifications import (
 )
 from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.dates import (
     get_current_date,
@@ -34,7 +34,7 @@ from .common import (
     get_read_only_repository_factory,
     get_smart_notification_handler,
     get_unit_of_work_factory,
-    get_user_repository,
+    get_identity_access,
     load_user,
 )
 
@@ -54,7 +54,9 @@ class _NotificationHandler(Protocol[_CommandT]):
 
 @broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
 async def evaluate_smart_notifications_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     enqueue_task: _EnqueueTask | None = None,
 ) -> None:
@@ -64,7 +66,7 @@ async def evaluate_smart_notifications_for_all_users_task(
     """
     logger.info("Starting smart notification evaluation for all users")
 
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     users_with_llm = [
         user for user in users if user.settings and user.settings.llm_provider
     ]
@@ -81,11 +83,13 @@ async def evaluate_smart_notifications_for_all_users_task(
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
 async def evaluate_calendar_entry_notifications_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
 ) -> None:
     """Evaluate calendar entry reminders for all eligible users."""
     logger.info("Starting calendar entry notification evaluation for all users")
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     eligible_users = [
         user
         for user in users
@@ -206,7 +210,9 @@ async def evaluate_calendar_entry_notifications_task(
 
 @broker.task(schedule=[{"cron": "*/15 * * * *"}])  # type: ignore[untyped-decorator]
 async def evaluate_morning_overviews_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     enqueue_task: _EnqueueTask | None = None,
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
@@ -220,7 +226,7 @@ async def evaluate_morning_overviews_for_all_users_task(
     """
     logger.info("Starting morning overview evaluation for all users")
 
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     eligible_users = [
         user
         for user in users

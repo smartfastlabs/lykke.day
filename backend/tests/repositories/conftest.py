@@ -18,8 +18,8 @@ from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
-    UserRepository,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 USER_TIMEZONE = "America/Chicago"
 
@@ -27,7 +27,7 @@ USER_TIMEZONE = "America/Chicago"
 @pytest_asyncio.fixture
 async def test_user():
     """Create a unique user for each test."""
-    user_repo = UserRepository()
+    identity_access = UnauthenticatedIdentityAccess()
     uid = uuid4()
     user = UserEntity(
         id=uid,
@@ -36,7 +36,8 @@ async def test_user():
         hashed_password="test_hash",
         settings=UserSetting(timezone=USER_TIMEZONE),
     )
-    return await user_repo.put(user)
+    await identity_access.create_user(user)
+    return user
 
 
 @pytest_asyncio.fixture

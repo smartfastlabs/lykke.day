@@ -3,62 +3,35 @@
 from __future__ import annotations
 
 from typing import Annotated
-from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends
 
-from lykke.application.commands.user import CreateLeadUserCommand, CreateLeadUserHandler
-from lykke.application.unit_of_work import (  # noqa: TC001
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.presentation.api.schemas import (
     EarlyAccessRequestSchema,
     StatusResponseSchema,
 )
-from lykke.presentation.handler_factory import CommandHandlerFactory
-
-from .dependencies.services import (
-    get_read_only_repository_factory,
-    get_unit_of_work_factory,
-)
-from .dependencies.user import build_synthetic_user
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 router = APIRouter()
 
 
-def get_synthetic_user_id() -> UUID:
-    """Generate a synthetic user id for early access lead creation."""
-    return uuid4()
-
-
-def get_early_access_command_handler_factory(
-    synthetic_user_id: Annotated[UUID, Depends(get_synthetic_user_id)],
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> CommandHandlerFactory:
-    """Create a CommandHandlerFactory for early access requests."""
-    synthetic_user = build_synthetic_user(synthetic_user_id)
-    return CommandHandlerFactory(
-        user=synthetic_user,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
+def get_identity_access() -> UnauthenticatedIdentityAccessProtocol:
+    """Identity access for unauthenticated endpoints (override in tests)."""
+    return UnauthenticatedIdentityAccess()
 
 
 @router.post("/early-access", response_model=StatusResponseSchema, status_code=200)
 async def request_early_access(
     data: EarlyAccessRequestSchema,
-    command_handler_factory: Annotated[
-        CommandHandlerFactory, Depends(get_early_access_command_handler_factory)
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
     ],
 ) -> StatusResponseSchema:
     """Capture lead contact as a user with status NEW_LEAD."""
-    handler = command_handler_factory.create(CreateLeadUserHandler)
-    await handler.handle(
-        CreateLeadUserCommand(email=data.email, phone_number=data.phone_number)
+    # Create or no-op if already exists; cross-user access is isolated here.
+    await identity_access.create_lead_user_if_new(
+        email=data.email, phone_number=data.phone_number
     )
 
     return StatusResponseSchema()
