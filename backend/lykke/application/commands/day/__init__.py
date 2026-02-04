@@ -8,6 +8,10 @@ from .add_routine_definition import (
 from .remove_alarm import RemoveAlarmFromDayCommand, RemoveAlarmFromDayHandler
 from .reschedule_day import RescheduleDayCommand, RescheduleDayHandler
 from .schedule_day import ScheduleDayCommand, ScheduleDayHandler
+from .trigger_alarms_for_user import (
+    TriggerAlarmsForUserCommand,
+    TriggerAlarmsForUserHandler,
+)
 from .update_alarm_status import UpdateAlarmStatusCommand, UpdateAlarmStatusHandler
 from .update_day import UpdateDayCommand, UpdateDayHandler
 
@@ -22,6 +26,8 @@ __all__ = [
     "RescheduleDayHandler",
     "ScheduleDayCommand",
     "ScheduleDayHandler",
+    "TriggerAlarmsForUserCommand",
+    "TriggerAlarmsForUserHandler",
     "UpdateAlarmStatusCommand",
     "UpdateAlarmStatusHandler",
     "UpdateDayCommand",

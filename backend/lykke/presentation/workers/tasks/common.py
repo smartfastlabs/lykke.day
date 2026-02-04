@@ -20,6 +20,7 @@ from lykke.presentation.workers.tasks.registry import WorkerRegistry
 if TYPE_CHECKING:
     from lykke.application.commands import ScheduleDayHandler
     from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
+    from lykke.application.commands.day import TriggerAlarmsForUserHandler
     from lykke.application.commands.calendar import (
         SubscribeCalendarHandler,
         SyncAllCalendarsHandler,
@@ -242,3 +243,20 @@ def get_process_inbound_sms_handler(
         uow_factory=uow_factory,
     )
     return factory.create(ProcessInboundSmsHandler)
+
+
+def get_trigger_alarms_for_user_handler(
+    user: UserEntity,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> TriggerAlarmsForUserHandler:
+    """Get a TriggerAlarmsForUserHandler instance for a user."""
+    from lykke.application.commands.day import TriggerAlarmsForUserHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
+    factory = CommandHandlerFactory(
+        user=user,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(TriggerAlarmsForUserHandler)

@@ -1,25 +1,26 @@
 """Alarm-related background worker tasks."""
 
-from collections.abc import Callable
-from datetime import date as dt_date, datetime as dt_datetime, timedelta as dt_timedelta
 from typing import Annotated, Protocol
 from uuid import UUID
 
 from loguru import logger
 from taskiq_dependencies import Depends
 
-from lykke.application.repositories import (
-    DayRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
+from lykke.application.commands.day import (
+    TriggerAlarmsForUserCommand,
+    TriggerAlarmsForUserHandler,
 )
-from lykke.application.unit_of_work import UnitOfWorkFactory
-from lykke.core.utils.dates import get_current_date, get_current_datetime
-from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity
+from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
-from .common import get_day_repository, get_unit_of_work_factory, get_user_repository
+from .common import (
+    get_read_only_repository_factory,
+    get_trigger_alarms_for_user_handler,
+    get_unit_of_work_factory,
+    get_user_repository,
+)
 
 
 class _EnqueueTask(Protocol):
@@ -49,82 +50,33 @@ async def trigger_alarms_for_all_users_task(
 async def trigger_alarms_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
-    day_repo: Annotated[DayRepositoryReadOnlyProtocol, Depends(get_day_repository)],
     *,
     uow_factory: UnitOfWorkFactory | None = None,
+    ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     pubsub_gateway: RedisPubSubGateway | None = None,
-    current_date_provider: Callable[[str | None], dt_date] | None = None,
-    current_datetime_provider: Callable[[], dt_datetime] | None = None,
+    command: TriggerAlarmsForUserCommand | None = None,
 ) -> None:
     """Trigger alarms for a specific user."""
     logger.info(f"Evaluating alarms for user {user_id}")
 
-    pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
+    gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        uow_factory = uow_factory or get_unit_of_work_factory(pubsub_gateway)
+        uow_factory = uow_factory or get_unit_of_work_factory(gateway)
+        ro_repo_factory = ro_repo_factory or get_read_only_repository_factory()
 
         try:
             user = await user_repo.get(user_id)
         except Exception:
             logger.warning(f"User not found for alarm evaluation {user_id}")
             return
-        timezone = user.settings.timezone if user.settings else None
 
-        current_date_provider = current_date_provider or get_current_date
-        current_datetime_provider = current_datetime_provider or get_current_datetime
-        target_date = current_date_provider(timezone)
-        now = current_datetime_provider()
-        evaluation_time = now
-        previous_date = target_date - dt_timedelta(days=1)
-
-        def evaluate_day_alarms(
-            day: DayEntity,
-            *,
-            snoozed_only: bool,
-        ) -> None:
-            for alarm in day.alarms:
-                if alarm.status in (
-                    value_objects.AlarmStatus.CANCELLED,
-                    value_objects.AlarmStatus.TRIGGERED,
-                ):
-                    continue
-                if alarm.status == value_objects.AlarmStatus.SNOOZED:
-                    if (
-                        alarm.snoozed_until is None
-                        or alarm.snoozed_until > evaluation_time
-                    ):
-                        continue
-                elif snoozed_only:
-                    continue
-                if alarm.datetime is None or alarm.datetime > evaluation_time:
-                    continue
-                day.update_alarm_status(
-                    alarm.id,
-                    value_objects.AlarmStatus.TRIGGERED,
-                )
-
-        async with uow_factory.create(user) as uow:
-            for day_date, snoozed_only in (
-                (target_date, False),
-                (previous_date, True),
-            ):
-                try:
-                    day_id = DayEntity.id_from_date_and_user(day_date, user.id)
-                    day = await day_repo.get(day_id)
-                except Exception as exc:
-                    logger.debug(
-                        f"No day found for user {user_id} on {day_date} ({exc})",
-                    )
-                    continue
-
-                if not day.alarms:
-                    continue
-
-                evaluate_day_alarms(day, snoozed_only=snoozed_only)
-
-                if day.has_events():
-                    uow.add(day)
+        handler = get_trigger_alarms_for_user_handler(
+            user=user,
+            uow_factory=uow_factory,
+            ro_repo_factory=ro_repo_factory,
+        )
+        await handler.handle(command or TriggerAlarmsForUserCommand())
 
         logger.info(f"Alarm evaluation completed for user {user_id}")
     finally:
-        await pubsub_gateway.close()
+        await gateway.close()

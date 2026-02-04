@@ -4,13 +4,16 @@ from datetime import UTC, date as dt_date, datetime, time
 from uuid import uuid4
 
 import pytest
-from dobles import allow
+from dobles import InstanceDouble, allow
 
+from lykke.application.commands.day import TriggerAlarmsForUserCommand
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.presentation.workers.tasks import alarms as alarm_tasks
 from tests.support.dobles import (
     create_day_repo_double,
+    create_read_only_repos_double,
     create_uow_double,
     create_uow_factory_double,
 )
@@ -52,20 +55,27 @@ async def test_trigger_alarms_for_user_task_triggers_alarm() -> None:
     day.add_alarm(alarm)
 
     day_repo = create_day_repo_double()
-    day_id = DayEntity.id_from_date_and_user(day.date, user_id)
-
     allow(day_repo).get.and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    ro_factory = InstanceDouble(
+        f"{ReadOnlyRepositoryFactory.__module__}.{ReadOnlyRepositoryFactory.__name__}"
+    )
+    allow(ro_factory).create.and_return(ro_repos)
+
     uow = create_uow_double(day_repo=day_repo)
     uow_factory = create_uow_factory_double(uow)
 
     await alarm_tasks.trigger_alarms_for_user_task(
         user_id=user_id,
         user_repo=create_user_repo([build_user(user_id)]),
-        day_repo=day_repo,
         uow_factory=uow_factory,
+        ro_repo_factory=ro_factory,
         pubsub_gateway=gateway,
-        current_date_provider=lambda _: day.date,
-        current_datetime_provider=lambda: datetime(2025, 11, 27, 8, 0, tzinfo=UTC),
+        command=TriggerAlarmsForUserCommand(
+            evaluation_datetime=datetime(2025, 11, 27, 8, 0, tzinfo=UTC),
+            target_date=day.date,
+        ),
     )
 
     assert uow.added
