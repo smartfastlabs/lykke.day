@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.repositories import (
-    SmsLoginCodeRepositoryReadWriteProtocol,
+    SmsLoginCodeRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import UnitOfWorkProtocol
@@ -33,7 +33,7 @@ class VerifySmsLoginCodeHandler(
 ):
     """Verify SMS code and return the user (creating one if first-time signup)."""
 
-    sms_login_code_rw_repo: SmsLoginCodeRepositoryReadWriteProtocol
+    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def handle(self, command: VerifySmsLoginCodeCommand) -> UserEntity:
@@ -42,39 +42,41 @@ class VerifySmsLoginCodeHandler(
         if not normalized:
             raise AuthenticationError("Invalid phone number")
 
-        code_entity = await self.sms_login_code_rw_repo.search_one_or_none(
-            value_objects.SmsLoginCodeQuery(phone_number=normalized, consumed=False)
-        )
-        if code_entity is None:
-            raise AuthenticationError("Invalid or expired code")
-
-        if code_entity.attempt_count >= MAX_VERIFY_ATTEMPTS:
-            raise AuthenticationError("Too many attempts")
-
-        if code_entity.expires_at < datetime.now(UTC):
-            raise AuthenticationError("Invalid or expired code")
-
-        if not verify_code(command.code, code_entity.code_hash):
-            await self.sms_login_code_rw_repo.mark_consumed_and_increment_attempts(
-                code_entity.id, consumed=False
+        valid = False
+        user: UserEntity | None = None
+        async with self.new_uow() as uow:
+            code_entity = await self.sms_login_code_ro_repo.search_one_or_none(
+                value_objects.SmsLoginCodeQuery(
+                    phone_number=normalized, consumed=False
+                )
             )
+            if code_entity is None:
+                raise AuthenticationError("Invalid or expired code")
+
+            if code_entity.attempt_count >= MAX_VERIFY_ATTEMPTS:
+                raise AuthenticationError("Too many attempts")
+
+            if code_entity.expires_at < datetime.now(UTC):
+                raise AuthenticationError("Invalid or expired code")
+
+            valid = verify_code(command.code, code_entity.code_hash)
+            code_entity.record_verification_attempt(consumed=valid)
+            uow.add(code_entity)
+
+            if valid:
+                user = await self.user_ro_repo.search_one_or_none(
+                    value_objects.UserQuery(phone_number=normalized)
+                )
+                is_new_user = user is None
+                if user is None:
+                    user = self._build_user(normalized)
+                if is_new_user:
+                    await self._create_user(uow, user)
+
+        if not valid:
             raise AuthenticationError("Invalid or expired code")
 
-        await self.sms_login_code_rw_repo.mark_consumed_and_increment_attempts(
-            code_entity.id, consumed=True
-        )
-
-        user = await self.user_ro_repo.search_one_or_none(
-            value_objects.UserQuery(phone_number=normalized)
-        )
-        is_new_user = user is None
-        if user is None:
-            user = self._build_user(normalized)
-
-        async with self._uow_factory.create(user) as uow:
-            if is_new_user:
-                await self._create_user(uow, user)
-
+        assert user is not None  # Set when valid
         return user
 
     def _build_user(self, phone_number: str) -> UserEntity:

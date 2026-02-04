@@ -33,6 +33,6 @@ class UpdateFactoidHandler(BaseCommandHandler[UpdateFactoidCommand, FactoidEntit
             NotFoundError: If factoid not found
         """
         async with self.new_uow() as uow:
-            factoid = await uow.factoid_ro_repo.get(command.factoid_id)
+            factoid = await self.factoid_ro_repo.get(command.factoid_id)
             factoid = factoid.apply_update(command.update_data, FactoidUpdatedEvent)
             return uow.add(factoid)

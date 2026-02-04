@@ -34,7 +34,7 @@ class UpdatePushSubscriptionHandler(
         """
         async with self.new_uow() as uow:
             # Get the existing push subscription
-            subscription = await uow.push_subscription_ro_repo.get(
+            subscription = await self.push_subscription_ro_repo.get(
                 command.subscription_id
             )
 

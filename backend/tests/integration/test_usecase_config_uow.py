@@ -14,7 +14,10 @@ from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.value_objects import UseCaseConfigQuery
 from lykke.domain.value_objects.update import BaseUpdateObject
 from lykke.infrastructure.gateways import StubPubSubGateway
-from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
+from lykke.infrastructure.unit_of_work import (
+    SqlAlchemyReadOnlyRepositoryFactory,
+    SqlAlchemyUnitOfWorkFactory,
+)
 
 
 @pytest.mark.asyncio
@@ -45,13 +48,14 @@ async def test_usecase_config_can_be_created_through_uow(test_user):
         assert created_config.config == {"user_amendments": ["Test amendment"]}
 
     # Verify the entity was persisted by reading it back
-    async with uow_factory.create(test_user) as uow:
-        retrieved = await uow.usecase_config_ro_repo.search(
-            UseCaseConfigQuery(usecase="notification")
-        )
-        assert len(retrieved) == 1
-        assert retrieved[0].usecase == "notification"
-        assert retrieved[0].config == {"user_amendments": ["Test amendment"]}
+    ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
+    ro_repos = ro_repo_factory.create(test_user)
+    retrieved = await ro_repos.usecase_config_ro_repo.search(
+        UseCaseConfigQuery(usecase="notification")
+    )
+    assert len(retrieved) == 1
+    assert retrieved[0].usecase == "notification"
+    assert retrieved[0].config == {"user_amendments": ["Test amendment"]}
 
 
 @pytest.mark.asyncio
@@ -119,9 +123,10 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
         uow.add(updated_config)
 
     # Verify update
-    async with uow_factory.create(test_user) as uow:
-        retrieved = await uow.usecase_config_ro_repo.search(
-            UseCaseConfigQuery(usecase="notification")
-        )
-        assert len(retrieved) == 1
-        assert retrieved[0].config == {"user_amendments": ["Updated"]}
+    ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
+    ro_repos = ro_repo_factory.create(test_user)
+    retrieved = await ro_repos.usecase_config_ro_repo.search(
+        UseCaseConfigQuery(usecase="notification")
+    )
+    assert len(retrieved) == 1
+    assert retrieved[0].config == {"user_amendments": ["Updated"]}

@@ -44,6 +44,7 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     RoutineDefinitionEntity,
     RoutineEntity,
+    SmsLoginCodeEntity,
     TacticEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -176,28 +177,6 @@ class SqlAlchemyUnitOfWork:
     Commands should not access them directly.
     """
 
-    # Read-only repository type annotations (public API for commands)
-    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
-    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
-    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
-    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
-    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
-    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
-    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
-    day_ro_repo: DayRepositoryReadOnlyProtocol
-    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
-    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
-    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
-    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
-    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
-    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
-    task_ro_repo: TaskRepositoryReadOnlyProtocol
-    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
-    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
     workers_to_schedule: WorkersToScheduleProtocol
 
     # Entity type to repository attribute name mapping
@@ -246,6 +225,7 @@ class SqlAlchemyUnitOfWork:
         ),
         AuthTokenEntity: ("auth_token_ro_repo", "_auth_token_rw_repo"),
         UseCaseConfigEntity: ("usecase_config_ro_repo", "_usecase_config_rw_repo"),
+        SmsLoginCodeEntity: ("sms_login_code_ro_repo", "_sms_login_code_rw_repo"),
     }
 
     def __init__(
@@ -281,6 +261,9 @@ class SqlAlchemyUnitOfWork:
         self._user_timezone_cache: str | None | object = _UNSET
         # Internal read-write repositories (not exposed to commands)
         self._auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol | None = None
+        self._sms_login_code_rw_repo: SmsLoginCodeRepositoryReadWriteProtocol | None = (
+            None
+        )
         self._bot_personality_rw_repo: (
             BotPersonalityRepositoryReadWriteProtocol | None
         ) = None
@@ -358,9 +341,12 @@ class SqlAlchemyUnitOfWork:
         self._auth_token_rw_repo = auth_token_repo
 
         sms_login_code_repo = cast(
-            "SmsLoginCodeRepositoryReadOnlyProtocol", SmsLoginCodeRepository()
+            "SmsLoginCodeRepositoryReadWriteProtocol", SmsLoginCodeRepository()
         )
-        self.sms_login_code_ro_repo = sms_login_code_repo
+        self.sms_login_code_ro_repo = cast(
+            "SmsLoginCodeRepositoryReadOnlyProtocol", sms_login_code_repo
+        )
+        self._sms_login_code_rw_repo = sms_login_code_repo
 
         # All other repositories are user-scoped
         calendar_repo = cast(
@@ -1508,7 +1494,9 @@ class SqlAlchemyReadWriteRepositories:
         )
         self.task_definition_rw_repo = task_definition_repo
 
-        task_repo = cast("TaskRepositoryReadWriteProtocol", TaskRepository(user=self.user))
+        task_repo = cast(
+            "TaskRepositoryReadWriteProtocol", TaskRepository(user=self.user)
+        )
         self.task_rw_repo = task_repo
 
         time_block_definition_repo = cast(

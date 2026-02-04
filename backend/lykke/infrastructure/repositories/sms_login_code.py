@@ -1,9 +1,7 @@
 """SMS login code repository - not user-scoped, manages verification codes."""
 
-from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select, update
 from sqlalchemy.sql import Select
 
 from lykke.domain import value_objects
@@ -62,24 +60,3 @@ class SmsLoginCodeRepository(
         data["user_id"] = _SYSTEM_USER_ID
         return SmsLoginCodeEntity(**data)
 
-    async def put(self, obj: SmsLoginCodeEntity) -> SmsLoginCodeEntity:
-        """Insert a new code (codes are append-only)."""
-        async with self._get_connection(for_write=True) as conn:
-            row = self.entity_to_row(obj)
-            stmt = self.table.insert().values(**row)
-            await conn.execute(stmt)
-        return obj
-
-    async def mark_consumed_and_increment_attempts(
-        self, code_id: Any, consumed: bool = True
-    ) -> None:
-        """Mark code as consumed and/or increment attempt count."""
-        async with self._get_connection(for_write=True) as conn:
-            values: dict[str, Any] = {
-                "attempt_count": self.table.c.attempt_count + 1,
-                "last_attempt_at": datetime.now(UTC),
-            }
-            if consumed:
-                values["consumed_at"] = datetime.now(UTC)
-            stmt = update(self.table).where(self.table.c.id == code_id).values(**values)
-            await conn.execute(stmt)

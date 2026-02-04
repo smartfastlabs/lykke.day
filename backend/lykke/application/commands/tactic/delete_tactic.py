@@ -20,5 +20,5 @@ class DeleteTacticHandler(BaseCommandHandler[DeleteTacticCommand, None]):
     async def handle(self, command: DeleteTacticCommand) -> None:
         """Delete a tactic."""
         async with self.new_uow() as uow:
-            tactic = await uow.tactic_ro_repo.get(command.tactic_id)
+            tactic = await self.tactic_ro_repo.get(command.tactic_id)
             await uow.delete(tactic)

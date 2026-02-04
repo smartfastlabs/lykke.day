@@ -26,5 +26,5 @@ class DeleteFactoidHandler(BaseCommandHandler[DeleteFactoidCommand, None]):
             NotFoundError: If factoid not found
         """
         async with self.new_uow() as uow:
-            factoid = await uow.factoid_ro_repo.get(command.factoid_id)
+            factoid = await self.factoid_ro_repo.get(command.factoid_id)
             await uow.delete(factoid)

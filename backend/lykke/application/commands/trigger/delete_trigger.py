@@ -19,5 +19,5 @@ class DeleteTriggerHandler(BaseCommandHandler[DeleteTriggerCommand, None]):
     async def handle(self, command: DeleteTriggerCommand) -> None:
         """Delete a trigger."""
         async with self.new_uow() as uow:
-            trigger = await uow.trigger_ro_repo.get(command.trigger_id)
+            trigger = await self.trigger_ro_repo.get(command.trigger_id)
             await uow.delete(trigger)

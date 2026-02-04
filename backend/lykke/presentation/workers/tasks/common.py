@@ -6,11 +6,14 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
-from lykke.infrastructure.repositories import UserRepository
+from lykke.infrastructure.repositories import DayRepository, UserRepository
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
 from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
@@ -64,6 +67,14 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
 def get_user_repository() -> UserRepositoryReadOnlyProtocol:
     """Get a UserRepository instance (not user-scoped)."""
     return cast("UserRepositoryReadOnlyProtocol", UserRepository())
+
+
+def get_day_repository(user_id: UUID) -> DayRepositoryReadOnlyProtocol:
+    """Get a DayRepository instance scoped to the given user."""
+    from lykke.presentation.api.routers.dependencies.user import build_synthetic_user
+
+    user = build_synthetic_user(user_id)
+    return cast("DayRepositoryReadOnlyProtocol", DayRepository(user=user))
 
 
 async def load_user(user_id: UUID) -> UserEntity:

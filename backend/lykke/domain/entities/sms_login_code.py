@@ -39,3 +39,21 @@ class SmsLoginCodeEntity(
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     attempt_count: int = 0
     last_attempt_at: datetime | None = None
+
+    def record_verification_attempt(self, consumed: bool = False) -> None:
+        """Record a verification attempt and optionally mark as consumed.
+
+        Increments attempt_count, sets last_attempt_at, and optionally sets
+        consumed_at when the code was successfully verified. Adds
+        EntityUpdatedEvent so UoW persists the change.
+        """
+        self.attempt_count += 1
+        self.last_attempt_at = datetime.now(UTC)
+        if consumed:
+            self.consumed_at = datetime.now(UTC)
+        self.add_event(
+            EntityUpdatedEvent[SmsLoginCodeUpdateObject](
+                user_id=self.user_id,
+                update_object=SmsLoginCodeUpdateObject(),
+            )
+        )

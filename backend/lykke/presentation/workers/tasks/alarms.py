@@ -8,7 +8,10 @@ from uuid import UUID
 from loguru import logger
 from taskiq_dependencies import Depends
 
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    DayRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from lykke.application.unit_of_work import UnitOfWorkFactory
 from lykke.core.utils.dates import get_current_date, get_current_datetime
 from lykke.domain import value_objects
@@ -16,7 +19,7 @@ from lykke.domain.entities import DayEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
-from .common import get_unit_of_work_factory, get_user_repository
+from .common import get_day_repository, get_unit_of_work_factory, get_user_repository
 
 
 class _EnqueueTask(Protocol):
@@ -46,6 +49,7 @@ async def trigger_alarms_for_all_users_task(
 async def trigger_alarms_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    day_repo: Annotated[DayRepositoryReadOnlyProtocol, Depends(get_day_repository)],
     *,
     uow_factory: UnitOfWorkFactory | None = None,
     pubsub_gateway: RedisPubSubGateway | None = None,
@@ -106,7 +110,7 @@ async def trigger_alarms_for_user_task(
             ):
                 try:
                     day_id = DayEntity.id_from_date_and_user(day_date, user.id)
-                    day = await uow.day_ro_repo.get(day_id)
+                    day = await day_repo.get(day_id)
                 except Exception as exc:
                     logger.debug(
                         f"No day found for user {user_id} on {day_date} ({exc})",

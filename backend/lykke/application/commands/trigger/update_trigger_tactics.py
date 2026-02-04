@@ -27,15 +27,15 @@ class UpdateTriggerTacticsHandler(
     ) -> list[TacticEntity]:
         """Replace all tactics linked to a trigger."""
         async with self.new_uow() as uow:
-            trigger = await uow.trigger_ro_repo.get(command.trigger_id)
+            trigger = await self.trigger_ro_repo.get(command.trigger_id)
             unique_ids = list(dict.fromkeys(command.tactic_ids))
 
             if unique_ids:
-                tactics = await uow.tactic_ro_repo.search(
+                tactics = await self.tactic_ro_repo.search(
                     value_objects.TacticQuery(ids=unique_ids)
                 )
                 if len(tactics) != len(unique_ids):
                     raise NotFoundError("One or more tactics not found")
 
             await uow.set_trigger_tactics(trigger.id, unique_ids)
-            return await uow.trigger_ro_repo.list_tactics_for_trigger(trigger.id)
+            return await self.trigger_ro_repo.list_tactics_for_trigger(trigger.id)

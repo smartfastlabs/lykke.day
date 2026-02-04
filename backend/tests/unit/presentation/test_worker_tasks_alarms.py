@@ -61,6 +61,7 @@ async def test_trigger_alarms_for_user_task_triggers_alarm() -> None:
     await alarm_tasks.trigger_alarms_for_user_task(
         user_id=user_id,
         user_repo=create_user_repo([build_user(user_id)]),
+        day_repo=day_repo,
         uow_factory=uow_factory,
         pubsub_gateway=gateway,
         current_date_provider=lambda _: day.date,
