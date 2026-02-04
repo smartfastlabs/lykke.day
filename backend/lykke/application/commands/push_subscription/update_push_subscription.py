@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    PushSubscriptionRepositoryReadOnlyProtocol,
+)
 from lykke.domain.entities import PushSubscriptionEntity
 from lykke.domain.value_objects import PushSubscriptionUpdateObject
 
@@ -20,6 +23,8 @@ class UpdatePushSubscriptionHandler(
     BaseCommandHandler[UpdatePushSubscriptionCommand, PushSubscriptionEntity]
 ):
     """Updates an existing push subscription."""
+
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
 
     async def handle(
         self, command: UpdatePushSubscriptionCommand

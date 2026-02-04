@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    PushSubscriptionRepositoryReadOnlyProtocol,
+)
 
 
 @dataclass(frozen=True)
@@ -17,6 +20,8 @@ class DeletePushSubscriptionHandler(
     BaseCommandHandler[DeletePushSubscriptionCommand, None]
 ):
     """Deletes a push subscription."""
+
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
 
     async def handle(self, command: DeletePushSubscriptionCommand) -> None:
         """Delete a push subscription.

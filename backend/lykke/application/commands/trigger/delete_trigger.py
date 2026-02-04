@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TriggerRepositoryReadOnlyProtocol
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,8 @@ class DeleteTriggerCommand(Command):
 
 class DeleteTriggerHandler(BaseCommandHandler[DeleteTriggerCommand, None]):
     """Deletes a trigger."""
+
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
 
     async def handle(self, command: DeleteTriggerCommand) -> None:
         """Delete a trigger."""

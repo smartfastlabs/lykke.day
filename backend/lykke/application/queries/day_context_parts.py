@@ -6,6 +6,16 @@ from dataclasses import dataclass
 from datetime import UTC, date as datetime_date, datetime, time, timedelta
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import (
+    BrainDumpRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    PushNotificationRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -29,6 +39,8 @@ class GetDayEntityQuery(Query):
 class GetDayEntityHandler(BaseQueryHandler[GetDayEntityQuery, DayEntity]):
     """Loads the Day entity for a given date."""
 
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
     async def handle(self, query: GetDayEntityQuery) -> DayEntity:
         """Handle day lookup query."""
         day_id = DayEntity.id_from_date_and_user(query.date, self.user.id)
@@ -44,6 +56,8 @@ class GetDayTasksQuery(Query):
 
 class GetDayTasksHandler(BaseQueryHandler[GetDayTasksQuery, list[TaskEntity]]):
     """Loads tasks for a given date."""
+
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetDayTasksQuery) -> list[TaskEntity]:
         """Handle tasks lookup query."""
@@ -76,6 +90,8 @@ class GetDayCalendarEntriesHandler(
 ):
     """Loads calendar entries for a given date."""
 
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+
     async def handle(
         self, query: GetDayCalendarEntriesQuery
     ) -> list[CalendarEntryEntity]:
@@ -95,6 +111,10 @@ class GetDayRoutinesQuery(Query):
 
 class GetDayRoutinesHandler(BaseQueryHandler[GetDayRoutinesQuery, list[RoutineEntity]]):
     """Loads routines for a given date."""
+
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetDayRoutinesQuery) -> list[RoutineEntity]:
         """Handle routines lookup query."""
@@ -150,6 +170,8 @@ class GetDayBrainDumpsHandler(
 ):
     """Loads brain dumps for a given date."""
 
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+
     async def handle(self, query: GetDayBrainDumpsQuery) -> list[BrainDumpEntity]:
         """Handle brain dumps lookup query."""
         items = await self.brain_dump_ro_repo.search(
@@ -169,6 +191,8 @@ class GetDayPushNotificationsHandler(
     BaseQueryHandler[GetDayPushNotificationsQuery, list[PushNotificationEntity]]
 ):
     """Loads push notifications for a given date."""
+
+    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: GetDayPushNotificationsQuery
@@ -198,6 +222,8 @@ class GetDayMessagesQuery(Query):
 
 class GetDayMessagesHandler(BaseQueryHandler[GetDayMessagesQuery, list[MessageEntity]]):
     """Loads messages for a given date."""
+
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetDayMessagesQuery) -> list[MessageEntity]:
         """Handle messages lookup query."""

@@ -23,6 +23,7 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.llm_snapshot import build_referenced_entities
@@ -41,8 +42,10 @@ class PreviewLLMSnapshotHandler(
     BaseQueryHandler[PreviewLLMSnapshotQuery, value_objects.LLMRunResultSnapshot | None]
 ):
     """Builds a synthetic LLM snapshot for a given usecase."""
+
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     llm_gateway_factory: LLMGatewayFactoryProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: PreviewLLMSnapshotQuery

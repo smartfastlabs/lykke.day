@@ -13,6 +13,7 @@ from lykke.application.repositories import (
     DayTemplateRepositoryReadOnlyProtocol,
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
@@ -49,6 +50,7 @@ class GetDayContextHandler(
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import FactoidRepositoryReadOnlyProtocol
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,8 @@ class DeleteFactoidCommand(Command):
 
 class DeleteFactoidHandler(BaseCommandHandler[DeleteFactoidCommand, None]):
     """Deletes a factoid."""
+
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
 
     async def handle(self, command: DeleteFactoidCommand) -> None:
         """Delete a factoid.

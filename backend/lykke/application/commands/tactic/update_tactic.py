@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TacticRepositoryReadOnlyProtocol
 from lykke.domain.entities import TacticEntity
 from lykke.domain.events.trigger_tactic_events import TacticUpdatedEvent
 from lykke.domain.value_objects import TacticUpdateObject
@@ -20,10 +21,11 @@ class UpdateTacticCommand(Command):
 class UpdateTacticHandler(BaseCommandHandler[UpdateTacticCommand, TacticEntity]):
     """Updates an existing tactic."""
 
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
+
     async def handle(self, command: UpdateTacticCommand) -> TacticEntity:
         """Update an existing tactic."""
         async with self.new_uow() as uow:
             tactic = await self.tactic_ro_repo.get(command.tactic_id)
             updated = tactic.apply_update(command.update_data, TacticUpdatedEvent)
-            uow.add(updated)
-            return updated
+            return uow.add(updated)

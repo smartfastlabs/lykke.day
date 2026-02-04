@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    TacticRepositoryReadOnlyProtocol,
+    TriggerRepositoryReadOnlyProtocol,
+)
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import TacticEntity
@@ -22,6 +26,9 @@ class UpdateTriggerTacticsHandler(
 ):
     """Replaces tactics linked to a trigger."""
 
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
+
     async def handle(
         self, command: UpdateTriggerTacticsCommand
     ) -> list[TacticEntity]:
@@ -38,4 +45,6 @@ class UpdateTriggerTacticsHandler(
                     raise NotFoundError("One or more tactics not found")
 
             await uow.set_trigger_tactics(trigger.id, unique_ids)
-            return await self.trigger_ro_repo.list_tactics_for_trigger(trigger.id)
+            return await self.trigger_ro_repo.list_tactics_for_trigger(
+                trigger.id
+            )

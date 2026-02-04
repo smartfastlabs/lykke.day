@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import FactoidRepositoryReadOnlyProtocol
 from lykke.domain.entities import FactoidEntity
 from lykke.domain.events.ai_chat_events import FactoidUpdatedEvent
 from lykke.domain.value_objects import FactoidUpdateObject
@@ -19,6 +20,8 @@ class UpdateFactoidCommand(Command):
 
 class UpdateFactoidHandler(BaseCommandHandler[UpdateFactoidCommand, FactoidEntity]):
     """Updates an existing factoid."""
+
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
 
     async def handle(self, command: UpdateFactoidCommand) -> FactoidEntity:
         """Update an existing factoid.

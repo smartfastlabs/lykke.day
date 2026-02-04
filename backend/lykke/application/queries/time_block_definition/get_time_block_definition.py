@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import TimeBlockDefinitionRepositoryReadOnlyProtocol
 from lykke.domain.entities import TimeBlockDefinitionEntity
 
 
@@ -18,6 +19,8 @@ class GetTimeBlockDefinitionHandler(
     BaseQueryHandler[GetTimeBlockDefinitionQuery, TimeBlockDefinitionEntity]
 ):
     """Query handler to get a single time block definition by ID."""
+
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: GetTimeBlockDefinitionQuery

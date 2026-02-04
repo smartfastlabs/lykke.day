@@ -72,31 +72,6 @@ class BaseHandler:
     _RO_REPO_SUFFIX = "_ro_repo"
     _RW_REPO_SUFFIX = "_rw_repo"
 
-    # Type hints for static analysis (repos are accessed lazily at runtime)
-    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
-    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
-    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
-    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
-    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
-    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
-    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
-    day_ro_repo: DayRepositoryReadOnlyProtocol
-    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
-    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
-    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
-    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
-    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
-    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
-    task_ro_repo: TaskRepositoryReadOnlyProtocol
-    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
-    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
-    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
-    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
-
     command_factory: CommandHandlerFactoryProtocol | None
     gateway_factory: GatewayFactoryProtocol | None
     _uow_factory: UnitOfWorkFactory | None

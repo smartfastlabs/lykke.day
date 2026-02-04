@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import TimeBlockDefinitionRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import TimeBlockDefinitionEntity
 
@@ -22,8 +23,12 @@ class SearchTimeBlockDefinitionsHandler(
 ):
     """Query handler to search time block definitions with pagination."""
 
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+
     async def handle(
         self, query: SearchTimeBlockDefinitionsQuery
     ) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
         """Search time block definitions with pagination."""
-        return await self.time_block_definition_ro_repo.paged_search(query.search_query)
+        return await self.time_block_definition_ro_repo.paged_search(
+            query.search_query
+        )

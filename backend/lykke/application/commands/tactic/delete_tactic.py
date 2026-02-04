@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import TacticRepositoryReadOnlyProtocol
 from lykke.domain.entities import TacticEntity
 
 
@@ -16,6 +17,8 @@ class DeleteTacticCommand(Command):
 
 class DeleteTacticHandler(BaseCommandHandler[DeleteTacticCommand, None]):
     """Deletes a tactic."""
+
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
 
     async def handle(self, command: DeleteTacticCommand) -> None:
         """Delete a tactic."""
