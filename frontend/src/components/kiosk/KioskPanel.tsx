@@ -8,7 +8,7 @@ export const KioskPanel: Component<{
 }> = (props) => (
   <div class="min-h-0 rounded-2xl border border-white/70 bg-white/80 p-3 shadow-sm shadow-amber-900/5 backdrop-blur-sm flex flex-col gap-2">
     <div class="flex items-center justify-between text-[11px] uppercase tracking-[0.25em] text-stone-500">
-      <span>{props.title}</span>
+      <span>TITLE:{props.title}</span>
       <Show when={props.count !== undefined}>
         <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
           {props.count}
