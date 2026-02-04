@@ -7,6 +7,7 @@ from uuid import UUID
 from loguru import logger
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import CalendarRepositoryReadOnlyProtocol
 from lykke.core.exceptions import NotFoundError
 
 
@@ -30,6 +31,8 @@ class VerifyGoogleWebhookHandler(
     BaseQueryHandler[VerifyGoogleWebhookQuery, VerifyGoogleWebhookResult]
 ):
     """Validate Google webhook headers against stored subscription data."""
+
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: VerifyGoogleWebhookQuery

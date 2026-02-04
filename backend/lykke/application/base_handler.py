@@ -182,40 +182,6 @@ class BaseHandler:
             )
         return self.gateway_factory.create(dependency_type)
 
-    def __getattr__(self, name: str) -> Any:
-        """Provide lazy access to repositories from the container.
-
-        This allows handlers to access repositories like self.task_ro_repo
-        without explicitly wiring them in __init__. The repository is looked
-        up from the repository factory on first access.
-
-        Args:
-            name: Attribute name being accessed
-
-        Returns:
-            The repository if it exists on the repositories
-
-        Raises:
-            AttributeError: If the attribute doesn't exist on the repositories
-        """
-        # Only intercept repository lookups
-        if name.endswith(self._RO_REPO_SUFFIX):
-            try:
-                ro_repos = self._get_ro_repos()
-                return getattr(ro_repos, name)
-            except AttributeError:
-                pass
-        if name.endswith(self._RW_REPO_SUFFIX):
-            try:
-                rw_repos = self._get_rw_repos()
-                return getattr(rw_repos, name)
-            except AttributeError:
-                pass
-
-        raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{name}'"
-        )
-
     def _wire_dependencies(self) -> None:
         """Populate annotated dependencies from factories when available."""
         factories: list[BaseFactory] = [

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -17,6 +18,8 @@ class GetUserByPhoneQuery(Query):
 
 class GetUserByPhoneHandler(BaseQueryHandler[GetUserByPhoneQuery, UserEntity | None]):
     """Return a user matching the phone number."""
+
+    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetUserByPhoneQuery) -> UserEntity | None:
         normalized = normalize_phone_number(query.phone_number)

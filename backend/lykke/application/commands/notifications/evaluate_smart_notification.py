@@ -26,7 +26,10 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
-from lykke.application.repositories import PushSubscriptionRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    PushNotificationRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
+)
 from lykke.core.config import settings
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -47,6 +50,7 @@ class SmartNotificationHandler(
 ):
     """Evaluates day context using LLM and sends notification if warranted."""
 
+    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler

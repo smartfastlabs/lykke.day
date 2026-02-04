@@ -25,13 +25,13 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
+from lykke.application.repositories import BrainDumpRepositoryReadOnlyProtocol
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
 
-    from lykke.application.repositories import BrainDumpRepositoryReadOnlyProtocol
     from lykke.domain.entities import BrainDumpEntity, UserEntity
 
 

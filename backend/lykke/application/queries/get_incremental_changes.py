@@ -6,6 +6,15 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import (
+    AuditLogRepositoryReadOnlyProtocol,
+    BrainDumpRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -35,13 +44,13 @@ class GetIncrementalChangesHandler(
     ]
 ):
     """Gets incremental changes since a timestamp, filtered to entities for a specific date."""
-    audit_log_ro_repo: Any
-    task_ro_repo: Any
-    calendar_entry_ro_repo: Any
-    routine_ro_repo: Any
-    routine_definition_ro_repo: Any
-    day_ro_repo: Any
-    brain_dump_ro_repo: Any
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: GetIncrementalChangesQuery

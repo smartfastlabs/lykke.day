@@ -11,6 +11,13 @@ from uuid import NAMESPACE_DNS, UUID, uuid5
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    PushNotificationRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
+)
 from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,
     SendPushNotificationHandler,
@@ -57,6 +64,11 @@ class CalendarEntryNotificationHandler(
 ):
     """Deterministically sends calendar entry reminders."""
 
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     send_push_notification_handler: SendPushNotificationHandler
     sms_gateway: SMSProviderProtocol
 

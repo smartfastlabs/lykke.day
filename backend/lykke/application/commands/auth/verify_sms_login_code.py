@@ -5,7 +5,10 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.repositories import SmsLoginCodeRepositoryReadWriteProtocol
+from lykke.application.repositories import (
+    SmsLoginCodeRepositoryReadWriteProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.exceptions import AuthenticationError
 from lykke.core.utils.phone_numbers import digits_only, normalize_phone_number
@@ -31,6 +34,7 @@ class VerifySmsLoginCodeHandler(
     """Verify SMS code and return the user (creating one if first-time signup)."""
 
     sms_login_code_rw_repo: SmsLoginCodeRepositoryReadWriteProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def handle(self, command: VerifySmsLoginCodeCommand) -> UserEntity:
         """Verify code, get or create user, return user entity."""
