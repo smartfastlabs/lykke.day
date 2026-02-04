@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
+# Version file for deploy detection (kiosk auto-refresh) - do not cache
+[[headers]]
+  for = "/version.json"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 [dev]
   targetPort = 5173
 

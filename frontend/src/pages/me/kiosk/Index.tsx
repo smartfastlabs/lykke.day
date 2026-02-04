@@ -18,6 +18,7 @@ import {
   isAllDayEvent,
   type KioskItem,
 } from "@/features/kiosk/kioskUtils";
+import { useDeployCheck } from "@/features/kiosk/useDeployCheck";
 import { useWeatherSnapshot } from "@/features/kiosk/weather/useWeatherSnapshot";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
@@ -35,6 +36,8 @@ const KioskPage: Component = () => {
   const { weather, weatherError } = useWeatherSnapshot();
   const { activeAlarm, alarmVideoUrl, setFullscreenContainerRef } =
     useAlarmVideo(alarms);
+
+  useDeployCheck();
 
   onMount(() => {
     const interval = window.setInterval(() => {
