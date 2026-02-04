@@ -1,8 +1,7 @@
 """Calendar entries table definition."""
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 

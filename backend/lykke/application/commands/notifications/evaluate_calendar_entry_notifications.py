@@ -11,13 +11,6 @@ from uuid import NAMESPACE_DNS, UUID, uuid5
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.repositories import (
-    CalendarEntryRepositoryReadOnlyProtocol,
-    DayRepositoryReadOnlyProtocol,
-    MessageRepositoryReadOnlyProtocol,
-    PushNotificationRepositoryReadOnlyProtocol,
-    PushSubscriptionRepositoryReadOnlyProtocol,
-)
 from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,
     SendPushNotificationHandler,
@@ -28,6 +21,13 @@ from lykke.application.notifications import (
     format_calendar_entry_time,
     format_calendar_entry_when,
     pick_calendar_entry_message_template,
+)
+from lykke.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    PushNotificationRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
 )
 from lykke.application.utils.filters import filter_upcoming_calendar_entries
 from lykke.core.utils.dates import (

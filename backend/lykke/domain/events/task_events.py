@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from lykke.domain.value_objects.update import TaskDefinitionUpdateObject, TaskUpdateObject
+from lykke.domain.value_objects.update import (
+    TaskDefinitionUpdateObject,
+    TaskUpdateObject,
+)
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
 

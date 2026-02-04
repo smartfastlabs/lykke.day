@@ -79,8 +79,8 @@ class BaseQueryHandler(
         self,
         *,
         user: UserEntity,
-        command_factory: "CommandHandlerFactoryProtocol | None" = None,
-        gateway_factory: "GatewayFactoryProtocol | None" = None,
+        command_factory: CommandHandlerFactoryProtocol | None = None,
+        gateway_factory: GatewayFactoryProtocol | None = None,
         repository_factory: ReadOnlyRepositoryFactoryProtocol | None = None,
         readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
     ) -> None:

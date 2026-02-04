@@ -32,6 +32,12 @@ from lykke.application.commands.task import (
     DeleteTaskHandler,
     RecordTaskActionHandler,
 )
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
+from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
+from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.application.queries import (
     ComputeTaskRiskHandler,
     GetDayContextHandler,
@@ -40,12 +46,6 @@ from lykke.application.queries import (
     PreviewLLMSnapshotHandler,
 )
 from lykke.application.queries.base import BaseQueryHandler
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.gateways.llm_gateway_factory_protocol import (
-    LLMGatewayFactoryProtocol,
-)
-from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
-from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.infrastructure.gateways import (
     GoogleCalendarGateway,
     RedisPubSubGateway,
@@ -183,7 +183,7 @@ class QueryHandlerFactory:
     def create(self, handler_class: type[object]) -> object: ...
 
     def create(self, handler_class: type[object]) -> object:
-        handler_type = cast(type[BaseQueryHandler], handler_class)
+        handler_type = cast("type[BaseQueryHandler]", handler_class)
         provider = self._registry.get(handler_type)
         if provider is None:
             return handler_type(
@@ -585,7 +585,7 @@ class CommandHandlerFactory:
         gateway_provider = self._gateway_provider_for_type(handler_class)
         if gateway_provider is not None:
             return gateway_provider()
-        handler_type = cast(type[BaseCommandHandler], handler_class)
+        handler_type = cast("type[BaseCommandHandler]", handler_class)
         provider = self._registry.get(handler_type)
         if provider is None:
             return handler_type(

@@ -14,7 +14,6 @@ from .push_notification import PushNotificationSchema
 from .routine import RoutineSchema
 from .task import TaskSchema
 
-
 DayContextPartKey = Literal[
     "day",
     "tasks",

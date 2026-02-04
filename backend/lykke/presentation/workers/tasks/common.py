@@ -20,12 +20,12 @@ from lykke.presentation.workers.tasks.registry import WorkerRegistry
 if TYPE_CHECKING:
     from lykke.application.commands import ScheduleDayHandler
     from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
-    from lykke.application.commands.day import TriggerAlarmsForUserHandler
     from lykke.application.commands.calendar import (
         SubscribeCalendarHandler,
         SyncAllCalendarsHandler,
         SyncCalendarHandler,
     )
+    from lykke.application.commands.day import TriggerAlarmsForUserHandler
     from lykke.application.commands.message import ProcessInboundSmsHandler
     from lykke.application.commands.notifications import (
         CalendarEntryNotificationHandler,

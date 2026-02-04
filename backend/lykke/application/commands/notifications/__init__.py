@@ -11,10 +11,10 @@ from .evaluate_smart_notification import (
 )
 
 __all__ = [
-    "MorningOverviewCommand",
-    "MorningOverviewHandler",
     "CalendarEntryNotificationCommand",
     "CalendarEntryNotificationHandler",
+    "MorningOverviewCommand",
+    "MorningOverviewHandler",
     "SmartNotificationCommand",
     "SmartNotificationHandler",
 ]

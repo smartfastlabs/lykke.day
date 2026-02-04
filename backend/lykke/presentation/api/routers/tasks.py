@@ -17,8 +17,8 @@ from lykke.application.commands import (
 )
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import AdhocTaskCreateSchema, TaskSchema
-from lykke.presentation.api.schemas.task import TaskRescheduleSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
+from lykke.presentation.api.schemas.task import TaskRescheduleSchema
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
 from .dependencies.factories import command_handler_factory

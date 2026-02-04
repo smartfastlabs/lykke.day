@@ -51,9 +51,7 @@ class LLMTool:
                 raise ValueError("LLM tool callbacks must use named parameters")
 
             annotation = param.annotation
-            if annotation is inspect.Parameter.empty:
-                annotation = hints.get(name, Any)
-            elif isinstance(annotation, str):
+            if annotation is inspect.Parameter.empty or isinstance(annotation, str):
                 annotation = hints.get(name, Any)
             default_value: Any = (
                 ... if param.default is inspect.Parameter.empty else param.default

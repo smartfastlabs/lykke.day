@@ -87,7 +87,7 @@ class WebhookRelayManager:
             relay_response = await asyncio.wait_for(
                 future, timeout=settings.WEBHOOK_RELAY_TIMEOUT_SECONDS
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Webhook relay timed out (id={})", request_id)
             return Response(status_code=status.HTTP_504_GATEWAY_TIMEOUT)
         except Exception as exc:

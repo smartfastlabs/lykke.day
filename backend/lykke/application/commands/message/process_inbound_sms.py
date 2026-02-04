@@ -29,11 +29,11 @@ from lykke.application.gateways.llm_gateway_factory_protocol import (
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
-from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
+from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity, UserEntity

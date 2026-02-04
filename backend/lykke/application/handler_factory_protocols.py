@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
+
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
@@ -27,7 +28,7 @@ class BaseFactory(Protocol):
 class ReadOnlyRepositoryFactoryProtocol(Protocol):
     """Protocol for constructing user-scoped read-only repositories."""
 
-    def create(self, user: "UserEntity") -> "ReadOnlyRepositories":
+    def create(self, user: UserEntity) -> ReadOnlyRepositories:
         """Return read-only repositories for the given user."""
 
 

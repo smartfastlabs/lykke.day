@@ -5,7 +5,6 @@ import random
 from typing import Any
 
 from lykke.core.utils.dates import resolve_timezone
-
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity, TaskEntity
 

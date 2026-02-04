@@ -7,6 +7,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
@@ -17,7 +18,6 @@ from lykke.application.repositories import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
-from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects

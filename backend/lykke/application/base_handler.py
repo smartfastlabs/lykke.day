@@ -21,31 +21,6 @@ if TYPE_CHECKING:
         GatewayFactoryProtocol,
         ReadOnlyRepositoryFactoryProtocol,
     )
-    from lykke.application.repositories import (
-        AuditLogRepositoryReadOnlyProtocol,
-        AuthTokenRepositoryReadOnlyProtocol,
-        BotPersonalityRepositoryReadOnlyProtocol,
-        BrainDumpRepositoryReadOnlyProtocol,
-        CalendarEntryRepositoryReadOnlyProtocol,
-        CalendarEntrySeriesRepositoryReadOnlyProtocol,
-        CalendarRepositoryReadOnlyProtocol,
-        DayRepositoryReadOnlyProtocol,
-        DayTemplateRepositoryReadOnlyProtocol,
-        FactoidRepositoryReadOnlyProtocol,
-        MessageRepositoryReadOnlyProtocol,
-        PushNotificationRepositoryReadOnlyProtocol,
-        PushSubscriptionRepositoryReadOnlyProtocol,
-        RoutineDefinitionRepositoryReadOnlyProtocol,
-        RoutineRepositoryReadOnlyProtocol,
-        SmsLoginCodeRepositoryReadOnlyProtocol,
-        TacticRepositoryReadOnlyProtocol,
-        TaskDefinitionRepositoryReadOnlyProtocol,
-        TaskRepositoryReadOnlyProtocol,
-        TimeBlockDefinitionRepositoryReadOnlyProtocol,
-        TriggerRepositoryReadOnlyProtocol,
-        UseCaseConfigRepositoryReadOnlyProtocol,
-        UserRepositoryReadOnlyProtocol,
-    )
     from lykke.application.unit_of_work import (
         ReadWriteRepositoryFactory,
         UnitOfWorkFactory,
@@ -218,15 +193,6 @@ class BaseHandler:
         if isinstance(annotation, type):
             return annotation
         return None
-
-
-@dataclass(frozen=True)
-class _StaticReadOnlyRepositoryFactory:
-    ro_repos: ReadOnlyRepositories
-
-    def create(self, user: UserEntity) -> ReadOnlyRepositories:
-        _ = user
-        return self.ro_repos
 
 
 def _build_repo_type_map(repo_protocol: type[object]) -> dict[type[object], str]:
