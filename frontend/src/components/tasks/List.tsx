@@ -108,21 +108,6 @@ const TaskItem: Component<{ task: Task }> = (props) => {
         compact={true}
       >
         <div class="flex items-center justify-start gap-2">
-          {/* Time column - only show if there's a time */}
-          <Show when={time()?.primary}>
-            <div class="flex-shrink-0 text-right">
-              <span
-                class={`text-[10px] tabular-nums whitespace-nowrap ${
-                  time()?.primary === "flexible"
-                    ? "text-stone-400 italic"
-                    : "text-stone-500"
-                }`}
-              >
-                {time()?.primary}
-              </span>
-            </div>
-          </Show>
-
           {/* Category/Type icon */}
           <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
             <Show when={icon()}>
@@ -149,6 +134,21 @@ const TaskItem: Component<{ task: Task }> = (props) => {
                 .replace("Routine Definition: ", "")}
             </span>
           </div>
+
+          {/* Time - right justified, only when present */}
+          <Show when={time()?.primary}>
+            <div class="flex-shrink-0 ml-auto text-right">
+              <span
+                class={`text-[10px] tabular-nums whitespace-nowrap ${
+                  time()?.primary === "flexible"
+                    ? "text-stone-400 italic"
+                    : "text-stone-500"
+                }`}
+              >
+                {time()?.primary}
+              </span>
+            </div>
+          </Show>
 
           <Show when={props.task.status === "COMPLETE"}>
             <div class="flex-shrink-0 w-4 text-amber-600">
