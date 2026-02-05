@@ -12,6 +12,7 @@ from loguru import logger
 from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
 )
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.application.llm.prompt_rendering import (
     combine_system_prompt,
@@ -22,16 +23,14 @@ from lykke.application.llm.prompt_rendering import (
 from lykke.application.llm.tools_prompt import render_tools_prompt
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
+from lykke.domain import value_objects
+from lykke.domain.entities import UserEntity
 
 if TYPE_CHECKING:
     from datetime import date as datetime_date
     from uuid import UUID
 
-    from lykke.application.repositories import (
-        UseCaseConfigRepositoryReadOnlyProtocol,
-    )
     from lykke.domain import value_objects
-    from lykke.domain.entities import UserEntity
 
 
 @dataclass(frozen=True)
@@ -81,6 +80,18 @@ class LLMHandlerMixin(ABC):
     llm_gateway_factory: LLMGatewayFactoryProtocol
     _llm_snapshot_context: LLMRunSnapshotContext | None = None
 
+    def resolve_llm_provider(
+        self, user: UserEntity
+    ) -> value_objects.LLMProvider | None:
+        """Resolve which LLM provider to use for this handler.
+
+        Default behavior is one-shot usecases: require an explicit per-user setting.
+        Stateful flows (e.g. onboarding) may override with a safe default.
+        """
+        if not user.settings:
+            return None
+        return user.settings.llm_provider
+
     @abstractmethod
     async def build_prompt_input(self, date: datetime_date) -> UseCasePromptInput:
         """Build the prompt inputs for this handler."""
@@ -99,13 +110,12 @@ class LLMHandlerMixin(ABC):
         """Run the LLM flow for this handler."""
         user = self.user
 
-        if not user.settings or not user.settings.llm_provider:
+        llm_provider = self.resolve_llm_provider(user)
+        if llm_provider is None:
             logger.debug(
                 f"User {self.user.id} has no LLM provider configured, skipping"
             )
             return None
-
-        llm_provider = user.settings.llm_provider
         current_time = get_current_datetime_in_timezone(user.settings.timezone)
         current_date = get_current_date(user.settings.timezone)
 

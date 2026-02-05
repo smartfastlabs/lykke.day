@@ -53,6 +53,8 @@ from lykke.application.repositories import (
     TriggerRepositoryReadWriteProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
+    UserProfileRepositoryReadOnlyProtocol,
+    UserProfileRepositoryReadWriteProtocol,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -246,6 +248,7 @@ class ReadOnlyRepositories(Protocol):
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    user_profile_ro_repo: UserProfileRepositoryReadOnlyProtocol
 
 
 class ReadOnlyRepositoryFactory(Protocol):
@@ -294,6 +297,7 @@ class ReadWriteRepositories(Protocol):
     time_block_definition_rw_repo: TimeBlockDefinitionRepositoryReadWriteProtocol
     trigger_rw_repo: TriggerRepositoryReadWriteProtocol
     usecase_config_rw_repo: UseCaseConfigRepositoryReadWriteProtocol
+    user_profile_rw_repo: UserProfileRepositoryReadWriteProtocol
 
 
 class ReadWriteRepositoryFactory(Protocol):

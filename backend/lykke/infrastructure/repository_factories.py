@@ -31,6 +31,7 @@ from lykke.infrastructure.repositories import (
     TimeBlockDefinitionRepository,
     TriggerRepository,
     UseCaseConfigRepository,
+    UserProfileRepository,
 )
 
 if TYPE_CHECKING:
@@ -76,6 +77,8 @@ if TYPE_CHECKING:
         TriggerRepositoryReadWriteProtocol,
         UseCaseConfigRepositoryReadOnlyProtocol,
         UseCaseConfigRepositoryReadWriteProtocol,
+        UserProfileRepositoryReadOnlyProtocol,
+        UserProfileRepositoryReadWriteProtocol,
     )
     from lykke.application.unit_of_work import ReadOnlyRepositories, ReadWriteRepositories
 
@@ -164,6 +167,10 @@ class SqlAlchemyReadOnlyRepositories:
         self.factoid_ro_repo = cast(
             "FactoidRepositoryReadOnlyProtocol",
             FactoidRepository(user=self.user),
+        )
+        self.user_profile_ro_repo = cast(
+            "UserProfileRepositoryReadOnlyProtocol",
+            UserProfileRepository(user=self.user),
         )
 
         # AuditLogRepository is read-only (immutable entities)
@@ -272,6 +279,10 @@ class SqlAlchemyReadWriteRepositories:
         self.push_notification_rw_repo = cast(
             "PushNotificationRepositoryReadWriteProtocol",
             PushNotificationRepository(user=self.user),
+        )
+        self.user_profile_rw_repo = cast(
+            "UserProfileRepositoryReadWriteProtocol",
+            UserProfileRepository(user=self.user),
         )
 
 

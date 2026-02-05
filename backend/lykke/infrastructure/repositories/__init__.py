@@ -19,6 +19,7 @@ from .task_definition import TaskDefinitionRepository
 from .time_block_definition import TimeBlockDefinitionRepository
 from .trigger import TriggerRepository
 from .usecase_config import UseCaseConfigRepository
+from .user_profile import UserProfileRepository
 
 __all__ = [
     "AuditLogRepository",
@@ -42,4 +43,5 @@ __all__ = [
     "TimeBlockDefinitionRepository",
     "TriggerRepository",
     "UseCaseConfigRepository",
+    "UserProfileRepository",
 ]

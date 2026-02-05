@@ -47,6 +47,7 @@ from lykke.domain.entities import (
     TriggerEntity,
     UseCaseConfigEntity,
     UserEntity,
+    UserProfileEntity,
 )
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
@@ -84,6 +85,7 @@ from lykke.infrastructure.repositories import (
     TimeBlockDefinitionRepository,
     TriggerRepository,
     UseCaseConfigRepository,
+    UserProfileRepository,
 )
 
 if TYPE_CHECKING:
@@ -115,6 +117,7 @@ if TYPE_CHECKING:
         TimeBlockDefinitionRepositoryReadWriteProtocol,
         TriggerRepositoryReadWriteProtocol,
         UseCaseConfigRepositoryReadWriteProtocol,
+        UserProfileRepositoryReadWriteProtocol,
     )
     from lykke.application.unit_of_work import UnitOfWorkProtocol
     from lykke.domain import value_objects
@@ -159,6 +162,7 @@ class SqlAlchemyUnitOfWork:
         PushSubscriptionEntity: "_push_subscription_rw_repo",
         AuthTokenEntity: "_auth_token_rw_repo",
         UseCaseConfigEntity: "_usecase_config_rw_repo",
+        UserProfileEntity: "_user_profile_rw_repo",
     }
 
     def __init__(
@@ -228,6 +232,7 @@ class SqlAlchemyUnitOfWork:
             TimeBlockDefinitionRepositoryReadWriteProtocol | None
         ) = None
         self._trigger_rw_repo: TriggerRepositoryReadWriteProtocol | None = None
+        self._user_profile_rw_repo: UserProfileRepositoryReadWriteProtocol | None = None
         # Note: UserEntity and SmsLoginCodeEntity persistence is intentionally *not*
         # handled by the UnitOfWork. Cross-user identity access is isolated in
         # infrastructure/unauthenticated/identity_access.py.
@@ -343,6 +348,12 @@ class SqlAlchemyUnitOfWork:
             UseCaseConfigRepository(user=self.user),
         )
         self._usecase_config_rw_repo = usecase_config_repo
+
+        user_profile_repo = cast(
+            "UserProfileRepositoryReadWriteProtocol",
+            UserProfileRepository(user=self.user),
+        )
+        self._user_profile_rw_repo = user_profile_repo
 
         # Chatbot-related repositories
         bot_personality_repo = cast(

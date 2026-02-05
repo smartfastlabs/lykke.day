@@ -23,6 +23,7 @@ from .time_block_definition import TimeBlockDefinitionEntity
 from .trigger import TriggerEntity
 from .usecase_config import UseCaseConfigEntity
 from .user import UserEntity
+from .user_profile import UserProfileEntity
 
 __all__ = [
     "AuditLogEntity",
@@ -51,4 +52,5 @@ __all__ = [
     "TriggerEntity",
     "UseCaseConfigEntity",
     "UserEntity",
+    "UserProfileEntity",
 ]

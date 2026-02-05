@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     ANTHROPIC_MODEL: str = "claude-3-5-haiku-20241022"  # Default to Haiku for cost
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"  # Default to cheaper model
+    DEFAULT_LLM_PROVIDER: str = "anthropic"
     SMART_NOTIFICATIONS_ENABLED: bool = True  # Feature flag
     SMART_NOTIFICATION_RATE_LIMIT_MINUTES: int = 10  # Prevent spam
     SENTRY_DSN: str = ""

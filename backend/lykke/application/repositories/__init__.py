@@ -85,6 +85,10 @@ from .usecase_config_repository import (
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
 )
+from .user_profile_repository import (
+    UserProfileRepositoryReadOnlyProtocol,
+    UserProfileRepositoryReadWriteProtocol,
+)
 
 # Exported repository protocols (sorted alphabetically)
 __all__ = [
@@ -129,4 +133,6 @@ __all__ = [
     "TriggerRepositoryReadWriteProtocol",
     "UseCaseConfigRepositoryReadOnlyProtocol",
     "UseCaseConfigRepositoryReadWriteProtocol",
+    "UserProfileRepositoryReadOnlyProtocol",
+    "UserProfileRepositoryReadWriteProtocol",
 ]
