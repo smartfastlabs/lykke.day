@@ -30,10 +30,15 @@ class CalendarEntry(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
     actions = Column(JSONB)  # list[Action]
+    ical_uid = Column(String, nullable=True)
+    original_starts_at = Column(DateTime, nullable=True)
+    recurring_platform_id = Column(String, nullable=True)
 
     __table_args__ = (
         Index("idx_calendar_entries_date", "date"),
         Index("idx_calendar_entries_calendar_id", "calendar_id"),
         Index("idx_calendar_entries_user_id", "user_id"),
         Index("idx_calendar_entries_series_id", "calendar_entry_series_id"),
+        Index("idx_calendar_entries_ical_uid", "ical_uid"),
+        Index("idx_calendar_entries_recurring_platform_id", "recurring_platform_id"),
     )

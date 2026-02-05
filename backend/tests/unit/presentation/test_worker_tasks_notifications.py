@@ -12,10 +12,10 @@ from lykke.presentation.workers.tasks import notifications as notification_tasks
 from tests.support.dobles import create_read_only_repos_double
 from tests.unit.presentation.worker_task_helpers import (
     build_user,
+    create_identity_access,
     create_gateway_recorder,
     create_handler_recorder,
     create_task_recorder,
-    create_user_repo,
 )
 
 
@@ -26,10 +26,10 @@ async def test_evaluate_smart_notifications_for_all_users_task() -> None:
         build_user(uuid4(), llm_provider=None),
     ]
     task, calls = create_task_recorder()
-    user_repo = create_user_repo(users)
+    identity_access = create_identity_access(users)
 
     await notification_tasks.evaluate_smart_notifications_for_all_users_task(
-        user_repo=user_repo,
+        identity_access=identity_access,
         enqueue_task=task,
     )
 
@@ -75,7 +75,7 @@ async def test_evaluate_morning_overviews_for_all_users_task() -> None:
     users = [eligible_user, invalid_user, late_user]
 
     task, calls = create_task_recorder()
-    user_repo = create_user_repo(users)
+    identity_access = create_identity_access(users)
 
     ro_repos = create_read_only_repos_double()
     allow(ro_repos.push_notification_ro_repo).search.and_return([])
@@ -85,7 +85,7 @@ async def test_evaluate_morning_overviews_for_all_users_task() -> None:
     allow(ro_factory).create.and_return(ro_repos)
 
     await notification_tasks.evaluate_morning_overviews_for_all_users_task(
-        user_repo=user_repo,
+        identity_access=identity_access,
         enqueue_task=task,
         ro_repo_factory=ro_factory,
         current_time_provider=lambda _: time(8, 5),

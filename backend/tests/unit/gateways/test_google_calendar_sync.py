@@ -517,11 +517,6 @@ async def test_sync_calendar_series_updates_cascade_entries_once(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -640,11 +635,6 @@ async def test_sync_calendar_series_deletion_cascades_entries_once(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -741,11 +731,6 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -767,6 +752,7 @@ async def test_sync_calendar_series_cancelled_master_ends_series(
     ]
     assert updated_series
     assert updated_series[0].ends_at is not None
+    assert updated_series[0].deleted_at is not None
 
 
 @pytest.mark.asyncio
@@ -828,11 +814,6 @@ async def test_sync_calendar_series_creation_emits_single_notification(
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
 
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
-
     handler = SyncCalendarHandler(
         user=test_user,
         uow_factory=mock_uow_factory,
@@ -852,6 +833,186 @@ async def test_sync_calendar_series_creation_emits_single_notification(
         if isinstance(event, CalendarEntryCreatedEvent)
     )
     assert created_event_count == 1
+
+
+@pytest.mark.asyncio
+async def test_sync_calendar_single_to_series_attaches_existing_entry(
+    test_user_id,
+    test_user,
+    test_calendar,
+    mock_ro_repos,
+    mock_uow_factory,
+    mock_uow,
+    mock_google_gateway,
+    mock_calendar_entry_series_repo,
+    mock_calendar_entry_repo,
+):
+    """When a single event is converted to a series, attach existing standalone entry to series."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-converted")
+    new_series = CalendarEntrySeriesEntity(
+        id=series_id,
+        user_id=test_user_id,
+        calendar_id=test_calendar.id,
+        name="Converted Series",
+        platform_id="series-converted",
+        platform="google",
+        frequency=TaskFrequency.WEEKLY,
+    )
+    instance_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Converted Series",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="instance-xyz_20250301T090000Z",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 3, 1, 9, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 3, 1, 10, 0, tzinfo=UTC),
+        frequency=TaskFrequency.WEEKLY,
+        ical_uid="same-ical@google.com",
+        recurring_platform_id="series-converted",
+    )
+    standalone_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Was Single Event",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=None,
+        platform_id="old-single-id",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 3, 1, 9, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 3, 1, 10, 0, tzinfo=UTC),
+        frequency=TaskFrequency.ONCE,
+        ical_uid="same-ical@google.com",
+    )
+
+    allow(mock_calendar_entry_series_repo).get.and_raise(NotFoundError("missing"))
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([instance_entry], [], [new_series], [], "new-sync-token")
+    )
+
+    async def search_entries(query: object) -> list[CalendarEntryEntity]:
+        if getattr(query, "platform_ids", None) == ["instance-xyz_20250301T090000Z"]:
+            return []
+        if (
+            getattr(query, "ical_uid", None) == "same-ical@google.com"
+            and getattr(query, "calendar_id", None) == test_calendar.id
+            and getattr(query, "date", None) is not None
+        ):
+            return [standalone_entry]
+        return []
+
+    mock_calendar_entry_repo.search = search_entries
+    mock_uow.calendar_entry_ro_repo.search = search_entries
+
+    handler = SyncCalendarHandler(
+        user=test_user,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
+    )
+
+    await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
+
+    added_entries = [
+        entity for entity in mock_uow.added if isinstance(entity, CalendarEntryEntity)
+    ]
+    created_count = sum(
+        1
+        for e in added_entries
+        for ev in e.collect_events()
+        if isinstance(ev, CalendarEntryCreatedEvent)
+    )
+    assert created_count == 0, "should attach existing entry, not create new one"
+    updated_with_series = [
+        e
+        for e in added_entries
+        if e.calendar_entry_series_id == series_id and e.platform_id == "old-single-id"
+    ]
+    assert len(updated_with_series) == 1
+    assert updated_with_series[0].recurring_platform_id == "series-converted"
+
+
+@pytest.mark.asyncio
+async def test_sync_calendar_instance_exceptions_emit_per_entry_notification(
+    test_user_id,
+    test_user,
+    test_calendar,
+    mock_ro_repos,
+    mock_uow_factory,
+    mock_uow,
+    mock_google_gateway,
+    mock_calendar_entry_series_repo,
+    mock_calendar_entry_repo,
+):
+    """Entries with original_starts_at (instance exceptions) each get their own notification."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-ex")
+    new_series = CalendarEntrySeriesEntity(
+        id=series_id,
+        user_id=test_user_id,
+        calendar_id=test_calendar.id,
+        name="Series With Exceptions",
+        platform_id="series-ex",
+        platform="google",
+        frequency=TaskFrequency.WEEKLY,
+    )
+    exception_one = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Moved 1",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="ex-1",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 4, 1, 10, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 4, 1, 11, 0, tzinfo=UTC),
+        frequency=TaskFrequency.WEEKLY,
+        original_starts_at=datetime(2025, 4, 1, 9, 0, tzinfo=UTC),
+    )
+    exception_two = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Moved 2",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="ex-2",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 4, 8, 14, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 4, 8, 15, 0, tzinfo=UTC),
+        frequency=TaskFrequency.WEEKLY,
+        original_starts_at=datetime(2025, 4, 8, 13, 0, tzinfo=UTC),
+    )
+
+    allow(mock_calendar_entry_series_repo).get.and_raise(NotFoundError("missing"))
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([exception_one, exception_two], [], [new_series], [], "new-sync-token")
+    )
+
+    async def search_entries(_: object) -> list[CalendarEntryEntity]:
+        return []
+
+    mock_calendar_entry_repo.search = search_entries
+    mock_uow.calendar_entry_ro_repo.search = search_entries
+
+    handler = SyncCalendarHandler(
+        user=test_user,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
+    )
+
+    await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
+
+    created_entries = [
+        entity for entity in mock_uow.added if isinstance(entity, CalendarEntryEntity)
+    ]
+    created_event_count = sum(
+        1
+        for entry in created_entries
+        for event in entry.collect_events()
+        if isinstance(event, CalendarEntryCreatedEvent)
+    )
+    assert created_event_count == 2, "instance exceptions get one notification each"
 
 
 @pytest.mark.asyncio
@@ -900,11 +1061,6 @@ async def test_sync_calendar_instance_level_single_entry_emits_notification(
 
     mock_calendar_entry_repo.search = search_entries
     mock_uow.calendar_entry_ro_repo.search = search_entries
-
-    async def get_user(_: object) -> object:
-        return SimpleNamespace(settings=SimpleNamespace(timezone="UTC"))
-
-    mock_uow.user_ro_repo.get = get_user
 
     handler = SyncCalendarHandler(
         user=test_user,

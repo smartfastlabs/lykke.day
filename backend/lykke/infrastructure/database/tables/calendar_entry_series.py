@@ -24,9 +24,12 @@ class CalendarEntrySeries(Base):
     ends_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
+    ical_uid = Column(String, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
         Index("idx_calendar_entry_series_user_id", "user_id"),
         Index("idx_calendar_entry_series_calendar_id", "calendar_id"),
         Index("idx_calendar_entry_series_platform_id", "platform_id"),
+        Index("idx_calendar_entry_series_ical_uid", "ical_uid"),
     )

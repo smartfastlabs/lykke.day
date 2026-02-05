@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from lykke.application.commands.base import Command
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.gateways import SMSProviderProtocol
-from lykke.application.repositories import SmsLoginCodeRepositoryReadWriteProtocol
 from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.core.utils.sms_code import generate_code, hash_code
 from lykke.domain.entities import SmsLoginCodeEntity
@@ -27,10 +27,10 @@ class RequestSmsLoginCodeHandler:
 
     def __init__(
         self,
-        sms_login_code_repo: SmsLoginCodeRepositoryReadWriteProtocol,
+        identity_access: UnauthenticatedIdentityAccessProtocol,
         sms_gateway: SMSProviderProtocol,
     ) -> None:
-        self._sms_login_code_repo = sms_login_code_repo
+        self._identity_access = identity_access
         self._sms_gateway = sms_gateway
 
     async def handle(self, command: RequestSmsLoginCodeCommand) -> None:
@@ -48,7 +48,7 @@ class RequestSmsLoginCodeHandler:
             code_hash=code_hash,
             expires_at=expires_at,
         )
-        await self._sms_login_code_repo.put(entity)
+        await self._identity_access.create_sms_login_code(entity)
 
         message = SMS_MESSAGE_TEMPLATE.format(code=code)
         await self._sms_gateway.send_message(normalized, message)

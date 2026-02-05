@@ -36,7 +36,6 @@ from tests.support.dobles import (
     create_repo_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
 )
 
 
@@ -132,9 +131,6 @@ async def test_calendar_entry_push_sends_notification() -> None:
     ]
     user = _build_user(user_id, rules=rules)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     _allow_calendar_entry_search(calendar_entry_repo, now.date(), entry)
 
@@ -159,7 +155,6 @@ async def test_calendar_entry_push_sends_notification() -> None:
     allow(message_repo).search.and_return([])
 
     ro_repos = create_read_only_repos_double(
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         push_subscription_repo=push_subscription_repo,
         push_notification_repo=push_notification_repo,
@@ -201,9 +196,6 @@ async def test_calendar_entry_push_dedupes_on_triggered_by() -> None:
     ]
     user = _build_user(user_id, rules=rules)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     _allow_calendar_entry_search(calendar_entry_repo, now.date(), entry)
 
@@ -223,7 +215,6 @@ async def test_calendar_entry_push_dedupes_on_triggered_by() -> None:
     )
 
     ro_repos = create_read_only_repos_double(
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         push_notification_repo=push_notification_repo,
     )
@@ -257,9 +248,6 @@ async def test_calendar_entry_text_creates_message_and_sends_sms() -> None:
     ]
     user = _build_user(user_id, rules=rules)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     _allow_calendar_entry_search(calendar_entry_repo, now.date(), entry)
 
@@ -267,7 +255,6 @@ async def test_calendar_entry_text_creates_message_and_sends_sms() -> None:
     allow(message_repo).search.and_return([])
 
     ro_repos = create_read_only_repos_double(
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         message_repo=message_repo,
     )
@@ -306,9 +293,6 @@ async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> No
     ]
     user = _build_user(user_id, rules=rules)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     _allow_calendar_entry_search(calendar_entry_repo, now.date(), entry)
 
@@ -319,7 +303,6 @@ async def test_calendar_entry_kiosk_alarm_emits_event_without_persisting() -> No
     allow(day_repo).get.with_args(day.id).and_return(day)
 
     ro_repos = create_read_only_repos_double(
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         day_repo=day_repo,
     )

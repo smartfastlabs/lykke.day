@@ -16,7 +16,6 @@ from lykke.application.repositories import (
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
 from lykke.core.exceptions import NotFoundError
@@ -53,7 +52,6 @@ class GetDayContextHandler(
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetDayContextQuery) -> value_objects.DayContext:
         """Handle get day context query."""

@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from lykke.core.exceptions import NotFoundError
+from lykke.core.exceptions import NotFoundError, UserScopeRequiredError
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.base import BaseEntityObject
@@ -60,12 +60,26 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     # Override in subclasses for entity-specific exclusions (e.g., {"date"} for computed fields)
     excluded_row_fields: ClassVar[set[str]] = set()
 
+    # Explicit escape hatch for rare cases where a table has user_id but a repository
+    # must be constructed unscoped (default: forbidden).
+    allow_unscoped_user_id_table: ClassVar[bool] = False
+
     def __init__(self, user_id: UUID | None = None) -> None:
         """Initialize repository with optional user scoping.
 
         Args:
             user_id: Optional user ID. When provided, all operations are scoped to this user.
         """
+        if (
+            user_id is None
+            and getattr(type(self), "allow_unscoped_user_id_table", False) is False
+            and hasattr(type(self), "table")
+            and hasattr(type(self).table.c, "user_id")
+        ):
+            raise UserScopeRequiredError(
+                f"{type(self).__name__} requires a user scope (table has user_id). "
+                "Construct it with `user=` (UserScopedBaseRepository) or `user_id=`."
+            )
         self.user_id = user_id
 
     @classmethod

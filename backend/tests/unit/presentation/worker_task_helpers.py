@@ -8,9 +8,9 @@ from uuid import UUID, uuid4
 
 from dobles import InstanceDouble, allow
 
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from tests.support.dobles import create_user_repo_double
 
 
 class TaskProtocol(Protocol):
@@ -84,11 +84,18 @@ def create_gateway_recorder() -> tuple[InstanceDouble, dict[str, bool]]:
     return gateway, state
 
 
-def create_user_repo(users: list[UserEntity]) -> InstanceDouble:
-    repo = create_user_repo_double()
-    allow(repo).all.and_return(users)
-    allow(repo).get.and_return(users[0])
-    return repo
+def create_identity_access(users: list[UserEntity]) -> InstanceDouble:
+    access = InstanceDouble(_protocol_path(UnauthenticatedIdentityAccessProtocol))
+    allow(access).list_all_users.and_return(users)
+
+    async def get_user_by_id(user_id: UUID) -> UserEntity | None:
+        for user in users:
+            if user.id == user_id:
+                return user
+        return None
+
+    access.get_user_by_id = get_user_by_id
+    return access
 
 
 def build_user(

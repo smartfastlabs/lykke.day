@@ -7,12 +7,12 @@ from lykke.application.commands.message import (
     ReceiveSmsMessageCommand,
     ReceiveSmsMessageHandler,
 )
-from lykke.application.queries.user import GetUserByPhoneHandler, GetUserByPhoneQuery
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.phone_numbers import normalize_phone_number
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
-    QueryHandlerFactory,
 )
 from lykke.presentation.webhook_relay import webhook_relay_manager
 
@@ -20,7 +20,6 @@ from .dependencies.services import (
     get_read_only_repository_factory,
     get_unit_of_work_factory,
 )
-from .dependencies.user import get_system_user
 
 router = APIRouter()
 
@@ -38,6 +37,10 @@ async def twilio_sms_webhook(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol,
+        Depends(lambda: UnauthenticatedIdentityAccess()),
     ],
 ) -> Response:
     """Webhook endpoint for inbound Twilio SMS messages."""
@@ -59,12 +62,7 @@ async def twilio_sms_webhook(
     from_number = normalize_phone_number(from_number)
     to_number = normalize_phone_number(to_number) if to_number else None
 
-    system_user = get_system_user()
-    query_factory = QueryHandlerFactory(
-        user=system_user, ro_repo_factory=ro_repo_factory
-    )
-    user_handler = query_factory.create(GetUserByPhoneHandler)
-    user = await user_handler.handle(GetUserByPhoneQuery(phone_number=from_number))
+    user = await identity_access.get_user_by_phone_number(from_number)
     if user is None:
         logger.warning("No user found for inbound SMS from {}", from_number)
         return Response(status_code=200)

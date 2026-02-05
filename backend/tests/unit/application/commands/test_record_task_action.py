@@ -24,7 +24,6 @@ from tests.support.dobles import (
     create_task_repo_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
 )
 
 
@@ -82,20 +81,15 @@ async def test_record_task_action_adds_task_and_day_to_uow():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     ro_repos = create_read_only_repos_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
@@ -173,20 +167,15 @@ async def test_record_task_action_raises_domain_events():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     ro_repos = create_read_only_repos_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
@@ -259,20 +248,15 @@ async def test_record_task_action_raises_if_day_missing():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     ro_repos = create_read_only_repos_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(
@@ -333,20 +317,15 @@ async def test_record_task_action_punt_updates_status():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     ro_repos = create_read_only_repos_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         task_repo=task_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = RecordTaskActionHandler(

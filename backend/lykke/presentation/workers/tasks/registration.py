@@ -7,7 +7,7 @@ from loguru import logger
 
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.repositories import UserRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
 from .common import get_read_only_repository_factory, get_unit_of_work_factory
 
@@ -44,11 +44,8 @@ def register_worker_event_handlers(
         from lykke.presentation.handler_factory import build_domain_event_handler
 
         async def _load_user(user_id: UUID) -> UserEntity | None:
-            user_repo = UserRepository()
-            try:
-                return await user_repo.get(user_id)
-            except Exception:
-                return None
+            identity_access = UnauthenticatedIdentityAccess()
+            return await identity_access.get_user_by_id(user_id)
 
         register_handlers(
             ro_repo_factory=ro_repo_factory,

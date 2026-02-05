@@ -25,7 +25,6 @@ from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
 )
 
 
@@ -75,18 +74,13 @@ async def test_create_brain_dump_creates_item():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.and_return(user)
-
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = CreateBrainDumpHandler(
@@ -141,18 +135,13 @@ async def test_create_brain_dump_day_not_found():
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.and_return(user)
-
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
     )
     uow_factory = create_uow_factory_double(uow)
     handler = CreateBrainDumpHandler(

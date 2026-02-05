@@ -26,6 +26,8 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
     ends_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    ical_uid: str | None = None  # master iCalUID from provider
+    deleted_at: datetime | None = None  # tombstone when series was deleted/cancelled
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

@@ -16,7 +16,6 @@ from lykke.application.repositories import (
     RoutineRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import UnitOfWorkProtocol
 from lykke.core.exceptions import NotFoundError
@@ -52,7 +51,6 @@ class ScheduleDayHandler(
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     @staticmethod
     def _time_to_local_datetime(

@@ -18,7 +18,6 @@ from tests.support.dobles import (
     create_read_only_repos_double,
     create_routine_definition_repo_double,
     create_task_definition_repo_double,
-    create_user_repo_double,
 )
 
 
@@ -60,9 +59,6 @@ async def test_preview_day_uses_provided_template():
     allow(day_template_repo).get.with_args(template.id).and_return(template)
     allow(day_template_repo).search_one.and_return(template)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).search.and_return([])
 
@@ -75,7 +71,6 @@ async def test_preview_day_uses_provided_template():
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
@@ -131,9 +126,6 @@ async def test_preview_day_falls_back_to_user_default_template():
     allow(day_template_repo).get.and_return(template)
     allow(day_template_repo).search_one.and_return(template)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).search.and_return([])
 
@@ -146,7 +138,6 @@ async def test_preview_day_falls_back_to_user_default_template():
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
@@ -198,9 +189,6 @@ async def test_preview_day_uses_existing_day_template_if_available():
     allow(day_template_repo).get.and_return(template)
     allow(day_template_repo).search_one.and_return(template)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).search.and_return([])
 
@@ -213,7 +201,6 @@ async def test_preview_day_uses_existing_day_template_if_available():
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,
@@ -267,9 +254,6 @@ async def test_preview_day_returns_calendar_entries():
     allow(day_template_repo).get.and_return(template)
     allow(day_template_repo).search_one.and_return(template)
 
-    user_repo = create_user_repo_double()
-    allow(user_repo).get.with_args(user_id).and_return(user)
-
     calendar_entry_repo = create_calendar_entry_repo_double()
     allow(calendar_entry_repo).search.and_return(mock_entries)
 
@@ -282,7 +266,6 @@ async def test_preview_day_returns_calendar_entries():
     ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
         routine_definition_repo=routine_definition_repo,
         task_definition_repo=task_definition_repo,

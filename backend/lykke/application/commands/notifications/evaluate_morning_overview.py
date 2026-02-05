@@ -32,7 +32,6 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
 from lykke.core.config import settings
 from lykke.core.utils.llm_snapshot import build_referenced_entities
@@ -54,7 +53,6 @@ class MorningOverviewHandler(
     """Evaluates day context using LLM and sends morning overview if warranted."""
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    user_ro_repo: UserRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     compute_task_risk_handler: ComputeTaskRiskHandler

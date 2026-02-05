@@ -31,14 +31,12 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
-    SmsLoginCodeRepositoryReadOnlyProtocol,
     TacticRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     TriggerRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
-    UserRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -127,11 +125,6 @@ def create_auth_token_repo_double() -> InstanceDouble:
     return create_repo_double(AuthTokenRepositoryReadOnlyProtocol)
 
 
-def create_user_repo_double() -> InstanceDouble:
-    """Create a dobles double for UserRepositoryReadOnlyProtocol."""
-    return create_repo_double(UserRepositoryReadOnlyProtocol)
-
-
 def create_routine_definition_repo_double() -> InstanceDouble:
     """Create a dobles double for RoutineDefinitionRepositoryReadOnlyProtocol."""
     return create_repo_double(RoutineDefinitionRepositoryReadOnlyProtocol)
@@ -212,7 +205,6 @@ def create_read_only_repos_double(
     time_block_definition_repo: InstanceDouble | None = None,
     trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
-    user_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
     """Create a dobles double for ReadOnlyRepositories protocol.
 
@@ -294,13 +286,6 @@ def create_read_only_repos_double(
     repos_double.usecase_config_ro_repo = usecase_config_repo or create_repo_double(
         UseCaseConfigRepositoryReadOnlyProtocol
     )
-    repos_double.user_ro_repo = user_repo or create_repo_double(
-        UserRepositoryReadOnlyProtocol
-    )
-    repos_double.sms_login_code_ro_repo = create_repo_double(
-        SmsLoginCodeRepositoryReadOnlyProtocol
-    )
-
     return repos_double
 
 
@@ -327,7 +312,6 @@ def create_uow_double(
     time_block_definition_repo: InstanceDouble | None = None,
     trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
-    user_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
     """Create a dobles double for UnitOfWorkProtocol.
 
@@ -407,13 +391,6 @@ def create_uow_double(
     uow_double.usecase_config_ro_repo = usecase_config_repo or create_repo_double(
         UseCaseConfigRepositoryReadOnlyProtocol
     )
-    uow_double.user_ro_repo = user_repo or create_repo_double(
-        UserRepositoryReadOnlyProtocol
-    )
-    uow_double.sms_login_code_ro_repo = create_repo_double(
-        SmsLoginCodeRepositoryReadOnlyProtocol
-    )
-
     # Stub async context manager methods
     allow(uow_double).__aenter__.and_return(uow_double)
     allow(uow_double).__aexit__.and_return(None)

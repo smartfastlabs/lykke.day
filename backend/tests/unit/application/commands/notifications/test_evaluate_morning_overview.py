@@ -30,7 +30,6 @@ from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
     create_uow_factory_double,
-    create_user_repo_double,
 )
 
 
@@ -181,18 +180,12 @@ async def test_morning_overview_handles_user_lookup_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     user_id = uuid4()
-    user_repo = create_user_repo_double()
-
-    async def raise_get(_: Any) -> None:
-        raise RuntimeError("missing user")
-
-    user_repo.get = raise_get
     handler_user = _build_user(user_id)
     handler = MorningOverviewHandler(
         user=handler_user,
         uow_factory=create_uow_factory_double(create_uow_double()),
         repository_factory=_RepositoryFactory(
-            create_read_only_repos_double(user_repo=user_repo)
+            create_read_only_repos_double()
         ),
     )
     handler.llm_gateway_factory = _LLMGatewayFactory()
@@ -213,19 +206,12 @@ async def test_morning_overview_skips_without_llm_provider(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     user_id = uuid4()
-    user_repo = create_user_repo_double()
-    user = UserEntity(email="test@example.com", hashed_password="hash")
-
-    async def return_user(_: Any) -> UserEntity:
-        return user
-
-    user_repo.get = return_user
-    handler_user = _build_user(user_id, settings=user.settings)
+    handler_user = _build_user(user_id, settings=value_objects.UserSetting())
     handler = MorningOverviewHandler(
         user=handler_user,
         uow_factory=create_uow_factory_double(create_uow_double()),
         repository_factory=_RepositoryFactory(
-            create_read_only_repos_double(user_repo=user_repo)
+            create_read_only_repos_double()
         ),
     )
     handler.llm_gateway_factory = _LLMGatewayFactory()
@@ -246,26 +232,18 @@ async def test_morning_overview_skips_without_time(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     user_id = uuid4()
-    user_repo = create_user_repo_double()
-    user = UserEntity(
-        email="test@example.com",
-        hashed_password="hash",
+    handler_user = _build_user(
+        user_id,
         settings=value_objects.UserSetting(
             llm_provider=value_objects.LLMProvider.OPENAI,
             timezone="UTC",
         ),
     )
-
-    async def return_user(_: Any) -> UserEntity:
-        return user
-
-    user_repo.get = return_user
-    handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
         user=handler_user,
         uow_factory=create_uow_factory_double(create_uow_double()),
         repository_factory=_RepositoryFactory(
-            create_read_only_repos_double(user_repo=user_repo)
+            create_read_only_repos_double()
         ),
     )
     handler.llm_gateway_factory = _LLMGatewayFactory()
@@ -296,27 +274,19 @@ async def test_morning_overview_runs_llm_when_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     user_id = uuid4()
-    user_repo = create_user_repo_double()
-    user = UserEntity(
-        email="test@example.com",
-        hashed_password="hash",
+    handler_user = _build_user(
+        user_id,
         settings=value_objects.UserSetting(
             llm_provider=value_objects.LLMProvider.OPENAI,
             morning_overview_time=time(8, 0),
             timezone="UTC",
         ),
     )
-
-    async def return_user(_: Any) -> UserEntity:
-        return user
-
-    user_repo.get = return_user
-    handler_user = _build_user(user_id, settings=user.settings)
     handler = MorningOverviewHandler(
         user=handler_user,
         uow_factory=create_uow_factory_double(create_uow_double()),
         repository_factory=_RepositoryFactory(
-            create_read_only_repos_double(user_repo=user_repo)
+            create_read_only_repos_double()
         ),
     )
     handler.llm_gateway_factory = _LLMGatewayFactory()

@@ -22,12 +22,12 @@ from lykke.infrastructure.repositories import (
     CalendarEntryRepository,
     DayTemplateRepository,
     TaskRepository,
-    UserRepository,
 )
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.handler_factory import CommandHandlerFactory
 from lykke.presentation.api.routers.dependencies.user import (
     get_current_user,
@@ -42,7 +42,7 @@ def setup_test_user_day_template():
     async def _setup():
         """Create a test user with default DayTemplate."""
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        user_repo = UserRepository()
+        identity_access = UnauthenticatedIdentityAccess()
         test_user_email = f"test_{uuid4()}@lykke.day"
         test_user = UserEntity(
             email=test_user_email,
@@ -50,7 +50,7 @@ def setup_test_user_day_template():
             hashed_password=pwd_context.hash("test_password"),
             settings=UserSetting(),
         )
-        test_user = await user_repo.put(test_user)
+        await identity_access.create_user(test_user)
 
         day_template_repo = DayTemplateRepository(user=test_user)
 
@@ -78,8 +78,10 @@ async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
     This is used instead of the removed HTTP endpoint to ensure days exist
     before creating tasks or testing other functionality.
     """
-    user_repo = UserRepository()
-    user = await user_repo.get(user_id)
+    identity_access = UnauthenticatedIdentityAccess()
+    user = await identity_access.get_user_by_id(user_id)
+    if user is None:
+        raise ValueError(f"User {user_id} not found")
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     schedule_handler = CommandHandlerFactory(
@@ -171,8 +173,10 @@ def create_entity_with_audit_log():
             entity: The entity to create
             user_id: The user ID
         """
-        user_repo = UserRepository()
-        user = await user_repo.get(user_id)
+        identity_access = UnauthenticatedIdentityAccess()
+        user = await identity_access.get_user_by_id(user_id)
+        if user is None:
+            raise ValueError(f"User {user_id} not found")
 
         # Get the appropriate repository for the entity
         if hasattr(entity, "scheduled_date"):

@@ -78,6 +78,9 @@ class CalendarEntryQuery(DateQuery):
     calendar_entry_series_id: UUID | None = None
     platform_id: str | None = None
     platform_ids: list[str] | None = None
+    ical_uid: str | None = None
+    recurring_platform_id: str | None = None
+    starts_at_after: datetime | None = None  # for future-entry queries
 
 
 @dataclass(kw_only=True)
@@ -86,6 +89,7 @@ class CalendarEntrySeriesQuery(BaseQuery):
 
     calendar_id: UUID | None = None
     platform_id: str | None = None
+    ical_uid: str | None = None
 
 
 @dataclass(kw_only=True)

@@ -49,6 +49,17 @@ class CalendarEntryRepository(
         if query.platform_ids:
             stmt = stmt.where(self.table.c.platform_id.in_(query.platform_ids))
 
+        if query.ical_uid is not None:
+            stmt = stmt.where(self.table.c.ical_uid == query.ical_uid)
+
+        if query.recurring_platform_id is not None:
+            stmt = stmt.where(
+                self.table.c.recurring_platform_id == query.recurring_platform_id
+            )
+
+        if query.starts_at_after is not None:
+            stmt = stmt.where(self.table.c.starts_at >= query.starts_at_after)
+
         return stmt
 
     @staticmethod
@@ -87,6 +98,9 @@ class CalendarEntryRepository(
             "ends_at": ends_at_utc,
             "created_at": created_at_utc,
             "updated_at": updated_at_utc,
+            "ical_uid": calendar_entry.ical_uid,
+            "original_starts_at": ensure_datetime_utc(calendar_entry.original_starts_at),
+            "recurring_platform_id": calendar_entry.recurring_platform_id,
         }
 
         # Handle JSONB fields
@@ -131,7 +145,14 @@ class CalendarEntryRepository(
             ]
 
         data = ensure_datetimes_utc(
-            data, keys=("starts_at", "ends_at", "created_at", "updated_at")
+            data,
+            keys=(
+                "starts_at",
+                "ends_at",
+                "created_at",
+                "updated_at",
+                "original_starts_at",
+            ),
         )
         data = filter_init_false_fields(data, CalendarEntryEntity)
         return CalendarEntryEntity(**data)

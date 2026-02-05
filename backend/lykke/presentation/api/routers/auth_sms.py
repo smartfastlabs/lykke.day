@@ -1,10 +1,8 @@
 """SMS-based auth endpoints: request and verify login codes."""
 
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.responses import Response
 
 from lykke.application.commands.auth import (
@@ -13,36 +11,26 @@ from lykke.application.commands.auth import (
     VerifySmsLoginCodeCommand,
     VerifySmsLoginCodeHandler,
 )
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
-from lykke.application.repositories import SmsLoginCodeRepositoryReadWriteProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-    ReadWriteRepositoryFactory,
-    UnitOfWorkFactory,
-)
+from lykke.application.unit_of_work import UnitOfWorkFactory
 from lykke.core.exceptions import AuthenticationError
 from lykke.infrastructure.auth import auth_backend, get_jwt_strategy
-from lykke.infrastructure.database.tables import User
-from lykke.infrastructure.database.utils import get_engine
 from lykke.infrastructure.gateways import TwilioGateway
-from lykke.infrastructure.repositories import SmsLoginCodeRepository
+from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.api.schemas.auth_sms import (
     RequestSmsCodeSchema,
     VerifySmsCodeSchema,
 )
 
-from .dependencies.services import (
-    get_read_only_repository_factory,
-    get_read_write_repository_factory,
-    get_unit_of_work_factory,
-)
-from .dependencies.user import get_system_user
+from .dependencies.services import get_unit_of_work_factory
 
 router = APIRouter()
 
 
-def _get_sms_login_code_repo() -> SmsLoginCodeRepository:
-    return SmsLoginCodeRepository()
+def get_identity_access() -> UnauthenticatedIdentityAccessProtocol:
+    """Identity access for unauthenticated flows (override in tests)."""
+    return UnauthenticatedIdentityAccess()
 
 
 def get_sms_gateway() -> SMSProviderProtocol:
@@ -51,36 +39,26 @@ def get_sms_gateway() -> SMSProviderProtocol:
 
 
 def _get_request_handler(
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
     ],
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     sms_gateway: Annotated[SMSProviderProtocol, Depends(get_sms_gateway)],
 ) -> RequestSmsLoginCodeHandler:
-    from uuid import uuid4
-
-    sms_repo = _get_sms_login_code_repo()
     return RequestSmsLoginCodeHandler(
-        sms_login_code_repo=cast("SmsLoginCodeRepositoryReadWriteProtocol", sms_repo),
+        identity_access=identity_access,
         sms_gateway=sms_gateway,
     )
 
 
 def _get_verify_handler(
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    rw_repo_factory: Annotated[
-        ReadWriteRepositoryFactory, Depends(get_read_write_repository_factory)
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
     ],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> VerifySmsLoginCodeHandler:
-    system_user = get_system_user()
     return VerifySmsLoginCodeHandler(
-        user=system_user,
+        identity_access=identity_access,
         uow_factory=uow_factory,
-        repository_factory=ro_repo_factory,
-        readwrite_repository_factory=rw_repo_factory,
     )
 
 
@@ -98,6 +76,9 @@ async def request_sms_code(
 async def verify_sms_code(
     data: VerifySmsCodeSchema,
     handler: Annotated[VerifySmsLoginCodeHandler, Depends(_get_verify_handler)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
 ) -> Response:
     """Verify SMS code and set auth cookie. Returns 204 on success."""
     user_entity = await handler.handle(
@@ -107,15 +88,9 @@ async def verify_sms_code(
         )
     )
 
-    # Fetch SQLAlchemy User for auth backend
-    engine = get_engine()
-    async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
-    async with async_session_maker() as session:
-        stmt = select(User).where(User.id == user_entity.id)  # type: ignore[arg-type]
-        result = await session.execute(stmt)
-        user = result.scalar_one_or_none()
-        if user is None:
-            raise AuthenticationError("User not found")
+    user_db = await identity_access.load_user_db_for_login(user_entity.id)
+    if user_db is None:
+        raise AuthenticationError("User not found")
 
-        jwt_strategy = get_jwt_strategy()
-        return await auth_backend.login(jwt_strategy, user)
+    jwt_strategy = get_jwt_strategy()
+    return await auth_backend.login(jwt_strategy, user_db)  # type: ignore[arg-type]

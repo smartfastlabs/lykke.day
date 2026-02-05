@@ -16,7 +16,7 @@ from uuid import UUID
 from loguru import logger
 from taskiq_dependencies import Depends
 
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.core.utils.dates import get_current_date
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.domain.entities import DayEntity
@@ -24,7 +24,7 @@ from lykke.domain.events.day_events import NewDayEvent
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
-from .common import get_user_repository
+from .common import get_identity_access
 
 
 class _EnqueueTask(Protocol):
@@ -44,14 +44,16 @@ class _PubSubGateway(Protocol):
 
 @broker.task(schedule=[{"cron": "5 3 * * *"}])  # type: ignore[untyped-decorator]
 async def emit_new_day_event_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     enqueue_task: _EnqueueTask | None = None,
 ) -> None:
     """Load all users and enqueue a NewDayEvent publish task for each user."""
     logger.info("Starting new-day event task for all users")
 
-    users = await user_repo.all()
+    users = await identity_access.list_all_users()
     logger.info(f"Found {len(users)} users to emit new-day events for")
 
     task = enqueue_task or emit_new_day_event_for_user_task
@@ -64,7 +66,9 @@ async def emit_new_day_event_for_all_users_task(
 @broker.task  # type: ignore[untyped-decorator]
 async def emit_new_day_event_for_user_task(
     user_id: UUID,
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+    identity_access: Annotated[
+        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+    ],
     *,
     pubsub_gateway: _PubSubGateway | None = None,
     current_date_provider: Callable[[str | None], dt_date] | None = None,
@@ -74,11 +78,8 @@ async def emit_new_day_event_for_user_task(
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
-        try:
-            user = await user_repo.get(user_id)
-            timezone = user.settings.timezone if user.settings else None
-        except Exception:  # pylint: disable=broad-except
-            timezone = None
+        user = await identity_access.get_user_by_id(user_id)
+        timezone = user.settings.timezone if user and user.settings else None
 
         current_date_provider = current_date_provider or get_current_date
         target_date = current_date_provider(timezone)
