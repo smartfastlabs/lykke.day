@@ -33,6 +33,7 @@ from lykke.infrastructure.repositories import (
     TaskRepository,
     TimeBlockDefinitionRepository,
     TriggerRepository,
+    UserProfileRepository,
 )
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 
@@ -258,6 +259,12 @@ async def message_repo(test_user):
 async def factoid_repo(test_user):
     """FactoidRepository scoped to test_user."""
     return FactoidRepository(user=test_user)
+
+
+@pytest_asyncio.fixture
+async def user_profile_repo(test_user):
+    """UserProfileRepository scoped to test_user."""
+    return UserProfileRepository(user=test_user)
 
 
 @pytest_asyncio.fixture

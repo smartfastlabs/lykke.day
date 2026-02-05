@@ -1,0 +1,24 @@
+Current time: {{ fmt_datetime_plain(current_time) }}
+
+# Onboarding state
+{% if onboarding_state %}
+- status: {{ onboarding_state.status }}
+- collected: {{ onboarding_state.collected }}
+{% endif %}
+
+{% if onboarding_missing_required is defined %}
+- missing_required: {{ onboarding_missing_required }}
+{% endif %}
+
+# Existing structured profile
+{% if user_profile %}
+- preferred_name: {{ user_profile.preferred_name }}
+- goals: {{ user_profile.goals }}
+- work_hours: {{ user_profile.work_hours }}
+- onboarding_completed_at: {{ user_profile.onboarding_completed_at }}
+{% else %}
+- user_profile: null
+{% endif %}
+
+{% include "components/messages/list.j2" %}
+

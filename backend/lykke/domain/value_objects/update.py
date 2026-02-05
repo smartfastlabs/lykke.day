@@ -34,6 +34,7 @@ if TYPE_CHECKING:
         TimeBlockCategory,
         TimeBlockType,
     )
+    from .user_profile import WorkHours
     from .user import UserSettingUpdate, UserStatus
 
 
@@ -115,6 +116,16 @@ class UserUpdateObject(BaseUpdateObject):
     is_verified: bool | None = None
     settings_update: UserSettingUpdate | None = None
     status: UserStatus | None = None
+
+
+@dataclass(kw_only=True)
+class UserProfileUpdateObject(BaseUpdateObject):
+    """Update object for UserProfile entity."""
+
+    preferred_name: str | None = None
+    goals: list[str] | None = None
+    work_hours: WorkHours | None = None
+    onboarding_completed_at: datetime | None = None
 
 
 @dataclass(kw_only=True)

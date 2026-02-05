@@ -175,6 +175,15 @@ class UseCaseConfigQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
+class UserProfileQuery(BaseQuery):
+    """Query class for UserProfile entities.
+
+    User profiles are 1:1 with users (user-scoped), so this is typically used
+    with empty filters to fetch the single profile for the current user.
+    """
+
+
+@dataclass(kw_only=True)
 class TimeBlockDefinitionQuery(BaseQuery):
     """Query class for TimeBlockDefinition entities."""
 

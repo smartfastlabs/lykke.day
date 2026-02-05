@@ -25,6 +25,7 @@ from .trigger_tactics import TriggerTactic
 from .triggers import Trigger
 from .usecase_config import UseCaseConfig
 from .users import User
+from .user_profiles import UserProfile
 
 # Export table objects for Core-style queries
 audit_logs_tbl = AuditLog.__table__
@@ -51,6 +52,7 @@ tasks_tbl = Task.__table__
 time_block_definitions_tbl = TimeBlockDefinition.__table__
 usecase_configs_tbl = UseCaseConfig.__table__
 users_tbl = User.__table__
+user_profiles_tbl = UserProfile.__table__
 
 __all__ = [
     # ORM Models
@@ -80,6 +82,7 @@ __all__ = [
     "TimeBlockDefinition",
     "UseCaseConfig",
     "User",
+    "UserProfile",
     # Table objects (for Core-style queries)
     "audit_logs_tbl",
     "auth_tokens_tbl",
@@ -106,4 +109,5 @@ __all__ = [
     "time_block_definitions_tbl",
     "usecase_configs_tbl",
     "users_tbl",
+    "user_profiles_tbl",
 ]

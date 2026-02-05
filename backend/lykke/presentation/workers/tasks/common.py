@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     )
     from lykke.application.commands.day import TriggerAlarmsForUserHandler
     from lykke.application.commands.message import ProcessInboundSmsHandler
+    from lykke.application.commands.onboarding import ProcessSmsOnboardingHandler
     from lykke.application.commands.notifications import (
         CalendarEntryNotificationHandler,
         MorningOverviewHandler,
@@ -245,6 +246,23 @@ def get_process_inbound_sms_handler(
         uow_factory=uow_factory,
     )
     return factory.create(ProcessInboundSmsHandler)
+
+
+def get_process_sms_onboarding_handler(
+    user: UserEntity,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> ProcessSmsOnboardingHandler:
+    """Get a ProcessSmsOnboardingHandler instance for a user."""
+    from lykke.application.commands.onboarding import ProcessSmsOnboardingHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
+    factory = CommandHandlerFactory(
+        user=user,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(ProcessSmsOnboardingHandler)
 
 
 def get_trigger_alarms_for_user_handler(

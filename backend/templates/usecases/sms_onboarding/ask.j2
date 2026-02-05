@@ -1,0 +1,10 @@
+# Inbound SMS
+- received_at: {{ fmt_datetime(inbound_message.created_at) }}
+- content: {{ inbound_message.content }}
+
+# Rules
+- Choose the single best tool call.
+- If the message answers a missing field, call `record_fields`.
+- Otherwise ask one question using `ask_question`.
+- Call `complete` only when all required fields are collected: {{ onboarding_required_fields }}.
+

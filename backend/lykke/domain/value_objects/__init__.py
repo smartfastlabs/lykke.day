@@ -28,6 +28,7 @@ from .llm_run import (
     LLMToolCallResultSnapshot,
 )
 from .notification_decision import NotificationDecision
+from .onboarding import OnboardingProfile
 from .push import NotificationAction, NotificationPayload
 from .query import (
     AuditLogQuery,
@@ -55,6 +56,7 @@ from .query import (
     TimeBlockDefinitionQuery,
     TriggerQuery,
     UseCaseConfigQuery,
+    UserProfileQuery,
     UserQuery,
 )
 from .routine_definition import (
@@ -96,6 +98,7 @@ from .update import (
     TaskUpdateObject,
     TimeBlockDefinitionUpdateObject,
     TriggerUpdateObject,
+    UserProfileUpdateObject,
     UserUpdateObject,
 )
 from .usecase_config import NotificationUseCaseConfig
@@ -107,6 +110,7 @@ from .user import (
     UserSettingUpdate,
     UserStatus,
 )
+from .user_profile import WorkHours
 
 __all__ = [
     "Action",
@@ -168,6 +172,7 @@ __all__ = [
     "NotificationDecision",
     "NotificationPayload",
     "NotificationUseCaseConfig",
+    "OnboardingProfile",
     "PagedQueryResponse",
     "PushNotificationQuery",
     "PushSubscriptionQuery",
@@ -200,9 +205,12 @@ __all__ = [
     "TriggerQuery",
     "TriggerUpdateObject",
     "UseCaseConfigQuery",
+    "UserProfileQuery",
     "UserQuery",
     "UserSetting",
     "UserSettingUpdate",
     "UserStatus",
+    "UserProfileUpdateObject",
     "UserUpdateObject",
+    "WorkHours",
 ]

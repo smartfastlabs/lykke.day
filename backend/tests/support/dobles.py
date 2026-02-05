@@ -37,6 +37,7 @@ from lykke.application.repositories import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     TriggerRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
+    UserProfileRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -205,6 +206,7 @@ def create_read_only_repos_double(
     time_block_definition_repo: InstanceDouble | None = None,
     trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
+    user_profile_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
     """Create a dobles double for ReadOnlyRepositories protocol.
 
@@ -286,6 +288,9 @@ def create_read_only_repos_double(
     repos_double.usecase_config_ro_repo = usecase_config_repo or create_repo_double(
         UseCaseConfigRepositoryReadOnlyProtocol
     )
+    repos_double.user_profile_ro_repo = user_profile_repo or create_repo_double(
+        UserProfileRepositoryReadOnlyProtocol
+    )
     return repos_double
 
 
@@ -312,6 +317,7 @@ def create_uow_double(
     time_block_definition_repo: InstanceDouble | None = None,
     trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
+    user_profile_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
     """Create a dobles double for UnitOfWorkProtocol.
 
@@ -390,6 +396,9 @@ def create_uow_double(
     )
     uow_double.usecase_config_ro_repo = usecase_config_repo or create_repo_double(
         UseCaseConfigRepositoryReadOnlyProtocol
+    )
+    uow_double.user_profile_ro_repo = user_profile_repo or create_repo_double(
+        UserProfileRepositoryReadOnlyProtocol
     )
     # Stub async context manager methods
     allow(uow_double).__aenter__.and_return(uow_double)
