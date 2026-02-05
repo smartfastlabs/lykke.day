@@ -16,10 +16,8 @@ from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways import StubPubSubGateway
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
+from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
 

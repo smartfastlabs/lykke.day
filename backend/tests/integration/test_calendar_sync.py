@@ -1,19 +1,20 @@
 """Integration tests for Google Calendar sync with real database."""
 
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity
+from lykke.domain.events.calendar_entry_events import CalendarEntryUpdatedEvent
 from lykke.domain.value_objects import TaskFrequency
+from lykke.domain.value_objects.update import CalendarEntryUpdateObject
 from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
 from lykke.infrastructure.repositories import CalendarEntryRepository
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
+from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
 
 @pytest_asyncio.fixture
@@ -37,10 +38,11 @@ def calendar_entry_repo(test_user):
 async def test_sync_creates_new_events(test_user, test_calendar, calendar_entry_repo):
     """Test that sync creates new events in the database."""
     # Create a test event
+    platform_id = f"test-event-{uuid4()}"
     event = CalendarEntryEntity(
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-1",
+        platform_id=platform_id,
         platform="google",
         status="confirmed",
         name="Test Meeting",
@@ -59,10 +61,10 @@ async def test_sync_creates_new_events(test_user, test_calendar, calendar_entry_
 
     # Verify event was created
     retrieved = await calendar_entry_repo.search_one(
-        value_objects.CalendarEntryQuery(platform_id="test-event-1")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
     assert retrieved.name == "Test Meeting"
-    assert retrieved.platform_id == "test-event-1"
+    assert retrieved.platform_id == platform_id
 
     # Cleanup
     async with uow:
@@ -75,10 +77,11 @@ async def test_sync_updates_existing_events(
 ):
     """Test that sync updates existing events in the database."""
     # Create initial event
+    platform_id = f"test-event-{uuid4()}"
     event = CalendarEntryEntity(
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-2",
+        platform_id=platform_id,
         platform="google",
         status="confirmed",
         name="Original Name",
@@ -100,7 +103,7 @@ async def test_sync_updates_existing_events(
         id=event.id,  # Same ID for upsert
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-2",  # Same platform_id
+        platform_id=platform_id,  # Same platform_id
         platform="google",
         status="confirmed",
         name="Updated Name",  # Changed name
@@ -110,15 +113,25 @@ async def test_sync_updates_existing_events(
     )
 
     async with uow:
-        updated_event.create()
+        updated_event.add_event(
+            CalendarEntryUpdatedEvent(
+                user_id=test_user.id,
+                calendar_entry_id=updated_event.id,
+                update_object=CalendarEntryUpdateObject(
+                    name=updated_event.name,
+                    starts_at=updated_event.starts_at,
+                    ends_at=updated_event.ends_at,
+                ),
+            )
+        )
         uow.add(updated_event)
 
     # Verify event was updated
     retrieved = await calendar_entry_repo.search_one(
-        value_objects.CalendarEntryQuery(platform_id="test-event-2")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
     assert retrieved.name == "Updated Name"
-    assert retrieved.platform_id == "test-event-2"
+    assert retrieved.platform_id == platform_id
 
     # Cleanup
     async with uow:
@@ -131,10 +144,11 @@ async def test_sync_deletes_cancelled_events(
 ):
     """Test that sync deletes cancelled events from the database."""
     # Create event
+    platform_id = f"test-event-{uuid4()}"
     event = CalendarEntryEntity(
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-3",
+        platform_id=platform_id,
         platform="google",
         status="confirmed",
         name="Event to Delete",
@@ -153,7 +167,7 @@ async def test_sync_deletes_cancelled_events(
 
     # Verify event exists
     await calendar_entry_repo.search_one(
-        value_objects.CalendarEntryQuery(platform_id="test-event-3")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
 
     # Delete the event
@@ -162,7 +176,7 @@ async def test_sync_deletes_cancelled_events(
 
     # Verify event was deleted
     deleted = await calendar_entry_repo.search_one_or_none(
-        value_objects.CalendarEntryQuery(platform_id="test-event-3")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
     assert deleted is None
 
@@ -184,10 +198,11 @@ async def test_upsert_with_same_platform_id(
 ):
     """Test that upserting with the same platform_id updates the event."""
     # Create first version
+    platform_id = f"test-event-upsert-{uuid4()}"
     event1 = CalendarEntryEntity(
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-upsert",
+        platform_id=platform_id,
         platform="google",
         status="confirmed",
         name="Version 1",
@@ -206,7 +221,7 @@ async def test_upsert_with_same_platform_id(
 
     # Get the ID that was generated
     retrieved1 = await calendar_entry_repo.search_one(
-        value_objects.CalendarEntryQuery(platform_id="test-event-upsert")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
     assert retrieved1.name == "Version 1"
     original_id = retrieved1.id
@@ -216,7 +231,7 @@ async def test_upsert_with_same_platform_id(
         id=original_id,  # Use same ID for proper upsert
         user_id=test_user.id,
         calendar_id=test_calendar.id,
-        platform_id="test-event-upsert",  # Same platform_id
+        platform_id=platform_id,  # Same platform_id
         platform="google",
         status="confirmed",
         name="Version 2",  # Updated name
@@ -226,12 +241,22 @@ async def test_upsert_with_same_platform_id(
     )
 
     async with uow:
-        event2.create()
+        event2.add_event(
+            CalendarEntryUpdatedEvent(
+                user_id=test_user.id,
+                calendar_entry_id=event2.id,
+                update_object=CalendarEntryUpdateObject(
+                    name=event2.name,
+                    starts_at=event2.starts_at,
+                    ends_at=event2.ends_at,
+                ),
+            )
+        )
         uow.add(event2)
 
     # Verify it was updated, not duplicated
     retrieved2 = await calendar_entry_repo.search_one(
-        value_objects.CalendarEntryQuery(platform_id="test-event-upsert")
+        value_objects.CalendarEntryQuery(platform_id=platform_id)
     )
     assert retrieved2.name == "Version 2"
     assert retrieved2.id == original_id  # Same ID

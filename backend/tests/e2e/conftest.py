@@ -23,10 +23,8 @@ from lykke.infrastructure.repositories import (
     DayTemplateRepository,
     TaskRepository,
 )
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
+from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.handler_factory import CommandHandlerFactory
 from lykke.presentation.api.routers.dependencies.user import (

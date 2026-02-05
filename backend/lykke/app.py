@@ -19,11 +19,9 @@ from lykke.core.utils import youtube
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
 from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers import auth_sms, router
 from lykke.presentation.handler_factory import build_domain_event_handler
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule

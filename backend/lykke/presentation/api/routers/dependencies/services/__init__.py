@@ -31,11 +31,11 @@ from lykke.application.unit_of_work import (
 )
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
-from lykke.infrastructure.unit_of_work import (
+from lykke.infrastructure.repository_factories import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyReadWriteRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
 )
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.user import (
     get_current_user,
     get_current_user_from_token,

@@ -59,7 +59,7 @@ def get_unit_of_work_factory(
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     """Get a ReadOnlyRepositoryFactory instance."""
-    from lykke.infrastructure.unit_of_work import SqlAlchemyReadOnlyRepositoryFactory
+    from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
 
     return SqlAlchemyReadOnlyRepositoryFactory()
 

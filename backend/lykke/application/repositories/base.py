@@ -66,6 +66,10 @@ class ReadWriteRepositoryProtocol(Protocol[T]):
         """Save or update an object."""
         ...
 
+    async def insert(self, obj: T) -> T:
+        """Insert an object, raising if it already exists."""
+        ...
+
     async def all(self) -> list[T]:
         """Get all objects."""
         ...

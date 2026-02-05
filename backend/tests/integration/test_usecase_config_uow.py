@@ -14,10 +14,8 @@ from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.value_objects import UseCaseConfigQuery
 from lykke.domain.value_objects.update import BaseUpdateObject
 from lykke.infrastructure.gateways import StubPubSubGateway
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
+from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
+from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
 
 @pytest.mark.asyncio

@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from lykke.core.exceptions import NotFoundError, UserScopeRequiredError
+from lykke.core.exceptions import BadRequestError, NotFoundError, UserScopeRequiredError
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.base import BaseEntityObject
@@ -378,6 +378,33 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         return obj
 
+    async def insert(self, obj: ObjectType) -> ObjectType:
+        """Insert an object, raising if it already exists.
+
+        This is the strict counterpart to `put()`, which is implemented as an upsert.
+
+        If this repository is user-scoped, ensures user_id is set on the entity.
+        """
+        obj = self._prepare_entity_for_save(obj)
+        row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
+        row = self._prepare_row_for_save(row)
+
+        async with self._get_connection(for_write=True) as conn:
+            insert_stmt = (
+                pg_insert(self.table)
+                .values(**row)
+                .on_conflict_do_nothing(index_elements=["id"])
+                .returning(self.table.c.id)
+            )
+            result = await conn.execute(insert_stmt)
+            inserted_id = result.scalar_one_or_none()
+            if inserted_id is None:
+                raise BadRequestError(
+                    f"{self.Object.__name__} with id {obj.id} already exists"
+                )
+
+        return obj
+
     async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
         """Insert multiple objects in a single transaction.
 
@@ -473,9 +500,18 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         obj_id = key if isinstance(key, UUID) else key.id
 
         async with self._get_connection(for_write=True) as conn:
-            stmt = delete(self.table).where(self.table.c.id == obj_id)
+            stmt = (
+                delete(self.table)
+                .where(self.table.c.id == obj_id)
+                .returning(self.table.c.id)
+            )
             stmt = self._apply_user_scope_to_mutate(stmt)
-            await conn.execute(stmt)
+            result = await conn.execute(stmt)
+            deleted_id = result.scalar_one_or_none()
+            if deleted_id is None:
+                raise NotFoundError(
+                    f"{self.Object.__name__} with id {obj_id} not found"
+                )
 
 
 class UserScopedBaseRepository(
