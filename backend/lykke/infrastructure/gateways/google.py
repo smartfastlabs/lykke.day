@@ -283,7 +283,11 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             if series_entity and series_entity.event_category
             else calendar.default_event_category
         )
-        is_instance_exception = self._is_instance_exception(event, series_id)
+        is_instance_exception = (
+            series_id is not None
+            and original_starts_at is not None
+            and original_starts_at != start_dt
+        )
         entry = CalendarEntryEntity(
             user_id=calendar.user_id,
             calendar_id=calendar.id,
@@ -307,21 +311,6 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         )
 
         return entry, series_entity
-
-    @staticmethod
-    def _is_instance_exception(event: dict[str, Any], series_id: UUID | None) -> bool:
-        """Classify whether this Google event is a single-instance exception.
-
-        Instance exceptions are recurring occurrences that were explicitly modified
-        (e.g. moved or retitled). Google sets originalStartTime when the instance
-        was changed from the default.
-
-        Returns:
-            True if the event represents an instance-level exception; False otherwise.
-        """
-        if series_id is None:
-            return False
-        return bool(event.get("originalStartTime"))
 
     def _determine_frequency(
         self,

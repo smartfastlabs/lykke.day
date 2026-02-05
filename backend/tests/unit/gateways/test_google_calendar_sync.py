@@ -836,6 +836,93 @@ async def test_sync_calendar_series_creation_emits_single_notification(
 
 
 @pytest.mark.asyncio
+async def test_sync_calendar_recurring_instances_with_original_start_time_emit_single_series_notification(
+    test_user_id,
+    test_user,
+    test_calendar,
+    mock_ro_repos,
+    mock_uow_factory,
+    mock_uow,
+    mock_google_gateway,
+    mock_calendar_entry_series_repo,
+    mock_calendar_entry_repo,
+):
+    """Google includes originalStartTime on all recurring instances; this should NOT fan out notifications."""
+    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-os")
+    new_series = CalendarEntrySeriesEntity(
+        id=series_id,
+        user_id=test_user_id,
+        calendar_id=test_calendar.id,
+        name="Series With OriginalStartTime",
+        platform_id="series-os",
+        platform="google",
+        frequency=TaskFrequency.DAILY,
+    )
+    # These represent regular occurrences. For Google instances, originalStartTime is
+    # present even when the occurrence wasn't modified; in that case it matches starts_at.
+    instance_one = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Series With OriginalStartTime",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="series-os_20250301T090000Z",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 3, 1, 9, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 3, 1, 10, 0, tzinfo=UTC),
+        frequency=TaskFrequency.DAILY,
+        original_starts_at=datetime(2025, 3, 1, 9, 0, tzinfo=UTC),
+        recurring_platform_id="series-os",
+    )
+    instance_two = CalendarEntryEntity(
+        user_id=test_user_id,
+        name="Series With OriginalStartTime",
+        calendar_id=test_calendar.id,
+        calendar_entry_series_id=series_id,
+        platform_id="series-os_20250302T090000Z",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime(2025, 3, 2, 9, 0, tzinfo=UTC),
+        ends_at=datetime(2025, 3, 2, 10, 0, tzinfo=UTC),
+        frequency=TaskFrequency.DAILY,
+        original_starts_at=datetime(2025, 3, 2, 9, 0, tzinfo=UTC),
+        recurring_platform_id="series-os",
+    )
+
+    allow(mock_calendar_entry_series_repo).get.and_raise(NotFoundError("missing"))
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([instance_one, instance_two], [], [new_series], [], "new-sync-token")
+    )
+
+    async def search_entries(_: object) -> list[CalendarEntryEntity]:
+        return []
+
+    mock_calendar_entry_repo.search = search_entries
+    mock_uow.calendar_entry_ro_repo.search = search_entries
+
+    handler = SyncCalendarHandler(
+        user=test_user,
+        uow_factory=mock_uow_factory,
+        repository_factory=_RepositoryFactory(mock_ro_repos),
+        gateway_factory=_GatewayFactory(mock_google_gateway),
+    )
+
+    await handler.handle(SyncCalendarCommand(calendar_id=test_calendar.id))
+
+    created_entries = [
+        entity for entity in mock_uow.added if isinstance(entity, CalendarEntryEntity)
+    ]
+    created_event_count = sum(
+        1
+        for entry in created_entries
+        for event in entry.collect_events()
+        if isinstance(event, CalendarEntryCreatedEvent)
+    )
+    # Expected: 1 notification for the series (representative), not 1 per occurrence.
+    assert created_event_count == 1
+
+
+@pytest.mark.asyncio
 async def test_sync_calendar_single_to_series_attaches_existing_entry(
     test_user_id,
     test_user,

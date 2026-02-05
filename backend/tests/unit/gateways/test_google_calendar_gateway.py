@@ -211,20 +211,113 @@ def test_google_event_to_entity_normalizes_missing_summary() -> None:
 
 
 def test_is_instance_exception_true_when_original_start_time() -> None:
-    """Events with originalStartTime and a series are instance exceptions."""
-    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-1")
-    event = {"originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"}}
-    assert GoogleCalendarGateway._is_instance_exception(event, series_id) is True
+    """Moved instances (originalStartTime != start) are instance exceptions."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "event-1",
+        "summary": "Standup",
+        "status": "confirmed",
+        "recurrence": ["RRULE:FREQ=DAILY"],
+        "recurringEventId": "series-1",
+        "start": {"dateTime": "2026-02-04T08:30:00Z"},
+        "end": {"dateTime": "2026-02-04T08:45:00Z"},
+        "originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(execute=lambda: {"recurrence": None})
+        )
+    )
+
+    entry, _ = GoogleCalendarGateway()._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+    assert entry.is_instance_exception is True
 
 
 def test_is_instance_exception_false_when_no_original_start_time() -> None:
     """Events without originalStartTime are not instance exceptions."""
-    series_id = CalendarEntrySeriesEntity.id_from_platform("google", "series-1")
-    event = {"start": {"dateTime": "2026-02-04T08:15:00Z"}}
-    assert GoogleCalendarGateway._is_instance_exception(event, series_id) is False
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "event-2",
+        "summary": "Standup",
+        "status": "confirmed",
+        "recurrence": ["RRULE:FREQ=DAILY"],
+        "recurringEventId": "series-1",
+        "start": {"dateTime": "2026-02-04T08:15:00Z"},
+        "end": {"dateTime": "2026-02-04T08:30:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(execute=lambda: {"recurrence": None})
+        )
+    )
+
+    entry, _ = GoogleCalendarGateway()._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+    assert entry.is_instance_exception is False
 
 
 def test_is_instance_exception_false_when_no_series() -> None:
-    """Standalone events (no series_id) are not instance exceptions."""
-    event = {"originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"}}
-    assert GoogleCalendarGateway._is_instance_exception(event, None) is False
+    """Normal recurring instances have originalStartTime == start and are not exceptions."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=uuid4(),
+        name="Test Calendar",
+        auth_token_id=uuid4(),
+        platform_id="test@calendar.google.com",
+        platform="google",
+    )
+    event = {
+        "id": "event-3",
+        "summary": "Standup",
+        "status": "confirmed",
+        "recurrence": ["RRULE:FREQ=DAILY"],
+        "recurringEventId": "series-1",
+        "start": {"dateTime": "2026-02-04T08:15:00Z"},
+        "end": {"dateTime": "2026-02-04T08:30:00Z"},
+        "originalStartTime": {"dateTime": "2026-02-04T08:15:00Z"},
+        "created": "2026-02-02T08:15:37.614Z",
+        "updated": "2026-02-02T08:15:37.614Z",
+    }
+    recurrence_lookup = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            get=lambda **_: SimpleNamespace(execute=lambda: {"recurrence": None})
+        )
+    )
+
+    entry, _ = GoogleCalendarGateway()._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=recurrence_lookup,
+        user_timezone="UTC",
+    )
+    assert entry.is_instance_exception is False

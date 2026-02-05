@@ -140,25 +140,38 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         ]
         current_time = datetime.now(UTC)
 
-        # Classify series-level vs instance-level using original_starts_at: entries with
-        # original_starts_at are instance exceptions (one notification each); entries without
-        # are series-level (one representative notification per series).
+        # Classify series-level vs instance-level:
+        # - Google includes originalStartTime on *all* recurring instances (even normal ones).
+        # - A "true" instance exception is when the instance deviates from the normal
+        #   occurrence, which we approximate as original_starts_at != starts_at (moved).
+        #
+        # For notifications we want:
+        # - one per true exception instance
+        # - otherwise one representative per series
         entries_by_series: dict[UUID | None, list[CalendarEntryEntity]] = defaultdict(
             list
         )
         for entry in entries_to_upsert:
             entries_by_series[entry.calendar_entry_series_id].append(entry)
+
+        def is_true_instance_exception(entry: CalendarEntryEntity) -> bool:
+            if entry.calendar_entry_series_id is None:
+                return False
+            if entry.original_starts_at is None:
+                return False
+            return entry.original_starts_at != entry.starts_at
+
         series_with_non_exception: set[UUID] = {
             sid
             for sid, entries in entries_by_series.items()
             if sid is not None
-            and any(e.original_starts_at is None for e in entries)
+            and any(not is_true_instance_exception(e) for e in entries)
         }
-        # One representative per series for series-level changes: earliest without original_starts_at.
+        # One representative per series for series-level changes: earliest non-exception.
         representative_entry_platform_ids: set[str] = set()
         for sid in series_with_non_exception:
             group = entries_by_series[sid]
-            non_exceptions = [e for e in group if e.original_starts_at is None]
+            non_exceptions = [e for e in group if not is_true_instance_exception(e)]
             rep = min(
                 non_exceptions if non_exceptions else group,
                 key=lambda e: (e.starts_at, e.platform_id),
@@ -166,14 +179,14 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             representative_entry_platform_ids.add(rep.platform_id)
 
         def should_emit_entry_notification(entry: CalendarEntryEntity) -> bool:
-            """Instance exception (original_starts_at set) => one per entry; else one per series."""
+            """True instance exception => one per entry; else one per series."""
             if entry.calendar_entry_series_id is None:
                 return True
-            if entry.original_starts_at is not None:
+            if is_true_instance_exception(entry):
                 return True  # instance-level exception
-            if entry.calendar_entry_series_id not in series_with_non_exception:
-                return True
-            return entry.platform_id in representative_entry_platform_ids
+            if entry.calendar_entry_series_id in series_with_non_exception:
+                return entry.platform_id in representative_entry_platform_ids
+            return True
 
         # One notification per series when deleting (used in both delete loops).
         series_delete_notification_emitted: set[UUID] = set()
