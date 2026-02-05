@@ -25,6 +25,8 @@ class CalendarEntrySeriesRepository(
                 stmt = stmt.where(self.table.c.calendar_id == query.calendar_id)
             if query.platform_id is not None:
                 stmt = stmt.where(self.table.c.platform_id == query.platform_id)
+            if query.ical_uid is not None:
+                stmt = stmt.where(self.table.c.ical_uid == query.ical_uid)
 
         return stmt
 
@@ -46,15 +48,21 @@ class CalendarEntrySeriesRepository(
             "ends_at": series.ends_at,
             "created_at": series.created_at,
             "updated_at": series.updated_at,
+            "ical_uid": series.ical_uid,
+            "deleted_at": series.deleted_at,
         }
         return row
 
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> CalendarEntrySeriesEntity:
+        from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+
         data = dict(row)
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
         if "event_category" in data and isinstance(data["event_category"], str):
             data["event_category"] = value_objects.EventCategory(data["event_category"])
-
+        data = ensure_datetimes_utc(
+            data, keys=("starts_at", "ends_at", "created_at", "updated_at", "deleted_at")
+        )
         return CalendarEntrySeriesEntity(**data)

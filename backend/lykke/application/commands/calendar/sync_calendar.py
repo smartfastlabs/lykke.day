@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from googleapiclient.errors import HttpError
 from loguru import logger
@@ -89,6 +89,12 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         uow: UnitOfWorkProtocol,
     ) -> CalendarEntity:
         """Perform the sync using an existing unit of work."""
+        sync_run_id = uuid4()
+        log_ctx: dict[str, str | bool] = {
+            "sync_run_id": str(sync_run_id),
+            "calendar_id": str(calendar.id),
+        }
+
         lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
@@ -98,6 +104,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             if calendar.sync_subscription
             else None
         )
+        log_ctx["sync_token_present"] = sync_token is not None
         user_timezone = self.user.settings.timezone if self.user.settings else None
 
         (
@@ -108,6 +115,14 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             next_sync_token,
         ) = await self._load_calendar_events(
             calendar, lookback, sync_token, token, user_timezone=user_timezone
+        )
+        logger.info(
+            "Calendar sync fetch completed",
+            **log_ctx,
+            entries_count=len(fetched_entries),
+            deleted_count=len(fetched_deleted_entries),
+            series_count=len(fetched_series),
+            cancelled_series_count=len(cancelled_series_ids),
         )
 
         max_date = datetime.now(UTC) + MAX_EVENT_LOOKAHEAD
@@ -125,31 +140,38 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         ]
         current_time = datetime.now(UTC)
 
-        # Classify series-level vs instance-level: multiple entries for same series
-        # in this batch = series-level change (notify once); single entry or standalone = instance-level.
+        # Classify series-level vs instance-level using original_starts_at: entries with
+        # original_starts_at are instance exceptions (one notification each); entries without
+        # are series-level (one representative notification per series).
         entries_by_series: dict[UUID | None, list[CalendarEntryEntity]] = defaultdict(
             list
         )
         for entry in entries_to_upsert:
             entries_by_series[entry.calendar_entry_series_id].append(entry)
-        series_level_series_ids: set[UUID] = {
+        series_with_non_exception: set[UUID] = {
             sid
             for sid, entries in entries_by_series.items()
-            if sid is not None and len(entries) > 1
+            if sid is not None
+            and any(e.original_starts_at is None for e in entries)
         }
-        # One representative entry per series-level series (earliest by starts_at) gets the notification.
+        # One representative per series for series-level changes: earliest without original_starts_at.
         representative_entry_platform_ids: set[str] = set()
-        for sid in series_level_series_ids:
+        for sid in series_with_non_exception:
             group = entries_by_series[sid]
-            if group:
-                rep = min(group, key=lambda e: e.starts_at)
-                representative_entry_platform_ids.add(rep.platform_id)
+            non_exceptions = [e for e in group if e.original_starts_at is None]
+            rep = min(
+                non_exceptions if non_exceptions else group,
+                key=lambda e: (e.starts_at, e.platform_id),
+            )
+            representative_entry_platform_ids.add(rep.platform_id)
 
         def should_emit_entry_notification(entry: CalendarEntryEntity) -> bool:
-            """Emit one notification per series-level change; per-instance for instance-level."""
+            """Instance exception (original_starts_at set) => one per entry; else one per series."""
             if entry.calendar_entry_series_id is None:
                 return True
-            if entry.calendar_entry_series_id not in series_level_series_ids:
+            if entry.original_starts_at is not None:
+                return True  # instance-level exception
+            if entry.calendar_entry_series_id not in series_with_non_exception:
                 return True
             return entry.platform_id in representative_entry_platform_ids
 
@@ -181,6 +203,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     series_update_fields["starts_at"] = series.starts_at
                 if existing_series.ends_at != series.ends_at:
                     series_update_fields["ends_at"] = series.ends_at
+                if existing_series.ical_uid != series.ical_uid:
+                    series_update_fields["ical_uid"] = series.ical_uid
 
                 if series_update_fields:
                     series_update_object = CalendarEntrySeriesUpdateObject(
@@ -215,12 +239,50 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 ).add(entry.platform_id)
             existing_entry = existing_entries_map.get(entry.platform_id)
             if existing_entry is None:
-                # New entry - create it
-                if should_emit_entry_notification(entry):
-                    entry.create()
-                else:
-                    entry.create_silently()
-                uow.add(entry)
+                # Single→series conversion: attach existing standalone entry if same event
+                attached = False
+                if entry.calendar_entry_series_id and entry.ical_uid:
+                    candidates = await self.calendar_entry_ro_repo.search(
+                        value_objects.CalendarEntryQuery(
+                            calendar_id=calendar.id,
+                            ical_uid=entry.ical_uid,
+                            date=entry.date,
+                        )
+                    )
+                    standalone_for_attach = [
+                        e
+                        for e in candidates
+                        if e.calendar_entry_series_id is None
+                        and e.starts_at == entry.starts_at
+                    ]
+                    if standalone_for_attach:
+                        to_attach = standalone_for_attach[0]
+                        attach_update = CalendarEntryUpdateObject(
+                            calendar_entry_series_id=entry.calendar_entry_series_id,
+                            recurring_platform_id=entry.recurring_platform_id,
+                            ical_uid=entry.ical_uid,
+                        )
+                        updated_attached = to_attach.apply_calendar_entry_update_silently(
+                            attach_update
+                        )
+                        uow.add(updated_attached)
+                        upsert_platform_ids_by_series.setdefault(
+                            entry.calendar_entry_series_id, set()
+                        ).add(to_attach.platform_id)
+                        attached = True
+                        logger.info(
+                            "Single→series attach: linked standalone entry to series",
+                            **log_ctx,
+                            entry_id=str(to_attach.id),
+                            series_id=str(entry.calendar_entry_series_id),
+                        )
+                if not attached:
+                    # New entry - create it
+                    if should_emit_entry_notification(entry):
+                        entry.create()
+                    else:
+                        entry.create_silently()
+                    uow.add(entry)
             else:
                 # Existing entry - check if changed and update if needed
                 # Build update object with changed fields
@@ -243,6 +305,14 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                 ):
                     entry_update_fields["calendar_entry_series_id"] = (
                         entry.calendar_entry_series_id
+                    )
+                if existing_entry.ical_uid != entry.ical_uid:
+                    entry_update_fields["ical_uid"] = entry.ical_uid
+                if existing_entry.original_starts_at != entry.original_starts_at:
+                    entry_update_fields["original_starts_at"] = entry.original_starts_at
+                if existing_entry.recurring_platform_id != entry.recurring_platform_id:
+                    entry_update_fields["recurring_platform_id"] = (
+                        entry.recurring_platform_id
                     )
 
                 # Only update if there are changes
@@ -358,6 +428,11 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
 
         # If an entire series was removed, delete future entries and end the series
         if series_ids_with_deletions:
+            logger.info(
+                "Calendar sync applying series tombstones",
+                **log_ctx,
+                series_ids_with_deletions=[str(s) for s in series_ids_with_deletions],
+            )
             for series_id in series_ids_with_deletions:
                 existing_series_entries = await self.calendar_entry_ro_repo.search(
                     value_objects.CalendarEntryQuery(calendar_entry_series_id=series_id)
@@ -401,6 +476,8 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                         series_end_update_fields["ends_at"] = current_time
                     if series_for_delete.recurrence:
                         series_end_update_fields["recurrence"] = []
+                    # Tombstone the series so we know it was deleted (keep past entries for history)
+                    series_end_update_fields["deleted_at"] = current_time
 
                     if series_end_update_fields:
                         series_update_object = CalendarEntrySeriesUpdateObject(

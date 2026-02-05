@@ -166,6 +166,8 @@ class CalendarEntrySeriesUpdateObject(BaseUpdateObject):
     recurrence: list[str] | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    ical_uid: str | None = None
+    deleted_at: datetime | None = None
 
 
 @dataclass(kw_only=True)
@@ -181,6 +183,9 @@ class CalendarEntryUpdateObject(BaseUpdateObject):
     category: EventCategory | None = None
     calendar_entry_series_id: UUID | None = None
     updated_at: datetime | None = None
+    ical_uid: str | None = None
+    original_starts_at: datetime | None = None
+    recurring_platform_id: str | None = None
     # Note: actions is a list, but we typically don't update it directly via update object
 
 

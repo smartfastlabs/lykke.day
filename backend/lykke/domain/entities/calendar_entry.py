@@ -42,6 +42,10 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
     actions: list[value_objects.Action] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
     user_timezone: str | None = field(default=None, repr=False)
+    # Provider identity for reconciliation and single→series conversion.
+    ical_uid: str | None = None
+    original_starts_at: datetime | None = None  # from originalStartTime; present = exception instance
+    recurring_platform_id: str | None = None  # raw recurringEventId when part of a series
     # Set by gateway when Google event has originalStartTime (modified occurrence).
     # Not persisted; used during sync to classify instance-level vs series-level changes.
     is_instance_exception: bool = field(default=False, repr=False)

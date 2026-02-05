@@ -244,8 +244,23 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         if not summary:
             summary = "(no title)"
 
+        ical_uid = event.get("iCalUID")
+        if isinstance(ical_uid, str) and ical_uid:
+            pass
+        else:
+            ical_uid = None
+
+        original_starts_at = None
+        if original_start := event.get("originalStartTime"):
+            original_starts_at = self._parse_datetime(
+                original_start,
+                fallback_timezone=fallback_timezone,
+                use_start_of_day=True,
+            )
+
         series_entity = None
         if series_id and series_platform_id:
+            series_ical = ical_uid if has_recurrence else None
             series_entity = CalendarEntrySeriesEntity(
                 id=series_id,
                 user_id=calendar.user_id,
@@ -260,6 +275,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
                 ends_at=end_dt,
                 created_at=created_dt,
                 updated_at=updated_dt,
+                ical_uid=series_ical,
             )
 
         entry_category = (
@@ -285,6 +301,9 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             user_timezone=user_timezone,
             category=entry_category,
             is_instance_exception=is_instance_exception,
+            ical_uid=ical_uid,
+            original_starts_at=original_starts_at,
+            recurring_platform_id=recurring_event_id,
         )
 
         return entry, series_entity
@@ -336,6 +355,59 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
 
         frequency_cache[recurring_event_id] = frequency
         return frequency
+
+    def _master_event_to_series_entity(
+        self,
+        calendar: CalendarEntity,
+        master_event: dict[str, Any],
+    ) -> CalendarEntrySeriesEntity:
+        """Build CalendarEntrySeriesEntity from a Google Calendar master event."""
+        event_id = master_event.get("id")
+        if not isinstance(event_id, str):
+            raise ValueError("Master event has no id")
+        series_id = CalendarEntrySeriesEntity.id_from_platform("google", event_id)
+        recurrence = master_event.get("recurrence") or []
+        frequency = _parse_recurrence_frequency(recurrence)
+        summary = master_event.get("summary")
+        if isinstance(summary, str):
+            summary = summary.strip()
+        if not summary:
+            summary = "(no title)"
+        fallback_timezone = (
+            master_event.get("timeZone")
+            or "UTC"
+        )
+        start_dt = self._parse_datetime(
+            master_event.get("start"),
+            fallback_timezone=fallback_timezone,
+            use_start_of_day=True,
+        )
+        end_dt = self._parse_datetime(
+            master_event.get("end"),
+            fallback_timezone=fallback_timezone,
+            use_start_of_day=False,
+        )
+        created_dt = self._parse_event_timestamp(master_event.get("created"))
+        updated_dt = self._parse_event_timestamp(master_event.get("updated"))
+        ical_uid = master_event.get("iCalUID")
+        if not isinstance(ical_uid, str) or not ical_uid:
+            ical_uid = None
+        return CalendarEntrySeriesEntity(
+            id=series_id,
+            user_id=calendar.user_id,
+            calendar_id=calendar.id,
+            name=summary,
+            platform_id=event_id,
+            platform="google",
+            frequency=frequency,
+            event_category=calendar.default_event_category,
+            recurrence=recurrence,
+            starts_at=start_dt,
+            ends_at=end_dt,
+            created_at=created_dt,
+            updated_at=updated_dt,
+            ical_uid=ical_uid,
+        )
 
     def _load_cancelled_series_ids_sync(
         self,
@@ -487,12 +559,51 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             if not page_token:
                 break
 
+        # Authoritative series state from master events: fetch each touched series
+        # master; 404 or status cancelled => tombstone; else overwrite series from master.
+        recurring_master_platform_ids = {
+            s.platform_id for s in series_entities.values()
+        }
+        cancelled_from_masters: set[UUID] = set()
+        for master_platform_id in recurring_master_platform_ids:
+            try:
+                master_event = (
+                    service.events()
+                    .get(
+                        calendarId=calendar.platform_id,
+                        eventId=master_platform_id,
+                    )
+                    .execute()
+                )
+            except HttpError as exc:
+                if exc.resp.status == 404:
+                    cancelled_from_masters.add(
+                        CalendarEntrySeriesEntity.id_from_platform(
+                            "google", master_platform_id
+                        )
+                    )
+                else:
+                    raise
+                continue
+            if master_event.get("status") == "cancelled":
+                series_id_tombstone = CalendarEntrySeriesEntity.id_from_platform(
+                    "google", master_platform_id
+                )
+                cancelled_from_masters.add(series_id_tombstone)
+                series_entities.pop(series_id_tombstone, None)
+                continue
+            series_from_master = self._master_event_to_series_entity(
+                calendar, master_event
+            )
+            series_entities[series_from_master.id] = series_from_master
+
         cancelled_series_ids = self._load_cancelled_series_ids_sync(
             service=service,
             calendar=calendar,
             lookback=lookback,
             sync_token=sync_token,
         )
+        cancelled_series_ids |= cancelled_from_masters
 
         return (
             events,
