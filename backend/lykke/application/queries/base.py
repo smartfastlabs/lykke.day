@@ -15,10 +15,7 @@ if TYPE_CHECKING:
         GatewayFactoryProtocol,
         ReadOnlyRepositoryFactoryProtocol,
     )
-    from lykke.application.unit_of_work import (
-        ReadOnlyRepositories,
-        ReadWriteRepositoryFactory,
-    )
+    from lykke.application.unit_of_work import ReadOnlyRepositories
     from lykke.domain.entities.day_template import DayTemplateEntity
 
 # Query type and result type
@@ -82,7 +79,6 @@ class BaseQueryHandler(
         command_factory: CommandHandlerFactoryProtocol | None = None,
         gateway_factory: GatewayFactoryProtocol | None = None,
         repository_factory: ReadOnlyRepositoryFactoryProtocol | None = None,
-        readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
     ) -> None:
         """Initialize the query handler with its dependencies."""
         super().__init__(
@@ -90,5 +86,4 @@ class BaseQueryHandler(
             command_factory=command_factory,
             gateway_factory=gateway_factory,
             repository_factory=repository_factory,
-            readwrite_repository_factory=readwrite_repository_factory,
         )

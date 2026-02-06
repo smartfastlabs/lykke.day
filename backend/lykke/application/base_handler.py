@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, cast
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositories, ReadWriteRepositories
+from lykke.application.unit_of_work import ReadOnlyRepositories
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
         ReadOnlyRepositoryFactoryProtocol,
     )
     from lykke.application.unit_of_work import (
-        ReadWriteRepositoryFactory,
         UnitOfWorkFactory,
     )
     from lykke.domain.entities import UserEntity
@@ -45,15 +44,12 @@ class BaseHandler:
 
     # Repository attribute suffix used to identify repository lookups
     _RO_REPO_SUFFIX = "_ro_repo"
-    _RW_REPO_SUFFIX = "_rw_repo"
 
     command_factory: CommandHandlerFactoryProtocol | None
     gateway_factory: GatewayFactoryProtocol | None
     _uow_factory: UnitOfWorkFactory | None
     _repository_factory: ReadOnlyRepositoryFactoryProtocol
-    _rw_repository_factory: ReadWriteRepositoryFactory | None
     _repositories: ReadOnlyRepositories | None
-    _rw_repositories: ReadWriteRepositories | None
 
     def __init__(
         self,
@@ -63,7 +59,6 @@ class BaseHandler:
         uow_factory: UnitOfWorkFactory | None = None,
         gateway_factory: GatewayFactoryProtocol | None = None,
         repository_factory: ReadOnlyRepositoryFactoryProtocol | None = None,
-        readwrite_repository_factory: ReadWriteRepositoryFactory | None = None,
     ) -> None:
         """Initialize the handler with its dependencies.
 
@@ -79,9 +74,7 @@ class BaseHandler:
             raise ValueError("BaseHandler requires repository_factory.")
 
         self._repository_factory = repository_factory
-        self._rw_repository_factory = readwrite_repository_factory
         self._repositories = None
-        self._rw_repositories = None
         self._gateway_overrides: dict[type[object], object] = {}
         self._wire_dependencies()
 
@@ -139,13 +132,6 @@ class BaseHandler:
                 self._get_ro_repos, _build_repo_type_map(ReadOnlyRepositories)
             )
         ]
-        if self._rw_repository_factory is not None:
-            factories.append(
-                _RepositoryDependencyFactory(
-                    self._get_rw_repos,
-                    _build_repo_type_map(ReadWriteRepositories),
-                )
-            )
         if self.gateway_factory is not None:
             factories.append(self.gateway_factory)
         if self.command_factory is not None:
@@ -175,13 +161,6 @@ class BaseHandler:
         if self._repositories is None:
             self._repositories = self._repository_factory.create(self.user)
         return self._repositories
-
-    def _get_rw_repos(self) -> ReadWriteRepositories:
-        if self._rw_repository_factory is None:
-            raise AttributeError("No ReadWriteRepositoryFactory configured.")
-        if self._rw_repositories is None:
-            self._rw_repositories = self._rw_repository_factory.create(self.user)
-        return self._rw_repositories
 
     @staticmethod
     def _resolve_annotation(owner: type[object], annotation: object) -> type | None:

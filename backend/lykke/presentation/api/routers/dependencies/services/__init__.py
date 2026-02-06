@@ -26,14 +26,12 @@ from lykke.application.queries import (
 )
 from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
-    ReadWriteRepositoryFactory,
     UnitOfWorkFactory,
 )
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.repository_factories import (
     SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyReadWriteRepositoryFactory,
 )
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.user import (
@@ -102,11 +100,6 @@ async def get_pubsub_gateway_for_request(
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     """Get a ReadOnlyRepositoryFactory instance."""
     return SqlAlchemyReadOnlyRepositoryFactory()
-
-
-def get_read_write_repository_factory() -> ReadWriteRepositoryFactory:
-    """Get a ReadWriteRepositoryFactory instance."""
-    return SqlAlchemyReadWriteRepositoryFactory()
 
 
 async def get_unit_of_work_factory(

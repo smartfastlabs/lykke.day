@@ -14,45 +14,25 @@ from uuid import UUID
 from lykke.application.repositories import (
     AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
-    AuthTokenRepositoryReadWriteProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
-    BotPersonalityRepositoryReadWriteProtocol,
     BrainDumpRepositoryReadOnlyProtocol,
-    BrainDumpRepositoryReadWriteProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
-    CalendarEntryRepositoryReadWriteProtocol,
     CalendarEntrySeriesRepositoryReadOnlyProtocol,
-    CalendarEntrySeriesRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
-    CalendarRepositoryReadWriteProtocol,
     DayRepositoryReadOnlyProtocol,
-    DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
-    DayTemplateRepositoryReadWriteProtocol,
     FactoidRepositoryReadOnlyProtocol,
-    FactoidRepositoryReadWriteProtocol,
     MessageRepositoryReadOnlyProtocol,
-    MessageRepositoryReadWriteProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
-    PushNotificationRepositoryReadWriteProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
-    PushSubscriptionRepositoryReadWriteProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
-    RoutineDefinitionRepositoryReadWriteProtocol,
     RoutineRepositoryReadOnlyProtocol,
-    RoutineRepositoryReadWriteProtocol,
     TacticRepositoryReadOnlyProtocol,
-    TacticRepositoryReadWriteProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
-    TaskDefinitionRepositoryReadWriteProtocol,
     TaskRepositoryReadOnlyProtocol,
-    TaskRepositoryReadWriteProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
-    TimeBlockDefinitionRepositoryReadWriteProtocol,
     TriggerRepositoryReadOnlyProtocol,
-    TriggerRepositoryReadWriteProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
-    UseCaseConfigRepositoryReadWriteProtocol,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -264,41 +244,4 @@ class ReadOnlyRepositoryFactory(Protocol):
         Returns:
             Read-only repositories scoped to the user.
         """
-        ...
-
-
-class ReadWriteRepositories(Protocol):
-    """Protocol for providing read-write repositories.
-
-    This is used when a handler needs explicit read-write repository access
-    without a Unit of Work. Each repository manages its own connections.
-    """
-
-    auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol
-    bot_personality_rw_repo: BotPersonalityRepositoryReadWriteProtocol
-    brain_dump_rw_repo: BrainDumpRepositoryReadWriteProtocol
-    calendar_entry_rw_repo: CalendarEntryRepositoryReadWriteProtocol
-    calendar_entry_series_rw_repo: CalendarEntrySeriesRepositoryReadWriteProtocol
-    calendar_rw_repo: CalendarRepositoryReadWriteProtocol
-    day_rw_repo: DayRepositoryReadWriteProtocol
-    day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol
-    factoid_rw_repo: FactoidRepositoryReadWriteProtocol
-    message_rw_repo: MessageRepositoryReadWriteProtocol
-    push_notification_rw_repo: PushNotificationRepositoryReadWriteProtocol
-    push_subscription_rw_repo: PushSubscriptionRepositoryReadWriteProtocol
-    routine_rw_repo: RoutineRepositoryReadWriteProtocol
-    routine_definition_rw_repo: RoutineDefinitionRepositoryReadWriteProtocol
-    tactic_rw_repo: TacticRepositoryReadWriteProtocol
-    task_definition_rw_repo: TaskDefinitionRepositoryReadWriteProtocol
-    task_rw_repo: TaskRepositoryReadWriteProtocol
-    time_block_definition_rw_repo: TimeBlockDefinitionRepositoryReadWriteProtocol
-    trigger_rw_repo: TriggerRepositoryReadWriteProtocol
-    usecase_config_rw_repo: UseCaseConfigRepositoryReadWriteProtocol
-
-
-class ReadWriteRepositoryFactory(Protocol):
-    """Factory protocol for creating ReadWriteRepositories instances."""
-
-    def create(self, user: UserEntity) -> ReadWriteRepositories:
-        """Create read-write repositories for the given user."""
         ...

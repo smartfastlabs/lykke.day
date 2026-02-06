@@ -1,7 +1,7 @@
 """Repository factories for handlers (non-transactional).
 
-These factories provide read-only and read-write repository collections that manage
-their own connections (i.e., they are not bound to a Unit of Work transaction).
+These factories provide read-only repository collections that manage their own
+connections (i.e., they are not bound to a Unit of Work transaction).
 """
 
 from __future__ import annotations
@@ -37,47 +37,27 @@ if TYPE_CHECKING:
     from lykke.application.repositories import (
         AuditLogRepositoryReadOnlyProtocol,
         AuthTokenRepositoryReadOnlyProtocol,
-        AuthTokenRepositoryReadWriteProtocol,
         BotPersonalityRepositoryReadOnlyProtocol,
-        BotPersonalityRepositoryReadWriteProtocol,
         BrainDumpRepositoryReadOnlyProtocol,
-        BrainDumpRepositoryReadWriteProtocol,
         CalendarEntryRepositoryReadOnlyProtocol,
-        CalendarEntryRepositoryReadWriteProtocol,
         CalendarEntrySeriesRepositoryReadOnlyProtocol,
-        CalendarEntrySeriesRepositoryReadWriteProtocol,
         CalendarRepositoryReadOnlyProtocol,
-        CalendarRepositoryReadWriteProtocol,
         DayRepositoryReadOnlyProtocol,
-        DayRepositoryReadWriteProtocol,
         DayTemplateRepositoryReadOnlyProtocol,
-        DayTemplateRepositoryReadWriteProtocol,
         FactoidRepositoryReadOnlyProtocol,
-        FactoidRepositoryReadWriteProtocol,
         MessageRepositoryReadOnlyProtocol,
-        MessageRepositoryReadWriteProtocol,
         PushNotificationRepositoryReadOnlyProtocol,
-        PushNotificationRepositoryReadWriteProtocol,
         PushSubscriptionRepositoryReadOnlyProtocol,
-        PushSubscriptionRepositoryReadWriteProtocol,
         RoutineDefinitionRepositoryReadOnlyProtocol,
-        RoutineDefinitionRepositoryReadWriteProtocol,
         RoutineRepositoryReadOnlyProtocol,
-        RoutineRepositoryReadWriteProtocol,
         TacticRepositoryReadOnlyProtocol,
-        TacticRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
-        TaskDefinitionRepositoryReadWriteProtocol,
         TaskRepositoryReadOnlyProtocol,
-        TaskRepositoryReadWriteProtocol,
         TimeBlockDefinitionRepositoryReadOnlyProtocol,
-        TimeBlockDefinitionRepositoryReadWriteProtocol,
         TriggerRepositoryReadOnlyProtocol,
-        TriggerRepositoryReadWriteProtocol,
         UseCaseConfigRepositoryReadOnlyProtocol,
-        UseCaseConfigRepositoryReadWriteProtocol,
     )
-    from lykke.application.unit_of_work import ReadOnlyRepositories, ReadWriteRepositories
+    from lykke.application.unit_of_work import ReadOnlyRepositories
 
 
 class SqlAlchemyReadOnlyRepositories:
@@ -99,7 +79,9 @@ class SqlAlchemyReadOnlyRepositories:
             "CalendarRepositoryReadOnlyProtocol",
             CalendarRepository(user=self.user),
         )
-        self.day_ro_repo = cast("DayRepositoryReadOnlyProtocol", DayRepository(user=self.user))
+        self.day_ro_repo = cast(
+            "DayRepositoryReadOnlyProtocol", DayRepository(user=self.user)
+        )
         self.day_template_ro_repo = cast(
             "DayTemplateRepositoryReadOnlyProtocol",
             DayTemplateRepository(user=self.user),
@@ -180,104 +162,5 @@ class SqlAlchemyReadOnlyRepositories:
 class SqlAlchemyReadOnlyRepositoryFactory:
     """Factory for creating SqlAlchemyReadOnlyRepositories instances."""
 
-    def create(self, user: UserEntity) -> "ReadOnlyRepositories":
+    def create(self, user: UserEntity) -> ReadOnlyRepositories:
         return SqlAlchemyReadOnlyRepositories(user=user)
-
-
-class SqlAlchemyReadWriteRepositories:
-    """SQLAlchemy implementation of ReadWriteRepositories.
-
-    Provides read-write access to repositories without a Unit of Work.
-    Each repository manages its own database connections.
-    """
-
-    def __init__(self, user: UserEntity) -> None:
-        self.user = user
-
-        # Initialize all read-write repositories (all are user-scoped).
-        self.auth_token_rw_repo = cast(
-            "AuthTokenRepositoryReadWriteProtocol",
-            AuthTokenRepository(user=self.user),
-        )
-        self.calendar_rw_repo = cast(
-            "CalendarRepositoryReadWriteProtocol",
-            CalendarRepository(user=self.user),
-        )
-        self.day_rw_repo = cast("DayRepositoryReadWriteProtocol", DayRepository(user=self.user))
-        self.day_template_rw_repo = cast(
-            "DayTemplateRepositoryReadWriteProtocol",
-            DayTemplateRepository(user=self.user),
-        )
-        self.calendar_entry_rw_repo = cast(
-            "CalendarEntryRepositoryReadWriteProtocol",
-            CalendarEntryRepository(user=self.user),
-        )
-        self.calendar_entry_series_rw_repo = cast(
-            "CalendarEntrySeriesRepositoryReadWriteProtocol",
-            CalendarEntrySeriesRepository(user=self.user),
-        )
-        self.push_subscription_rw_repo = cast(
-            "PushSubscriptionRepositoryReadWriteProtocol",
-            PushSubscriptionRepository(user=self.user),
-        )
-        self.routine_definition_rw_repo = cast(
-            "RoutineDefinitionRepositoryReadWriteProtocol",
-            RoutineDefinitionRepository(user=self.user),
-        )
-        self.routine_rw_repo = cast(
-            "RoutineRepositoryReadWriteProtocol",
-            RoutineRepository(user=self.user),
-        )
-        self.tactic_rw_repo = cast(
-            "TacticRepositoryReadWriteProtocol",
-            TacticRepository(user=self.user),
-        )
-        self.task_definition_rw_repo = cast(
-            "TaskDefinitionRepositoryReadWriteProtocol",
-            TaskDefinitionRepository(user=self.user),
-        )
-        self.task_rw_repo = cast(
-            "TaskRepositoryReadWriteProtocol", TaskRepository(user=self.user)
-        )
-        self.time_block_definition_rw_repo = cast(
-            "TimeBlockDefinitionRepositoryReadWriteProtocol",
-            TimeBlockDefinitionRepository(user=self.user),
-        )
-        self.trigger_rw_repo = cast(
-            "TriggerRepositoryReadWriteProtocol",
-            TriggerRepository(user=self.user),
-        )
-        self.usecase_config_rw_repo = cast(
-            "UseCaseConfigRepositoryReadWriteProtocol",
-            UseCaseConfigRepository(user=self.user),
-        )
-
-        # Chatbot-related repositories
-        self.bot_personality_rw_repo = cast(
-            "BotPersonalityRepositoryReadWriteProtocol",
-            BotPersonalityRepository(user=self.user),
-        )
-        self.brain_dump_rw_repo = cast(
-            "BrainDumpRepositoryReadWriteProtocol",
-            BrainDumpRepository(user=self.user),
-        )
-        self.message_rw_repo = cast(
-            "MessageRepositoryReadWriteProtocol",
-            MessageRepository(user=self.user),
-        )
-        self.factoid_rw_repo = cast(
-            "FactoidRepositoryReadWriteProtocol",
-            FactoidRepository(user=self.user),
-        )
-        self.push_notification_rw_repo = cast(
-            "PushNotificationRepositoryReadWriteProtocol",
-            PushNotificationRepository(user=self.user),
-        )
-
-
-class SqlAlchemyReadWriteRepositoryFactory:
-    """Factory for creating SqlAlchemyReadWriteRepositories instances."""
-
-    def create(self, user: UserEntity) -> "ReadWriteRepositories":
-        return SqlAlchemyReadWriteRepositories(user=user)
-

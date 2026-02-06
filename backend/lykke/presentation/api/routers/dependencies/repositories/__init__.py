@@ -12,33 +12,16 @@ from fastapi import Depends, HTTPException, Path
 
 from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.repositories import (
-    AuthTokenRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
-    CalendarRepositoryReadWriteProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
 )
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.repositories import (
-    AuthTokenRepository,
     CalendarRepository,
     TimeBlockDefinitionRepository,
 )
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.api.routers.dependencies.user import get_current_user
-
-
-def get_auth_token_repo(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> AuthTokenRepositoryReadWriteProtocol:
-    """Get a user-scoped instance of AuthTokenRepository."""
-    return cast("AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository(user=user))
-
-
-def get_calendar_repo(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> CalendarRepositoryReadWriteProtocol:
-    """Get a user-scoped instance of CalendarRepository."""
-    return cast("CalendarRepositoryReadWriteProtocol", CalendarRepository(user=user))
 
 
 def get_time_block_definition_ro_repo(
