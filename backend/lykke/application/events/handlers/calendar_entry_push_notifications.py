@@ -104,6 +104,23 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             )
             return
 
+        # If user has indicated they will not attend, do not notify.
+        attendance_status: value_objects.CalendarEntryAttendanceStatus | str | None
+        if hasattr(entry_data, "attendance_status"):
+            attendance_status = getattr(entry_data, "attendance_status")
+        else:
+            attendance_status = (
+                entry_data.get("attendance_status") if isinstance(entry_data, dict) else None
+            )
+
+        if value_objects.CalendarEntryAttendanceStatus.blocks_notifications(
+            attendance_status
+        ):
+            logger.debug(
+                f"Skipping calendar entry {change_type} push notification for entry {calendar_entry_id} due to attendance_status={attendance_status}"
+            )
+            return
+
         # Build notification payload
         try:
             payload = build_notification_payload_for_calendar_entry_change(

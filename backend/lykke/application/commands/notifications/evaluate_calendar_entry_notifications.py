@@ -126,6 +126,14 @@ class CalendarEntryNotificationHandler(
         user: UserEntity,
         now: datetime,
     ) -> None:
+        if value_objects.CalendarEntryAttendanceStatus.blocks_notifications(
+            entry.attendance_status
+        ):
+            logger.debug(
+                f"Skipping calendar entry `{entry.name}` for user {self.user.id} due to attendance_status={entry.attendance_status}"
+            )
+            return
+
         for rule in rules:
             scheduled_for = entry.starts_at - timedelta(minutes=rule.minutes_before)
             if not self._within_window(now, scheduled_for):

@@ -2191,6 +2191,8 @@ export interface components {
             calendar_id?: string | null;
             /** Platform Id */
             platform_id?: string | null;
+            /** Ical Uid */
+            ical_uid?: string | null;
         };
         /**
          * CalendarEntrySeriesSchema
@@ -2386,8 +2388,6 @@ export interface components {
             template?: components["schemas"]["DayTemplateSchema"] | null;
             /** Alarms */
             alarms?: components["schemas"]["AlarmSchema"][];
-            /** Brain Dumps */
-            brain_dumps?: components["schemas"]["BrainDumpSchema"][];
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
         };
         /**

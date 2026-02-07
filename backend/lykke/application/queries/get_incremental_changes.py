@@ -17,7 +17,6 @@ from lykke.application.repositories import (
 )
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
-from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas.mappers import (
     map_calendar_entry_to_schema,
     map_day_to_schema,
@@ -131,7 +130,7 @@ class GetIncrementalChangesHandler(
                 entity_data = await self._load_entity_data(
                     audit_log.entity_type or "unknown",
                     audit_log.entity_id,
-                    activity_type=audit_log.activity_type,
+                    _activity_type=audit_log.activity_type,
                     user_timezone=user_timezone,
                 )
 
@@ -167,7 +166,7 @@ class GetIncrementalChangesHandler(
         entity_type: str,
         entity_id: UUID,
         *,
-        activity_type: str,
+        _activity_type: str,
         user_timezone: str | None,
     ) -> dict[str, Any] | None:
         """Load the full entity data from the repository and convert to dict.
@@ -219,25 +218,7 @@ class GetIncrementalChangesHandler(
                 day = await self.day_ro_repo.get(entity_id)
                 if not day:
                     return None
-                # Only load brain dumps when the day update was caused by a brain dump
-                # event. Otherwise day updates (e.g. alarms) must not be blocked by
-                # brain dump loading.
-                if activity_type in {
-                    "BrainDumpAddedEvent",
-                    "BrainDumpStatusChangedEvent",
-                    "BrainDumpRemovedEvent",
-                }:
-                    brain_dumps = []
-                    try:
-                        brain_dumps = await self.brain_dump_ro_repo.search(
-                            value_objects.BrainDumpQuery(date=day.date)
-                        )
-                    except Exception:
-                        brain_dumps = []
-
-                    day_schema = map_day_to_schema(day, brain_dumps=brain_dumps)
-                else:
-                    day_schema = map_day_to_schema(day)
+                day_schema = map_day_to_schema(day)
                 return day_schema.model_dump(mode="json")
 
             return None

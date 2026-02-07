@@ -40,6 +40,8 @@ import TomorrowAddAlarmPage from "@/pages/me/tomorrow/AddAlarm";
 import TomorrowRoutinesView from "@/pages/me/tomorrow/Routines";
 import TodayNotificationsPage from "@/pages/me/today/notifications/Index";
 import TodayNotificationDetailPage from "@/pages/me/today/notifications/Detail";
+import TodayMessagesPage from "@/pages/me/today/messages/Index";
+import TodayMessageDetailPage from "@/pages/me/today/messages/Detail";
 import TodayBrainDumpsPage from "@/pages/me/today/brain-dumps/Index";
 import TodayBrainDumpDetailPage from "@/pages/me/today/brain-dumps/Detail";
 import TodayEditPage from "@/pages/me/today/Edit";
@@ -304,6 +306,7 @@ export default function App() {
                   path="/notifications/:id"
                   component={TodayNotificationDetailPage}
                 />
+                <Route path="/messages/:id" component={TodayMessageDetailPage} />
                 <Route
                   path="/brain-dumps/:id"
                   component={TodayBrainDumpDetailPage}
@@ -320,6 +323,7 @@ export default function App() {
                     path="/notifications"
                     component={TodayNotificationsPage}
                   />
+                  <Route path="/messages" component={TodayMessagesPage} />
                   <Route path="/edit" component={TodayEditPage} />
                 </Route>
                 <Route path="/nav" component={NavigationLayout}>

@@ -137,19 +137,9 @@ async def update_day(
 ) -> DaySchema:
     """Update a day."""
     update_day_handler = command_factory.create(UpdateDayHandler)
-    ro_repos = ro_repo_factory.create(user)
-    day = await ro_repos.day_ro_repo.get(day_id)
-
-    status = update_data.status
-    if (
-        status is None
-        and update_data.high_level_plan is not None
-        and day.status == value_objects.DayStatus.SCHEDULED
-    ):
-        status = value_objects.DayStatus.STARTED
 
     update_object = DayUpdateObject(
-        status=status,
+        status=update_data.status,
         scheduled_at=update_data.scheduled_at,
         tags=update_data.tags,
         template_id=update_data.template_id,
@@ -164,12 +154,9 @@ async def update_day(
         ),
     )
     updated = await update_day_handler.handle(
-        UpdateDayCommand(date=day.date, update_data=update_object)
+        UpdateDayCommand(day_id=day_id, update_data=update_object)
     )
-    brain_dumps = await ro_repos.brain_dump_ro_repo.search(
-        value_objects.BrainDumpQuery(date=day.date)
-    )
-    return map_day_to_schema(updated, brain_dumps=brain_dumps)
+    return map_day_to_schema(updated)
 
 
 # ============================================================================
@@ -236,7 +223,7 @@ def _build_partial_context(
         if day is None:
             raise ValueError("Day is required for day context part.")
         return DayContextPartialSchema(
-            day=map_day_to_schema(day, brain_dumps=brain_dumps or []),
+            day=map_day_to_schema(day),
         )
     if part_key == "tasks":
         return DayContextPartialSchema(
@@ -384,7 +371,6 @@ async def _load_day_context_part(
             _build_partial_context(
                 part_key=part_key,
                 day=day_entity,
-                brain_dumps=[],
                 user_timezone=user_timezone,
             ),
             tasks_cache,
@@ -927,7 +913,7 @@ async def _build_change_from_stream_payload(
             entity_data = await get_incremental_changes_handler._load_entity_data(
                 entity_type,
                 entity_uuid,
-                activity_type=activity_type,
+                _activity_type=activity_type,
                 user_timezone=user_timezone,
             )
         except Exception as e:

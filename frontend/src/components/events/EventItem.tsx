@@ -158,8 +158,8 @@ export const EventItem: Component<EventItemProps> = (props) => {
               class="flex items-center gap-2 text-rose-700/70 text-xs transition-opacity duration-150"
               style={{ opacity: leftOpacity() }}
             >
-              <Icon icon={faCircleXmark} class="w-4 h-4 fill-rose-600/70" />
-              <span>Negative</span>
+              <Icon icon={faBan} class="w-4 h-4 fill-rose-600/70" />
+              <span>Not going</span>
             </div>
             <div
               class="flex items-center gap-2 text-emerald-700/70 text-xs transition-opacity duration-150"

@@ -187,6 +187,34 @@ def test_filter_upcoming_calendar_entries_empty_list() -> None:
         assert result == []
 
 
+def test_filter_upcoming_calendar_entries_excludes_not_going(test_user_id: str) -> None:
+    """Entries marked NOT_GOING should not be included in upcoming results."""
+    calendar = CalendarEntity(
+        user_id=test_user_id,
+        name="Test Calendar",
+        platform="google",
+        platform_id="cal123",
+        auth_token_id=uuid4(),
+    )
+    not_going_entry = CalendarEntryEntity(
+        user_id=test_user_id,
+        calendar_id=calendar.id,
+        name="Not going event",
+        starts_at=datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC),
+        ends_at=datetime.datetime(2025, 11, 27, 13, 0, 0, tzinfo=UTC),
+        platform_id="event-ng",
+        platform="google",
+        status="confirmed",
+        attendance_status=value_objects.CalendarEntryAttendanceStatus.NOT_GOING,
+        frequency=value_objects.TaskFrequency.ONCE,
+    )
+
+    with freeze_time("2025-11-27 10:00:00+00:00", real_asyncio=True):
+        look_ahead = timedelta(hours=3)
+        result = filter_upcoming_calendar_entries([not_going_entry], look_ahead)
+        assert result == []
+
+
 def test_filter_upcoming_calendar_entries_ongoing_events(
     test_user_id: str,
 ) -> None:

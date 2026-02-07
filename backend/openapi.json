@@ -6599,6 +6599,17 @@
               }
             ],
             "title": "Platform Id"
+          },
+          "ical_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ical Uid"
           }
         },
         "type": "object",
@@ -7253,13 +7264,6 @@
             },
             "type": "array",
             "title": "Alarms"
-          },
-          "brain_dumps": {
-            "items": {
-              "$ref": "#/components/schemas/BrainDumpSchema"
-            },
-            "type": "array",
-            "title": "Brain Dumps"
           },
           "high_level_plan": {
             "anyOf": [

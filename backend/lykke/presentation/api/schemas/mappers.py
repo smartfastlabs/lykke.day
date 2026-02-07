@@ -258,16 +258,11 @@ def map_day_template_to_schema(
 
 def map_day_to_schema(
     day: DayEntity,
-    *,
-    brain_dumps: list[BrainDumpEntity] | None = None,
 ) -> DaySchema:
     """Convert Day entity to Day schema."""
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     alarm_schemas = [map_alarm_to_schema(alarm) for alarm in day.alarms]
-    brain_dump_schemas = [
-        map_brain_dump_to_schema(item) for item in (brain_dumps or [])
-    ]
 
     return DaySchema(
         id=day.id,
@@ -280,7 +275,6 @@ def map_day_to_schema(
         tags=day.tags,
         template=template_schema,
         alarms=alarm_schemas,
-        brain_dumps=brain_dump_schemas,
         high_level_plan=(
             HighLevelPlanSchema(
                 title=day.high_level_plan.title,
@@ -331,7 +325,6 @@ def map_day_context_to_schema(
     current_time = get_current_datetime_in_timezone(user_timezone)
     day_schema = map_day_to_schema(
         context.day,
-        brain_dumps=context.brain_dumps,
     )
     calendar_entry_schemas = [
         map_calendar_entry_to_schema(entry, user_timezone=user_timezone)

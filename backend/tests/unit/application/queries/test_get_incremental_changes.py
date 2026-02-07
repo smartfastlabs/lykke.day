@@ -183,7 +183,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "task",
             task_id,
-            activity_type="TaskUpdatedEvent",
+            _activity_type="TaskUpdatedEvent",
             user_timezone="America/Chicago",
         )
 
@@ -218,7 +218,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "calendarentry",
             entry_id,
-            activity_type="EntityUpdatedEvent",
+            _activity_type="EntityUpdatedEvent",
             user_timezone="America/Chicago",
         )
 
@@ -244,7 +244,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "day",
             day_id,
-            activity_type="DayUpdatedEvent",
+            _activity_type="DayUpdatedEvent",
             user_timezone="America/Chicago",
         )
 
@@ -276,7 +276,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "day",
             day_id,
-            activity_type="AlarmTriggeredEvent",
+            _activity_type="AlarmTriggeredEvent",
             user_timezone="America/Chicago",
         )
 
@@ -287,10 +287,14 @@ class TestLoadEntityData:
         assert "alarms" in result
 
     @pytest.mark.asyncio
-    async def test_load_day_entity_data_loads_brain_dumps_for_brain_dump_events(
+    async def test_load_day_entity_data_does_not_load_brain_dumps_for_brain_dump_events(
         self, handler_with_mocks
     ):
-        """Brain dump events should still include brain dumps in the day payload."""
+        """Day entity payload is not coupled to brain dump loading.
+
+        Brain dumps are delivered as their own entity changes, so day updates should
+        remain lightweight regardless of the triggering activity.
+        """
         day_id = uuid4()
         mock_day = DayEntity(
             id=day_id,
@@ -303,12 +307,12 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "day",
             day_id,
-            activity_type="BrainDumpAddedEvent",
+            _activity_type="BrainDumpAddedEvent",
             user_timezone="America/Chicago",
         )
 
         assert result is not None
-        handler_with_mocks.brain_dump_ro_repo.search.assert_called_once()
+        handler_with_mocks.brain_dump_ro_repo.search.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_load_routine_definition_entity_data(self, handler_with_mocks):
@@ -331,7 +335,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "routine_definition",
             routine_definition_id,
-            activity_type="RoutineDefinitionUpdatedEvent",
+            _activity_type="RoutineDefinitionUpdatedEvent",
             user_timezone="America/Chicago",
         )
 
@@ -344,7 +348,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "unknown_type",
             uuid4(),
-            activity_type="EntityUpdatedEvent",
+            _activity_type="EntityUpdatedEvent",
             user_timezone="America/Chicago",
         )
         assert result is None
@@ -362,7 +366,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "calendar_entry",
             uuid4(),
-            activity_type="EntityUpdatedEvent",
+            _activity_type="EntityUpdatedEvent",
             user_timezone="America/Chicago",
         )
         assert result is None

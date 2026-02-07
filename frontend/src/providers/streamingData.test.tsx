@@ -195,6 +195,7 @@ describe("StreamingDataProvider", () => {
             "routines",
             "brain_dumps",
             "push_notifications",
+            "messages",
           ],
         });
       });

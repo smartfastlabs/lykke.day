@@ -65,7 +65,11 @@ def _build_subscription(user_id: Any) -> PushSubscriptionEntity:
     )
 
 
-def _build_calendar_entry(user_id: Any) -> CalendarEntryEntity:
+def _build_calendar_entry(
+    user_id: Any,
+    *,
+    attendance_status: value_objects.CalendarEntryAttendanceStatus | None = None,
+) -> CalendarEntryEntity:
     return CalendarEntryEntity(
         user_id=user_id,
         name="Daily standup",
@@ -73,6 +77,7 @@ def _build_calendar_entry(user_id: Any) -> CalendarEntryEntity:
         platform_id="event-1",
         platform="google",
         status="confirmed",
+        attendance_status=attendance_status,
         starts_at=datetime(2025, 11, 27, 10, 0, tzinfo=UTC),
         ends_at=datetime(2025, 11, 27, 10, 30, tzinfo=UTC),
         frequency=value_objects.TaskFrequency.ONCE,
@@ -215,6 +220,65 @@ async def test_calendar_entry_handler_loads_entry_and_sends() -> None:
     await handler.handle(event)
 
     assert send_calls
+
+
+@pytest.mark.asyncio
+async def test_calendar_entry_handler_skips_when_not_going() -> None:
+    user_id = uuid4()
+    calendar_entry = _build_calendar_entry(
+        user_id, attendance_status=value_objects.CalendarEntryAttendanceStatus.NOT_GOING
+    )
+    push_subscription_repo = create_push_subscription_repo_double()
+
+    async def subscriptions() -> list[PushSubscriptionEntity]:
+        return [_build_subscription(user_id)]
+
+    push_subscription_repo.all = subscriptions
+    calendar_entry_repo = create_calendar_entry_repo_double()
+
+    async def get_entry(_: Any) -> CalendarEntryEntity:
+        return calendar_entry
+
+    calendar_entry_repo.get = get_entry
+
+    send_calls: list[PushSubscriptionEntity] = []
+
+    class _WebPushGateway(WebPushGatewayProtocol):
+        async def send_notification(
+            self,
+            subscription: PushSubscriptionEntity,
+            content: object,
+        ) -> None:
+            _ = content
+            send_calls.append(subscription)
+
+    web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
+    handler = CalendarEntryPushNotificationHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
+    )
+
+    event = CalendarEntryUpdatedEvent(
+        user_id=user_id,
+        calendar_entry_id=calendar_entry.id,
+        update_object=value_objects.CalendarEntryUpdateObject(name="Updated"),
+    )
+    await handler.handle(event)
+
+    assert send_calls == []
 
 
 @pytest.mark.asyncio

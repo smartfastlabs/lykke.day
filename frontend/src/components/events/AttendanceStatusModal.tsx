@@ -38,7 +38,7 @@ const POSITIVE_OPTIONS: AttendanceStatusOption[] = [
 ];
 
 const NEGATIVE_OPTIONS: AttendanceStatusOption[] = [
-  { status: "NOT_GOING", label: "Cancelled", icon: faBan, tone: "negative" },
+  { status: "NOT_GOING", label: "Not going", icon: faBan, tone: "negative" },
   {
     status: "DIDNT_HAPPEN",
     label: "Didn’t happen",
@@ -92,7 +92,7 @@ const AttendanceStatusModal: Component<AttendanceStatusModalProps> = (
 
   const headerTitle = () =>
     props.title ??
-    (props.direction === "positive" ? "Mark attendance" : "Mark outcome");
+    (props.direction === "positive" ? "Mark attendance" : "Not attending");
 
   return (
     <Show when={props.isOpen}>

@@ -1,14 +1,13 @@
 """Command to update a day's status or template."""
 
-from dataclasses import dataclass
-from datetime import date
+from dataclasses import dataclass, replace
+from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.repositories import (
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
 )
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 from lykke.domain.events.day_events import DayUpdatedEvent
@@ -19,7 +18,7 @@ from lykke.domain.value_objects import DayUpdateObject
 class UpdateDayCommand(Command):
     """Command to update a day."""
 
-    date: date
+    day_id: UUID
     update_data: DayUpdateObject
 
 
@@ -33,7 +32,7 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
         """Update a day's status and/or template.
 
         Args:
-            command: The command containing the date and update data
+            command: The command containing the day id and update data
 
         Returns:
             The updated Day entity
@@ -43,10 +42,16 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
         """
         async with self.new_uow() as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(command.date, self.user.id)
-            day = await self.day_ro_repo.get(day_id)
+            day = await self.day_ro_repo.get(command.day_id)
 
             update_data = command.update_data
+            if (
+                update_data.status is None
+                and update_data.high_level_plan is not None
+                and day.status == value_objects.DayStatus.SCHEDULED
+            ):
+                update_data = replace(update_data, status=value_objects.DayStatus.STARTED)
+
             # Apply status transition if requested
             if update_data.status is not None:
                 self._apply_status_transition(day, update_data.status)

@@ -37,7 +37,6 @@ export type CalendarEntryAttendanceStatus =
   components["schemas"]["CalendarEntryAttendanceStatus"];
 export type Day = components["schemas"]["DaySchema"] & {
   alarms?: Alarm[];
-  brain_dumps?: BrainDump[];
 };
 
 // DayContext with events alias
@@ -48,6 +47,7 @@ export type DayContext = Omit<BaseDayContext, "calendar_entries"> & {
   tasks?: Task[];
   alarms?: Alarm[];
   push_notifications?: PushNotification[];
+  messages?: Message[];
 };
 
 export type DayTemplate = components["schemas"]["DayTemplateSchema"] & {
@@ -77,6 +77,7 @@ export type RoutineDefinitionTask =
   };
 export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 export type PushNotification = components["schemas"]["PushNotificationSchema"];
+export type Message = components["schemas"]["MessageSchema"];
 
 // Value object types
 export type RecurrenceSchedule =

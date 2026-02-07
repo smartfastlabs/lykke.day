@@ -22,6 +22,7 @@ import {
   BrainDump,
   BrainDumpStatus,
   PushNotification,
+  Message,
   DayContextWithRoutines,
   Routine,
 } from "@/types/api";
@@ -61,12 +62,14 @@ interface StreamingDataContextValue {
   alarms: Accessor<Alarm[]>;
   brainDumps: Accessor<BrainDump[]>;
   notifications: Accessor<PushNotification[]>;
+  messages: Accessor<Message[]>;
   day: Accessor<Day | undefined>;
   routines: Accessor<Routine[]>;
   // Loading and error states
   isLoading: Accessor<boolean>;
   isPartLoading: (part: DayContextPartKey) => boolean;
   notificationsLoading: Accessor<boolean>;
+  messagesLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
   // Connection state
   isConnected: Accessor<boolean>;
@@ -106,6 +109,7 @@ interface StreamingDataContextValue {
   ) => Promise<void>;
   removeBrainDump: (itemId: string) => Promise<void>;
   loadNotifications: () => Promise<void>;
+  loadMessages: () => Promise<void>;
   updateEventAttendanceStatus: (
     event: Event,
     status: import("@/types/api").CalendarEntryAttendanceStatus | null,
@@ -139,7 +143,8 @@ type DayContextPartKey =
   | "calendar_entries"
   | "routines"
   | "brain_dumps"
-  | "push_notifications";
+  | "push_notifications"
+  | "messages";
 
 type DayContextLoadingState = Record<DayContextPartKey, boolean>;
 
@@ -150,6 +155,7 @@ interface PartialDayContext {
   routines?: Routine[];
   brain_dumps?: BrainDump[];
   push_notifications?: PushNotification[];
+  messages?: Message[];
 }
 
 interface SyncRequestMessage extends WebSocketMessage {
@@ -213,6 +219,7 @@ export function StreamingDataProvider(props: ParentProps) {
       routines: true,
       brain_dumps: true,
       push_notifications: true,
+      messages: true,
     });
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
@@ -221,6 +228,8 @@ export function StreamingDataProvider(props: ParentProps) {
     [],
   );
   const [notificationsLoading, setNotificationsLoading] = createSignal(false);
+  const [messages, setMessages] = createSignal<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = createSignal(false);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
@@ -240,6 +249,7 @@ export function StreamingDataProvider(props: ParentProps) {
   let isMounted = false;
   let wsClient: WsClient<DomainEventEnvelope> | null = null;
   let fullSyncBaseContext: DayContextWithRoutines | undefined = undefined;
+  let nowInterval: number | null = null;
 
   type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
     id?: string | null;
@@ -283,6 +293,7 @@ export function StreamingDataProvider(props: ParentProps) {
     "routines",
     "brain_dumps",
     "push_notifications",
+    "messages",
   ];
 
   const setLoadingForParts = (parts: DayContextPartKey[], loading: boolean) => {
@@ -301,6 +312,7 @@ export function StreamingDataProvider(props: ParentProps) {
     if (partial.routines) parts.push("routines");
     if (partial.brain_dumps) parts.push("brain_dumps");
     if (partial.push_notifications) parts.push("push_notifications");
+    if (partial.messages) parts.push("messages");
     return parts;
   };
 
@@ -311,6 +323,7 @@ export function StreamingDataProvider(props: ParentProps) {
     routines: [],
     brain_dumps: [],
     push_notifications: [],
+    messages: [],
   });
 
   const createDebugEventId = (): string => {
@@ -379,6 +392,11 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  // Keep a lightweight clock for time-based derived values (e.g. filtering
+  // alarms that have already passed). This avoids relying on websocket updates
+  // for purely "time moved forward" changes.
+  const [now, setNow] = createSignal(new Date());
+
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
@@ -398,7 +416,54 @@ export function StreamingDataProvider(props: ParentProps) {
   );
   const alarms = createMemo(() => {
     const context = dayContextStore.data;
-    return (context?.day?.alarms || []) as Alarm[];
+    const all = (context?.day?.alarms || []) as Alarm[];
+    const dayDate = (context?.day as { date?: string } | undefined)?.date;
+
+    // Touch the clock signal so this memo recomputes as time passes.
+    const nowMs = now().getTime();
+    const graceMs = 60_000; // avoid flicker around the exact minute boundary
+
+    const getEffectiveAlarmTimeMs = (alarm: Alarm): number | null => {
+      const status = (alarm.status ?? "ACTIVE") as AlarmStatus;
+
+      // Snoozed alarms should be evaluated by their snooze time.
+      if (status === "SNOOZED" && alarm.snoozed_until) {
+        const d = new Date(alarm.snoozed_until);
+        const t = d.getTime();
+        return Number.isFinite(t) ? t : null;
+      }
+
+      // Prefer the server-provided datetime if present.
+      if (alarm.datetime) {
+        const d = new Date(alarm.datetime);
+        const t = d.getTime();
+        return Number.isFinite(t) ? t : null;
+      }
+
+      // Fall back to combining the day date with the alarm time (local time).
+      if (dayDate && alarm.time) {
+        const d = new Date(`${dayDate}T${alarm.time}`);
+        const t = d.getTime();
+        return Number.isFinite(t) ? t : null;
+      }
+
+      return null;
+    };
+
+    return all.filter((alarm) => {
+      const status = (alarm.status ?? "ACTIVE") as AlarmStatus;
+
+      // Always hide cancelled alarms on the main /me/today experience.
+      if (status === "CANCELLED") return false;
+
+      // Always keep currently-triggered alarms so overlays/kiosk can react.
+      if (status === "TRIGGERED") return true;
+
+      // Hide alarms that are already in the past (missed/outdated).
+      const effectiveMs = getEffectiveAlarmTimeMs(alarm);
+      if (effectiveMs === null) return true; // if we can't evaluate, keep visible
+      return effectiveMs + graceMs >= nowMs;
+    });
   });
   const triggeredAlarm = createMemo<Alarm | undefined>(() => {
     const active = (alarms() ?? []).filter(
@@ -416,10 +481,12 @@ export function StreamingDataProvider(props: ParentProps) {
     })[0];
   });
   const brainDumps = createMemo(() => {
-    const day = dayContextStore.data?.day;
-    if (!day) return [];
     return normalizeBrainDumps(
-      (day as { brain_dumps?: BrainDumpWithOptionalId[] }).brain_dumps,
+      (
+        dayContextStore.data as
+          | { brain_dumps?: BrainDumpWithOptionalId[] }
+          | undefined
+      )?.brain_dumps,
     );
   });
   const day = createMemo<Day | undefined>(() => {
@@ -428,7 +495,6 @@ export function StreamingDataProvider(props: ParentProps) {
     return {
       ...currentDay,
       alarms: alarms(),
-      brain_dumps: brainDumps(),
     };
   });
 
@@ -591,13 +657,13 @@ export function StreamingDataProvider(props: ParentProps) {
       next = {
         ...next,
         brain_dumps: partial.brain_dumps,
-        day: next.day
-          ? { ...next.day, brain_dumps: partial.brain_dumps }
-          : next.day,
       };
     }
     if (partial.push_notifications) {
       next = { ...next, push_notifications: partial.push_notifications };
+    }
+    if (partial.messages) {
+      next = { ...next, messages: partial.messages };
     }
     return next;
   };
@@ -1045,14 +1111,11 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const updateBrainDumpsLocally = (updatedItems: BrainDump[]) => {
     setDayContextStore((current) => {
-      if (!current.data || !current.data.day) return current;
+      if (!current.data) return current;
       const updated = {
         data: {
           ...current.data,
-          day: {
-            ...current.data.day,
-            brain_dumps: updatedItems,
-          },
+          brain_dumps: updatedItems,
         },
       };
       return updated;
@@ -1061,14 +1124,14 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const refreshAuxiliaryData = async () => {
     const context = dayContextStore.data;
-    if (context?.day) {
-      const normalized = normalizeBrainDumps(
-        (context.day as { brain_dumps?: BrainDumpWithOptionalId[] })
-          .brain_dumps,
-      );
-      updateBrainDumpsLocally(normalized);
-    }
+    const normalized = normalizeBrainDumps(
+      (
+        context as { brain_dumps?: BrainDumpWithOptionalId[] } | undefined
+      )?.brain_dumps,
+    );
+    updateBrainDumpsLocally(normalized);
     setNotifications(context?.push_notifications ?? []);
+    setMessages(context?.messages ?? []);
   };
 
   const addReminder = async (name: string): Promise<void> => {
@@ -1293,6 +1356,20 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const loadMessages = async () => {
+    if (messagesLoading()) {
+      return;
+    }
+    setMessagesLoading(true);
+    try {
+      setMessages(dayContextStore.data?.messages ?? []);
+    } catch (err) {
+      console.error("StreamingDataProvider: Failed to load messages", err);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
   const subscribeToTopic = (
     topic: string,
     handler: (event: DomainEventEnvelope) => void,
@@ -1310,6 +1387,15 @@ export function StreamingDataProvider(props: ParentProps) {
   onMount(() => {
     isMounted = true;
     connectWebSocket();
+
+    // Keep a "now" signal fresh for relative time UI. Avoid scheduling an
+    // interval in the test environment because fake-timer test suites often
+    // use runAllTimers(), which would loop indefinitely with intervals.
+    if (typeof window !== "undefined" && import.meta.env.MODE !== "test") {
+      nowInterval = window.setInterval(() => {
+        setNow(new Date());
+      }, 30000);
+    }
   });
 
   // Cleanup on unmount
@@ -1317,6 +1403,10 @@ export function StreamingDataProvider(props: ParentProps) {
     // Set isMounted to false first to prevent reconnection attempts
     isMounted = false;
 
+    if (nowInterval) {
+      clearInterval(nowInterval);
+      nowInterval = null;
+    }
     if (syncDebounceTimeout) {
       clearTimeout(syncDebounceTimeout);
     }
@@ -1332,11 +1422,13 @@ export function StreamingDataProvider(props: ParentProps) {
     alarms,
     brainDumps,
     notifications,
+    messages,
     day,
     routines,
     isLoading,
     isPartLoading,
     notificationsLoading,
+    messagesLoading,
     error,
     isConnected,
     isOutOfSync,
@@ -1362,6 +1454,7 @@ export function StreamingDataProvider(props: ParentProps) {
     updateBrainDumpStatus,
     removeBrainDump,
     loadNotifications,
+    loadMessages,
     updateEventAttendanceStatus,
     subscribeToTopic,
     unsubscribeFromTopic,

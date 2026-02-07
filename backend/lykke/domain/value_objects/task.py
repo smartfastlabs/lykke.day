@@ -1,8 +1,4 @@
-from dataclasses import dataclass
-from datetime import time
 from enum import Enum
-
-from .base import BaseValueObject
 
 
 class TaskTag(str, Enum):
@@ -129,6 +125,31 @@ class CalendarEntryAttendanceStatus(str, Enum):
     COMPLETE = "COMPLETE"
     NOT_GOING = "NOT_GOING"
     SNOOZED = "SNOOZED"
+
+    @classmethod
+    def blocks_notifications(cls, value: "CalendarEntryAttendanceStatus | str | None") -> bool:
+        """Return True when attendance status should suppress notifications.
+
+        We treat these statuses as user intent (or outcome) that the event should be
+        ignored for reminders / notifications.
+        """
+        if value is None:
+            return False
+        if isinstance(value, cls):
+            status = value
+        else:
+            try:
+                status = cls(value)
+            except ValueError:
+                # Unknown status (forwards/backwards compat) -> do not block.
+                return False
+
+        return status in {
+            cls.NOT_GOING,
+            cls.DIDNT_HAPPEN,
+            cls.MISSED,
+            cls.COMPLETE,
+        }
 
 
 # TimeWindow defines task timing fields (see routine_definition.py)

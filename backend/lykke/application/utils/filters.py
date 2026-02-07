@@ -7,6 +7,7 @@ from lykke.core.utils.dates import (
     get_current_datetime_in_timezone,
     get_current_time,
 )
+from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity, TaskEntity
 
 
@@ -77,6 +78,12 @@ def filter_upcoming_calendar_entries(
     result: list[CalendarEntryEntity] = []
 
     for calendar_entry in calendar_entries:
+        # If user has indicated they will not attend, suppress from "upcoming"
+        # notification candidates entirely.
+        if value_objects.CalendarEntryAttendanceStatus.blocks_notifications(
+            calendar_entry.attendance_status
+        ):
+            continue
         if calendar_entry.is_eligible_for_upcoming(now, look_ahead):
             result.append(calendar_entry)
 

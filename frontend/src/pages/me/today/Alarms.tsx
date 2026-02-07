@@ -9,9 +9,10 @@ import type { Alarm } from "@/types/api";
 export const TodaysAlarmsView: Component = () => {
   const { dayContext } = useStreamingData();
 
-  // Important: `useStreamingData().alarms()` intentionally hides cancelled alarms.
-  // On the alarms page we want to show alarms that have already been triggered
-  // (often marked as CANCELLED after being dismissed), so we use the raw day data.
+  // Important: `useStreamingData().alarms()` hides CANCELLED + outdated (past)
+  // alarms for the main `/me/today` experience. On the alarms page we want to
+  // show the full list (including already-triggered/dismissed alarms), so we
+  // use the raw day data instead.
   const alarms = createMemo<Alarm[]>(() => {
     const day = dayContext()?.day as unknown as
       | { alarms?: Alarm[] }

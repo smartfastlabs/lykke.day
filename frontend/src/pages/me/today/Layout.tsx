@@ -1,6 +1,7 @@
 import {
   faBell,
   faBrain,
+  faEnvelope,
   faPenToSquare,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
@@ -83,6 +84,17 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                   class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
                 >
                   <Icon icon={faBell} class="w-4 h-4 fill-amber-600/70" />
+                </a>
+                <a
+                  href="/me/today/messages"
+                  aria-label="Today's messages"
+                  title="Today's messages"
+                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                >
+                  <Icon
+                    icon={faEnvelope}
+                    class="w-4 h-4 fill-amber-600/70"
+                  />
                 </a>
                 <a
                   href="/me/today/edit"
