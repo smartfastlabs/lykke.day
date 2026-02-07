@@ -392,6 +392,10 @@ export const dayAPI = {
         text?: string | null;
         intentions?: string[];
       } | null;
+      status?: Day["status"] | null;
+      scheduled_at?: string | null;
+      tags?: Day["tags"] | null;
+      template_id?: string | null;
     },
   ): Promise<Day> =>
     fetchData<Day>(`/api/days/${dayId}`, {

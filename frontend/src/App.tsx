@@ -49,6 +49,7 @@ import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
 import AddAlarmPage from "@/pages/me/today/AddAlarm";
+import MeIndexPage from "@/pages/me/Index";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import KioskPage from "@/pages/me/kiosk/Index";
 import NavigationLayout from "@/pages/me/navigation/Layout";
@@ -279,7 +280,7 @@ export default function App() {
               />
 
               <Route path="/me" component={AuthGuard}>
-                <Route path="/" component={NotFound} />
+                <Route path="/" component={MeIndexPage} />
                 <Route path="/today/kiosk" component={KioskPage} />
                 <Route path="/brain-dump" component={BrainDumpPage} />
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
