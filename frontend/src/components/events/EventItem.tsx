@@ -32,10 +32,14 @@ const formatCategory = (category?: Event["category"]): string =>
   (category ?? "OTHER").toLowerCase().replace("_", " ");
 
 export const EventItem: Component<EventItemProps> = (props) => {
-  const { updateEventAttendanceStatus } = useStreamingData();
+  const { updateEventAttendanceStatus, now } = useStreamingData();
   const icon = () => getTypeIcon("EVENT");
   const categoryLabel = () => formatCategory(props.event.category);
   const frequencyLabel = () => formatByFrequency(props.event.frequency);
+  const meetingHasStarted = createMemo(() => {
+    const startsAtMs = new Date(props.event.starts_at).getTime();
+    return Number.isFinite(startsAtMs) ? startsAtMs <= now().getTime() : false;
+  });
 
   const attendanceStatus = createMemo(
     () => props.event.attendance_status ?? null,
@@ -158,8 +162,21 @@ export const EventItem: Component<EventItemProps> = (props) => {
               class="flex items-center gap-2 text-rose-700/70 text-xs transition-opacity duration-150"
               style={{ opacity: leftOpacity() }}
             >
-              <Icon icon={faBan} class="w-4 h-4 fill-rose-600/70" />
-              <span>Not going</span>
+              <Show
+                when={meetingHasStarted()}
+                fallback={
+                  <>
+                    <Icon icon={faBan} class="w-4 h-4 fill-rose-600/70" />
+                    <span>Not going</span>
+                  </>
+                }
+              >
+                <Icon
+                  icon={faTriangleExclamation}
+                  class="w-4 h-4 fill-rose-600/70"
+                />
+                <span>Missed</span>
+              </Show>
             </div>
             <div
               class="flex items-center gap-2 text-emerald-700/70 text-xs transition-opacity duration-150"
@@ -232,6 +249,7 @@ export const EventItem: Component<EventItemProps> = (props) => {
         isOpen={isModalOpen()}
         direction={modalDirection()}
         subtitle={props.event.name}
+        meetingHasStarted={meetingHasStarted()}
         currentStatus={attendanceStatus()}
         onClose={() => setIsModalOpen(false)}
         onSelect={(status) => {

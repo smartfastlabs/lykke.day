@@ -265,6 +265,85 @@ async def test_calendar_entry_notifications_skip_when_not_going() -> None:
 
 @pytest.mark.asyncio
 @freeze_time("2026-02-01 10:00:00")
+async def test_calendar_entry_notifications_skip_when_missed() -> None:
+    user_id = uuid4()
+    now = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
+    entry = _build_entry(
+        user_id,
+        now + timedelta(minutes=5),
+        attendance_status=value_objects.CalendarEntryAttendanceStatus.MISSED,
+    )
+    rules = [
+        value_objects.CalendarEntryNotificationRule(
+            channel=value_objects.CalendarEntryNotificationChannel.PUSH,
+            minutes_before=5,
+        ),
+        value_objects.CalendarEntryNotificationRule(
+            channel=value_objects.CalendarEntryNotificationChannel.TEXT,
+            minutes_before=5,
+        ),
+        value_objects.CalendarEntryNotificationRule(
+            channel=value_objects.CalendarEntryNotificationChannel.KIOSK_ALARM,
+            minutes_before=5,
+        ),
+    ]
+    user = _build_user(user_id, rules=rules)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    _allow_calendar_entry_search(calendar_entry_repo, now.date(), entry)
+
+    push_subscription_repo = create_push_subscription_repo_double()
+    allow(push_subscription_repo).all.and_return(
+        [
+            PushSubscriptionEntity(
+                user_id=user_id,
+                endpoint="https://example.com/push/1",
+                p256dh="p256dh",
+                auth="auth",
+            )
+        ]
+    )
+
+    push_notification_repo = create_repo_double(
+        PushNotificationRepositoryReadOnlyProtocol
+    )
+    allow(push_notification_repo).search.and_return([])
+
+    message_repo = create_repo_double(MessageRepositoryReadOnlyProtocol)
+    allow(message_repo).search.and_return([])
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(AssertionError("Day repo should not be used"))
+
+    ro_repos = create_read_only_repos_double(
+        calendar_entry_repo=calendar_entry_repo,
+        push_subscription_repo=push_subscription_repo,
+        push_notification_repo=push_notification_repo,
+        message_repo=message_repo,
+        day_repo=day_repo,
+    )
+    uow = create_uow_double()
+    uow_factory = create_uow_factory_double(uow)
+
+    recorder = _Recorder(commands=[])
+    sms_gateway = _SmsGateway()
+    handler = CalendarEntryNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.send_push_notification_handler = recorder
+    handler.sms_gateway = sms_gateway
+
+    await handler.handle(CalendarEntryNotificationCommand(user=user))
+
+    assert recorder.commands == []
+    assert sms_gateway.sent == []
+    assert uow.added == []
+
+
+@pytest.mark.asyncio
+@freeze_time("2026-02-01 10:00:00")
 async def test_calendar_entry_push_dedupes_on_triggered_by() -> None:
     user_id = uuid4()
     now = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)

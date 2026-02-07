@@ -25,6 +25,7 @@ type AttendanceStatusModalProps = {
   direction: AttendanceStatusModalDirection;
   title?: string;
   subtitle?: string;
+  meetingHasStarted?: boolean;
   currentStatus?: CalendarEntryAttendanceStatus | null;
   onClose: () => void;
   onSelect: (status: CalendarEntryAttendanceStatus | null) => void;
@@ -87,8 +88,18 @@ const toneClasses = (
 const AttendanceStatusModal: Component<AttendanceStatusModalProps> = (
   props,
 ) => {
-  const options = () =>
-    props.direction === "positive" ? POSITIVE_OPTIONS : NEGATIVE_OPTIONS;
+  const options = () => {
+    if (props.direction === "positive") return POSITIVE_OPTIONS;
+
+    const hasStarted = props.meetingHasStarted ?? false;
+    // Before the meeting starts: allow NOT_GOING, but don't allow MISSED.
+    // After the meeting has started: allow MISSED, but don't allow NOT_GOING.
+    return NEGATIVE_OPTIONS.filter((option) => {
+      if (option.status === "MISSED") return hasStarted;
+      if (option.status === "NOT_GOING") return !hasStarted;
+      return true;
+    });
+  };
 
   const headerTitle = () =>
     props.title ??

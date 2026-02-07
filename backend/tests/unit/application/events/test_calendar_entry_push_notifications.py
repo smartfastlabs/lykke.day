@@ -282,6 +282,71 @@ async def test_calendar_entry_handler_skips_when_not_going() -> None:
 
 
 @pytest.mark.asyncio
+async def test_calendar_entry_handler_skips_when_marked_missed_via_update_object() -> None:
+    """Ensure we don't notify when user marks an entry MISSED.
+
+    Handlers run BEFORE commit; reloading the entry can be stale. This test
+    simulates a stale repo read (attendance_status is None) while the update
+    event carries the new MISSED status.
+    """
+    user_id = uuid4()
+    calendar_entry = _build_calendar_entry(user_id, attendance_status=None)
+    push_subscription_repo = create_push_subscription_repo_double()
+
+    async def subscriptions() -> list[PushSubscriptionEntity]:
+        return [_build_subscription(user_id)]
+
+    push_subscription_repo.all = subscriptions
+    calendar_entry_repo = create_calendar_entry_repo_double()
+
+    async def get_entry(_: Any) -> CalendarEntryEntity:
+        return calendar_entry
+
+    calendar_entry_repo.get = get_entry
+
+    send_calls: list[PushSubscriptionEntity] = []
+
+    class _WebPushGateway(WebPushGatewayProtocol):
+        async def send_notification(
+            self,
+            subscription: PushSubscriptionEntity,
+            content: object,
+        ) -> None:
+            _ = content
+            send_calls.append(subscription)
+
+    web_push_gateway = _WebPushGateway()
+    ro_repos = create_read_only_repos_double(
+        push_subscription_repo=push_subscription_repo,
+        calendar_entry_repo=calendar_entry_repo,
+    )
+    user = UserEntity(id=user_id, email="test@example.com", hashed_password="!")
+    uow_factory = create_uow_factory_double(create_uow_double())
+    handler = CalendarEntryPushNotificationHandler(
+        user=user,
+        repository_factory=_RepositoryFactory(ro_repos),
+        uow_factory=uow_factory,
+    )
+    handler.send_push_notification_handler = SendPushNotificationHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=_RepositoryFactory(ro_repos),
+        gateway_factory=_GatewayFactory(web_push_gateway),
+    )
+
+    event = CalendarEntryUpdatedEvent(
+        user_id=user_id,
+        calendar_entry_id=calendar_entry.id,
+        update_object=value_objects.CalendarEntryUpdateObject(
+            attendance_status=value_objects.CalendarEntryAttendanceStatus.MISSED
+        ),
+    )
+    await handler.handle(event)
+
+    assert send_calls == []
+
+
+@pytest.mark.asyncio
 async def test_calendar_entry_handler_uses_snapshot_on_delete() -> None:
     user_id = uuid4()
     push_subscription_repo = create_push_subscription_repo_double()

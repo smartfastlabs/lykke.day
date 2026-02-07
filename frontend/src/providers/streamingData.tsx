@@ -60,6 +60,7 @@ interface StreamingDataContextValue {
   events: Accessor<Event[]>;
   reminders: Accessor<Task[]>;
   alarms: Accessor<Alarm[]>;
+  now: Accessor<Date>;
   brainDumps: Accessor<BrainDump[]>;
   notifications: Accessor<PushNotification[]>;
   messages: Accessor<Message[]>;
@@ -1420,6 +1421,7 @@ export function StreamingDataProvider(props: ParentProps) {
     events,
     reminders,
     alarms,
+    now,
     brainDumps,
     notifications,
     messages,

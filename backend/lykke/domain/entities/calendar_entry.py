@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from loguru import logger
 
+from lykke.core.exceptions import DomainError
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
@@ -179,6 +180,31 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
         Returns:
             A new instance of the entity with updates applied
         """
+        effective_starts_at = update_object.starts_at or self.starts_at
+        if effective_starts_at.tzinfo is None:
+            # Defensive: treat naive datetimes as UTC.
+            effective_starts_at = effective_starts_at.replace(tzinfo=UTC)
+
+        if update_object.attendance_status is not None:
+            now = datetime.now(UTC)
+            new_status = update_object.attendance_status
+
+            # Before the meeting starts: you can mark NOT_GOING, but not MISSED.
+            if (
+                new_status == value_objects.CalendarEntryAttendanceStatus.MISSED
+                and effective_starts_at > now
+            ):
+                raise DomainError("Cannot mark a meeting as MISSED before it starts")
+
+            # After the meeting has started: you can mark MISSED, but not NOT_GOING.
+            if (
+                new_status == value_objects.CalendarEntryAttendanceStatus.NOT_GOING
+                and effective_starts_at <= now
+            ):
+                raise DomainError(
+                    "Cannot mark a meeting as NOT_GOING after it has started"
+                )
+
         # Apply updates using base method, but we need to create the event manually
         # to include calendar_entry_id and user_id
         from typing import Any

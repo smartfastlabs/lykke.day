@@ -67,16 +67,23 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             calendar_entry_id = event.calendar_entry_id
             change_type = "created"
             entry_data = None  # Will need to load the entry
+            attendance_status_override = None
         elif isinstance(event, CalendarEntryUpdatedEvent):
             user_id = event.user_id
             calendar_entry_id = event.calendar_entry_id
             change_type = "edited"
             entry_data = None  # Will need to load the entry
+            # Important: event handlers run BEFORE commit. If we re-load the entity
+            # from the repository, we may see stale state. Prefer the *new* status
+            # (when present) from the update object to avoid notifying when user
+            # marks an entry as NOT_GOING / MISSED / etc.
+            attendance_status_override = event.update_object.attendance_status
         elif isinstance(event, CalendarEntryDeletedEvent):
             user_id = event.user_id
             calendar_entry_id = event.calendar_entry_id
             change_type = "deleted"
             entry_data = event.entry_snapshot  # Already have snapshot
+            attendance_status_override = None
         else:
             logger.warning(f"Unknown calendar entry event type: {type(event)}")
             return
@@ -112,6 +119,9 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             attendance_status = (
                 entry_data.get("attendance_status") if isinstance(entry_data, dict) else None
             )
+
+        if attendance_status_override is not None:
+            attendance_status = attendance_status_override
 
         if value_objects.CalendarEntryAttendanceStatus.blocks_notifications(
             attendance_status
