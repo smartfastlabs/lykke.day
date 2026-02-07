@@ -126,6 +126,18 @@ def _build_user(user_id: Any) -> UserEntity:
     return UserEntity(id=user_id, email="test@example.com", hashed_password="!")
 
 
+def _build_user_with_llm(user_id: Any) -> UserEntity:
+    return UserEntity(
+        id=user_id,
+        email="test@example.com",
+        hashed_password="!",
+        settings=value_objects.UserSetting(
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            timezone="UTC",
+        ),
+    )
+
+
 @pytest.mark.asyncio
 async def test_smart_handle_skips_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
@@ -472,3 +484,65 @@ async def test_smart_tool_handles_send_errors() -> None:
 
     await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")
+
+
+@pytest.mark.asyncio
+async def test_run_llm_injects_usecase_config_ro_repo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression test for prod AttributeError on self.usecase_config_ro_repo.
+
+    BaseHandler wires annotated dependencies by resolving annotation strings
+    against the defining module at runtime. If
+    `UseCaseConfigRepositoryReadOnlyProtocol` is not available at runtime in
+    `lykke.application.llm.mixin`, the `usecase_config_ro_repo` attribute is
+    never injected and `LLMHandlerMixin.run_llm()` crashes.
+    """
+
+    user_id = uuid4()
+    ro_repos = create_read_only_repos_double()
+    handler = SmartNotificationHandler(
+        user=_build_user_with_llm(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=_build_prompt_context(user_id)
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+
+    # Assert injection happened (this was missing in production).
+    assert handler.usecase_config_ro_repo is ro_repos.usecase_config_ro_repo
+
+    # Avoid filesystem/template rendering in this unit test; we only want to
+    # verify that the LLM flow can access `self.usecase_config_ro_repo`.
+    from lykke.application.llm import mixin as llm_mixin
+
+    called = {"system": 0}
+
+    async def fake_render_system_prompt(
+        *,
+        usecase: str,
+        user: UserEntity,
+        usecase_config_ro_repo: object,
+    ) -> str:
+        _ = (usecase, user)
+        assert usecase_config_ro_repo is ro_repos.usecase_config_ro_repo
+        called["system"] += 1
+        return "system"
+
+    def fake_render_context_prompt(*_: object, **__: object) -> str:
+        return "context"
+
+    def fake_render_ask_prompt(*_: object, **__: object) -> str:
+        return "ask"
+
+    monkeypatch.setattr(llm_mixin, "render_system_prompt", fake_render_system_prompt)
+    monkeypatch.setattr(llm_mixin, "render_context_prompt", fake_render_context_prompt)
+    monkeypatch.setattr(llm_mixin, "render_ask_prompt", fake_render_ask_prompt)
+
+    result = await handler.run_llm()
+
+    assert result is None
+    assert called["system"] == 1

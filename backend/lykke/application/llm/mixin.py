@@ -23,13 +23,16 @@ from lykke.application.llm.tools_prompt import render_tools_prompt
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 
+# NOTE: This import is intentionally runtime (not TYPE_CHECKING-only).
+# BaseHandler wires annotated dependencies by resolving annotation strings
+# against the defining module at runtime; keeping this symbol available prevents
+# missing repo attributes on LLMHandlerMixin implementers.
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
+
 if TYPE_CHECKING:
     from datetime import date as datetime_date
     from uuid import UUID
 
-    from lykke.application.repositories import (
-        UseCaseConfigRepositoryReadOnlyProtocol,
-    )
     from lykke.domain import value_objects
     from lykke.domain.entities import UserEntity
 
