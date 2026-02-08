@@ -31,10 +31,88 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
 )
 from lykke.core.config import settings
+from lykke.core.utils.dates import get_current_datetime_in_timezone
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity, UserEntity
+from lykke.domain.entities import PushNotificationEntity, TaskEntity, UserEntity
+
+_SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
+
+
+def _filter_prompt_context_for_smart_notifications(
+    prompt_context: value_objects.LLMPromptContext,
+    *,
+    current_time: datetime,
+) -> value_objects.LLMPromptContext:
+    """Filter prompt context so Smart Notification only sees near-term items.
+
+    SmartNotification should not notify about anything that isn't due / starting
+    within the next 60 minutes. We apply that rule by removing tasks, calendar
+    entries, and alarms that are too far in the future from the prompt context
+    before the LLM sees it.
+    """
+
+    # Calendar entries: include ongoing + starts within lookahead.
+    filtered_calendar_entries = [
+        entry
+        for entry in prompt_context.calendar_entries
+        if not value_objects.CalendarEntryAttendanceStatus.blocks_notifications(
+            entry.attendance_status
+        )
+        if entry.is_eligible_for_upcoming(current_time, _SMART_NOTIFICATION_LOOKAHEAD)
+    ]
+
+    # Tasks: only include tasks that are due (cutoff/end/start/available) within lookahead.
+    filtered_tasks: list[TaskEntity] = []
+    for task in prompt_context.tasks:
+        if task.status not in (
+            value_objects.TaskStatus.PENDING,
+            value_objects.TaskStatus.NOT_STARTED,
+            value_objects.TaskStatus.READY,
+        ):
+            continue
+        if task.completed_at:
+            continue
+
+        tw = task.time_window
+        if not tw:
+            # No explicit due/start; treat as not a notification candidate.
+            continue
+
+        due_time = (
+            tw.cutoff_time
+            or tw.end_time
+            or tw.start_time
+            or tw.available_time
+        )
+        if due_time is None:
+            continue
+
+        # Build a localized datetime for "due".
+        due_at = datetime.combine(
+            task.scheduled_date, due_time, tzinfo=current_time.tzinfo
+        )
+        if due_at <= current_time + _SMART_NOTIFICATION_LOOKAHEAD:
+            filtered_tasks.append(task)
+
+    # Alarms: only include alarms scheduled within lookahead.
+    day = prompt_context.day
+    filtered_alarms: list[value_objects.Alarm] = []
+    for alarm in list(day.alarms or []):
+        alarm_at = alarm.datetime
+        if alarm_at is None:
+            alarm_at = datetime.combine(day.date, alarm.time, tzinfo=current_time.tzinfo)
+        if alarm_at <= current_time + _SMART_NOTIFICATION_LOOKAHEAD:
+            filtered_alarms.append(alarm)
+
+    filtered_day = day.clone(alarms=filtered_alarms)
+
+    return prompt_context.clone(
+        day=filtered_day,
+        tasks=filtered_tasks,
+        calendar_entries=filtered_calendar_entries,
+    )
 
 
 @dataclass(frozen=True)
@@ -76,6 +154,11 @@ class SmartNotificationHandler(
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
         prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=date)
+        )
+        timezone = self.user.settings.timezone if self.user.settings else None
+        current_time = get_current_datetime_in_timezone(timezone)
+        prompt_context = _filter_prompt_context_for_smart_notifications(
+            prompt_context, current_time=current_time
         )
         return UseCasePromptInput(prompt_context=prompt_context)
 

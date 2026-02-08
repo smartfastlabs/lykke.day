@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date as dt_date, datetime, timedelta
+from datetime import UTC, date as dt_date, datetime, time as dt_time, timedelta
 from typing import Any
 from uuid import uuid4
 
 import pytest
 from dobles import allow
 
+from lykke.application.commands.notifications import evaluate_smart_notification as smart_module
 from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
@@ -20,10 +21,12 @@ from lykke.application.repositories import PushNotificationRepositoryReadOnlyPro
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import (
+    CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
+    TaskEntity,
     UserEntity,
 )
 from tests.support.dobles import (
@@ -219,6 +222,113 @@ async def test_smart_build_prompt_input() -> None:
     result = await handler.build_prompt_input(dt_date(2025, 11, 27))
 
     assert result.prompt_context == prompt_context
+
+
+@pytest.mark.asyncio
+async def test_smart_build_prompt_input_filters_far_future_items(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user_id = uuid4()
+    template = DayTemplateEntity(user_id=user_id, slug="default")
+    day = DayEntity.create_for_date(dt_date(2025, 11, 27), user_id, template).clone(
+        alarms=[
+            value_objects.Alarm(name="soon", time=dt_time(9, 30)),
+            value_objects.Alarm(name="later", time=dt_time(12, 0)),
+        ]
+    )
+
+    # Now = 09:00 UTC, lookahead = 60 minutes
+    now = datetime(2025, 11, 27, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(
+        smart_module, "get_current_datetime_in_timezone", lambda _: now
+    )
+
+    due_soon = TaskEntity(
+        user_id=user_id,
+        scheduled_date=day.date,
+        name="due soon",
+        status=value_objects.TaskStatus.READY,
+        type=value_objects.TaskType.WORK,
+        category=value_objects.TaskCategory.WORK,
+        frequency=value_objects.TaskFrequency.ONCE,
+        time_window=value_objects.TimeWindow(
+            available_time=dt_time(8, 0),
+            cutoff_time=dt_time(9, 30),
+        ),
+    )
+    due_later = TaskEntity(
+        user_id=user_id,
+        scheduled_date=day.date,
+        name="due later",
+        status=value_objects.TaskStatus.READY,
+        type=value_objects.TaskType.WORK,
+        category=value_objects.TaskCategory.WORK,
+        frequency=value_objects.TaskFrequency.ONCE,
+        time_window=value_objects.TimeWindow(
+            available_time=dt_time(8, 0),
+            cutoff_time=dt_time(12, 0),
+        ),
+    )
+    no_window = TaskEntity(
+        user_id=user_id,
+        scheduled_date=day.date,
+        name="no window",
+        status=value_objects.TaskStatus.READY,
+        type=value_objects.TaskType.WORK,
+        category=value_objects.TaskCategory.WORK,
+        frequency=value_objects.TaskFrequency.ONCE,
+        time_window=None,
+    )
+
+    entry_soon = CalendarEntryEntity(
+        user_id=user_id,
+        name="soon meeting",
+        calendar_id=uuid4(),
+        platform_id="1",
+        platform="google",
+        status="confirmed",
+        starts_at=now + timedelta(minutes=30),
+        ends_at=now + timedelta(minutes=60),
+        frequency=value_objects.TaskFrequency.ONCE,
+    )
+    entry_later = CalendarEntryEntity(
+        user_id=user_id,
+        name="later meeting",
+        calendar_id=uuid4(),
+        platform_id="2",
+        platform="google",
+        status="confirmed",
+        starts_at=now + timedelta(hours=3),
+        ends_at=now + timedelta(hours=4),
+        frequency=value_objects.TaskFrequency.ONCE,
+    )
+
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[due_soon, due_later, no_window],
+        calendar_entries=[entry_soon, entry_later],
+        brain_dumps=[],
+        factoids=[],
+        messages=[],
+        push_notifications=[],
+    )
+
+    handler = SmartNotificationHandler(
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+
+    result = await handler.build_prompt_input(day.date)
+
+    assert [t.name for t in result.prompt_context.tasks] == ["due soon"]
+    assert [e.name for e in result.prompt_context.calendar_entries] == ["soon meeting"]
+    assert [a.name for a in result.prompt_context.day.alarms] == ["soon"]
 
 
 @pytest.mark.asyncio
