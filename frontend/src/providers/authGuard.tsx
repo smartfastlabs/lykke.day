@@ -3,6 +3,7 @@ import { Show, createEffect, createMemo, type ParentProps } from "solid-js";
 
 import { useAuth } from "@/providers/auth";
 import { StreamingDataProvider } from "@/providers/streamingData";
+import TimezoneMismatchPrompt from "@/components/shared/TimezoneMismatchPrompt";
 
 function AuthenticatedBoundary(props: ParentProps) {
   const navigate = useNavigate();
@@ -33,7 +34,10 @@ function AuthenticatedBoundary(props: ParentProps) {
         </div>
       }
     >
-      <StreamingDataProvider>{props.children}</StreamingDataProvider>
+      <StreamingDataProvider>
+        <TimezoneMismatchPrompt />
+        {props.children}
+      </StreamingDataProvider>
     </Show>
   );
 }
