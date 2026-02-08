@@ -332,6 +332,59 @@ async def test_smart_build_prompt_input_filters_far_future_items(
 
 
 @pytest.mark.asyncio
+async def test_smart_build_prompt_input_includes_no_window_tasks_near_end_of_day(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user_id = uuid4()
+    template = DayTemplateEntity(user_id=user_id, slug="default")
+    ends_at = datetime(2025, 11, 27, 23, 0, tzinfo=UTC)
+    day = DayEntity.create_for_date(dt_date(2025, 11, 27), user_id, template).clone(
+        ends_at=ends_at
+    )
+
+    now = ends_at - timedelta(hours=1)
+    monkeypatch.setattr(
+        smart_module, "get_current_datetime_in_timezone", lambda _: now
+    )
+
+    floating = TaskEntity(
+        user_id=user_id,
+        scheduled_date=day.date,
+        name="floating",
+        status=value_objects.TaskStatus.READY,
+        type=value_objects.TaskType.WORK,
+        category=value_objects.TaskCategory.WORK,
+        frequency=value_objects.TaskFrequency.ONCE,
+        time_window=None,
+    )
+
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[floating],
+        calendar_entries=[],
+        brain_dumps=[],
+        factoids=[],
+        messages=[],
+        push_notifications=[],
+    )
+
+    handler = SmartNotificationHandler(
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+
+    result = await handler.build_prompt_input(day.date)
+
+    assert [t.name for t in result.prompt_context.tasks] == ["floating"]
+
+
+@pytest.mark.asyncio
 async def test_smart_tool_skips_low_priority() -> None:
     user_id = uuid4()
     prompt_context = _build_prompt_context(user_id)

@@ -38,6 +38,7 @@ from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity, TaskEntity, UserEntity
 
 _SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
+_SMART_NOTIFICATION_FLOATING_TASK_WINDOW = timedelta(hours=2)
 
 
 def _filter_prompt_context_for_smart_notifications(
@@ -63,7 +64,12 @@ def _filter_prompt_context_for_smart_notifications(
         if entry.is_eligible_for_upcoming(current_time, _SMART_NOTIFICATION_LOOKAHEAD)
     ]
 
-    # Tasks: only include tasks that are due (cutoff/end/start/available) within lookahead.
+    day = prompt_context.day
+
+    # Tasks: only include tasks that are due within lookahead.
+    #
+    # Special case: tasks without a time window ("floating") are treated as due in the
+    # final hours of the day so they can still be suggested when the day is ending.
     filtered_tasks: list[TaskEntity] = []
     for task in prompt_context.tasks:
         if task.status not in (
@@ -77,7 +83,20 @@ def _filter_prompt_context_for_smart_notifications(
 
         tw = task.time_window
         if not tw:
-            # No explicit due/start; treat as not a notification candidate.
+            if day.ends_at is None:
+                continue
+            end_of_day = (
+                day.ends_at.astimezone(current_time.tzinfo)
+                if day.ends_at.tzinfo is not None
+                else day.ends_at.replace(tzinfo=current_time.tzinfo)
+            )
+            # Treat floating tasks as "due" within 2 hours of end-of-day.
+            if (
+                timedelta(0)
+                <= (end_of_day - current_time)
+                <= _SMART_NOTIFICATION_FLOATING_TASK_WINDOW
+            ):
+                filtered_tasks.append(task)
             continue
 
         due_time = (
@@ -97,12 +116,13 @@ def _filter_prompt_context_for_smart_notifications(
             filtered_tasks.append(task)
 
     # Alarms: only include alarms scheduled within lookahead.
-    day = prompt_context.day
     filtered_alarms: list[value_objects.Alarm] = []
     for alarm in list(day.alarms or []):
         alarm_at = alarm.datetime
         if alarm_at is None:
-            alarm_at = datetime.combine(day.date, alarm.time, tzinfo=current_time.tzinfo)
+            alarm_at = datetime.combine(
+                day.date, alarm.time, tzinfo=current_time.tzinfo
+            )
         if alarm_at <= current_time + _SMART_NOTIFICATION_LOOKAHEAD:
             filtered_alarms.append(alarm)
 
