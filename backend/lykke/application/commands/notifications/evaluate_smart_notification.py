@@ -222,8 +222,10 @@ class SmartNotificationHandler(
                     f"LLM decided not to send notification for user {self.user.id}",
                 )
                 return None
+            if message is None or not message.strip():
+                return None
             decision = value_objects.NotificationDecision(
-                message=message or "",
+                message=message,
                 priority=priority or "medium",
                 reason=reason,
             )
@@ -232,6 +234,7 @@ class SmartNotificationHandler(
             )
             if decision.priority not in ["high", "medium"]:
                 return
+
             cooldown_window = current_time - timedelta(minutes=15)
             recent_notifications = await self.push_notification_ro_repo.search(
                 value_objects.PushNotificationQuery(sent_after=cooldown_window)

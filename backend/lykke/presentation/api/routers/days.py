@@ -171,7 +171,22 @@ async def send_ws_message(websocket: WebSocket, message: dict[str, Any]) -> None
         websocket: The WebSocket connection
         message: Dictionary to send as JSON
     """
-    await websocket.send_text(json.dumps(message))
+    # Starlette/Uvicorn can raise either WebSocketDisconnect (send/receive) or a
+    # RuntimeError if a close message has already been sent. Treat both as a
+    # normal disconnect so background tasks exit cleanly.
+    try:
+        await websocket.send_text(json.dumps(message))
+    except WebSocketDisconnect:
+        raise
+    except RuntimeError as e:
+        if "close message has been sent" in str(e):
+            raise WebSocketDisconnect(code=1006) from e
+        raise
+    except Exception as e:
+        # Uvicorn may raise ClientDisconnected (without exporting the type here).
+        if e.__class__.__name__ == "ClientDisconnected":
+            raise WebSocketDisconnect(code=1006) from e
+        raise
 
 
 async def send_error(websocket: WebSocket, code: str, message: str) -> None:
@@ -610,6 +625,21 @@ async def days_context_websocket(
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
+            # Ensure we always retrieve task exceptions (avoids "Task exception was never retrieved")
+            for task in done:
+                with contextlib.suppress(asyncio.CancelledError):
+                    exc = task.exception()
+                    if exc and not isinstance(exc, WebSocketDisconnect):
+                        coro = task.get_coro()
+                        coro_name = (
+                            getattr(coro, "__qualname__", None)
+                            or getattr(coro, "__name__", None)
+                            or coro.__class__.__name__
+                        )
+                        logger.error(
+                            f"Days context WebSocket task error ({coro_name}): {exc}"
+                        )
+
             for task in pending:
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
@@ -718,13 +748,16 @@ async def _handle_client_messages(
                         last_audit_log_timestamp=last_timestamp,
                         last_change_stream_id=last_stream_id,
                     )
+                except WebSocketDisconnect:
+                    break
                 except Exception as e:
                     logger.error(f"Error getting incremental changes: {e}")
-                    await send_error(
-                        websocket,
-                        "INTERNAL_ERROR",
-                        f"Failed to get incremental changes: {e}",
-                    )
+                    with contextlib.suppress(WebSocketDisconnect):
+                        await send_error(
+                            websocket,
+                            "INTERNAL_ERROR",
+                            f"Failed to get incremental changes: {e}",
+                        )
                     continue
             else:
                 parts = []
@@ -747,13 +780,18 @@ async def _handle_client_messages(
                     )
                     if last_stream_id:
                         stream_state["last_id"] = last_stream_id
+                except WebSocketDisconnect:
+                    break
                 except Exception as e:
-                    logger.error(f"Error getting day context parts: {e}")
-                    await send_error(
-                        websocket,
-                        "INTERNAL_ERROR",
-                        f"Failed to get day context parts: {e}",
+                    logger.error(
+                        f"Error getting day context parts: {type(e).__name__}: {e}"
                     )
+                    with contextlib.suppress(WebSocketDisconnect):
+                        await send_error(
+                            websocket,
+                            "INTERNAL_ERROR",
+                            f"Failed to get day context parts: {e}",
+                        )
                 continue
 
             await send_ws_message(websocket, response.model_dump(mode="json"))
@@ -762,9 +800,11 @@ async def _handle_client_messages(
             break
         except Exception as e:
             logger.error(f"Error handling client message: {e}")
-            await send_error(
-                websocket, "INTERNAL_ERROR", f"Error processing message: {e}"
-            )
+            with contextlib.suppress(WebSocketDisconnect):
+                await send_error(
+                    websocket, "INTERNAL_ERROR", f"Error processing message: {e}"
+                )
+            break
 
 
 async def _handle_realtime_domain_events(
@@ -824,6 +864,8 @@ async def _handle_realtime_domain_events(
                     event=serialize_domain_event(domain_event),
                 )
                 await send_ws_message(websocket, topic_event.model_dump(mode="json"))
+        except WebSocketDisconnect:
+            break
         except Exception as e:
             logger.error(f"Error in domain event handler: {e}")
             break
@@ -980,6 +1022,8 @@ async def _handle_change_stream_events(
                     last_change_stream_id=stream_id,
                 )
                 await send_ws_message(websocket, response.model_dump(mode="json"))
+        except WebSocketDisconnect:
+            break
         except Exception as e:
             logger.error(f"Error in change stream handler: {e}")
             break

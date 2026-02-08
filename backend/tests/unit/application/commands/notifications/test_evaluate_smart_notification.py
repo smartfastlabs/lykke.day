@@ -10,13 +10,14 @@ from uuid import uuid4
 import pytest
 from dobles import allow
 
-from lykke.application.commands.notifications import evaluate_smart_notification as smart_module
 from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
+    evaluate_smart_notification as smart_module,
 )
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.application.llm.mixin import LLMRunSnapshotContext
+from lykke.application.llm.prompt_rendering import render_context_prompt
 from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.core.config import settings
 from lykke.domain import value_objects
@@ -239,9 +240,7 @@ async def test_smart_build_prompt_input_filters_far_future_items(
 
     # Now = 09:00 UTC, lookahead = 60 minutes
     now = datetime(2025, 11, 27, 9, 0, tzinfo=UTC)
-    monkeypatch.setattr(
-        smart_module, "get_current_datetime_in_timezone", lambda _: now
-    )
+    monkeypatch.setattr(smart_module, "get_current_datetime_in_timezone", lambda _: now)
 
     due_soon = TaskEntity(
         user_id=user_id,
@@ -332,6 +331,63 @@ async def test_smart_build_prompt_input_filters_far_future_items(
 
 
 @pytest.mark.asyncio
+async def test_smart_build_prompt_input_includes_ongoing_event_availability_line(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user_id = uuid4()
+    template = DayTemplateEntity(user_id=user_id, slug="default")
+    day = DayEntity.create_for_date(dt_date(2025, 11, 27), user_id, template)
+
+    now = datetime(2025, 11, 27, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(smart_module, "get_current_datetime_in_timezone", lambda _: now)
+
+    entry = CalendarEntryEntity(
+        user_id=user_id,
+        name="Flight UA 1743",
+        calendar_id=uuid4(),
+        platform_id="1",
+        platform="google",
+        status="confirmed",
+        starts_at=now - timedelta(minutes=14),
+        ends_at=now + timedelta(minutes=46),
+        frequency=value_objects.TaskFrequency.ONCE,
+    )
+
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[],
+        calendar_entries=[entry],
+        brain_dumps=[],
+        factoids=[],
+        messages=[],
+        push_notifications=[],
+    )
+
+    handler = SmartNotificationHandler(
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = _Recorder(commands=[])
+
+    result = await handler.build_prompt_input(day.date)
+
+    rendered = render_context_prompt(
+        usecase="notification",
+        prompt_context=result.prompt_context,
+        current_time=now,
+        extra_template_vars={"tools_prompt": ""},
+    )
+    assert "# Availability right now" in rendered
+    assert "- You are currently in:" in rendered
+    assert '- "Flight UA 1743": started 14 mins ago, ends in 46 mins' in rendered
+
+
+@pytest.mark.asyncio
 async def test_smart_build_prompt_input_includes_no_window_tasks_near_end_of_day(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -343,9 +399,7 @@ async def test_smart_build_prompt_input_includes_no_window_tasks_near_end_of_day
     )
 
     now = ends_at - timedelta(hours=1)
-    monkeypatch.setattr(
-        smart_module, "get_current_datetime_in_timezone", lambda _: now
-    )
+    monkeypatch.setattr(smart_module, "get_current_datetime_in_timezone", lambda _: now)
 
     floating = TaskEntity(
         user_id=user_id,
@@ -709,3 +763,8 @@ async def test_run_llm_injects_usecase_config_ro_repo(
 
     assert result is None
     assert called["system"] == 1
+
+    result = await handler.run_llm()
+
+    assert result is None
+    assert called["system"] == 2

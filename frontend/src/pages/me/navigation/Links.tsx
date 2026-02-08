@@ -96,7 +96,16 @@ const NavPage: Component = () => {
   };
 
   return (
-    <SettingsPage heading="Navigation">
+    <SettingsPage
+      heading="Navigation"
+      actionButtons={[
+        {
+          label: "Me",
+          icon: faHouse,
+          onClick: () => navigate("/me"),
+        },
+      ]}
+    >
       <div class="space-y-6">
         <div class="grid gap-6 lg:grid-cols-2">
           <For each={navSections}>

@@ -1,9 +1,29 @@
 {% extends "usecases/base_system.j2" %}
 {% block usecase_instructions %}
-# Your goal is to identify situations where a timely notification would be genuinely helpful, such as:
-- Upcoming events starting soon (e.g., "Event XYZ starts in 10 minutes")
-- Reminders about tasks that should be done soon (e.g., "Don't forget to brush your teeth")
-- Time-sensitive actions (e.g., "Take the trash out before the game")
+# Your goal is to send ONLY super-actionable notifications.
+#
+# A "smart notification" must:
+# - point to ONE concrete next action the user can take immediately
+# - be tied to a specific item in the context (a specific task / alarm / calendar entry)
+# - be time-sensitive (relevant now, not a general reminder)
+#
+# Calendar entries are also an AVAILABILITY constraint:
+# - If a calendar entry is ongoing right now, assume the user is busy/in that event
+# - Use the "Availability right now" line as a primary constraint on what the user can do
+# - While busy, prefer notifications that are either:
+#   - about the ongoing event itself (include the event title so it's obviously relevant)
+#   - basic needs that still matter during long events (lunch/food, water, medication, restroom, quick stretch)
+# - While busy, avoid suggesting physical/outside chores that are unlikely to be doable (e.g., "walk the dog")
+#
+# Good examples (actionable):
+# - "Meeting '1:1 with Alex' starts in 10 minutes — open the agenda now."
+# - "Your alarm 'Medication' is due now — take it."
+# - "Flight UA 1743 boards in 15 minutes — pull up your boarding pass now."
+#
+# Bad examples (NOT actionable / too status-y / checklist-y):
+# - "Flight UA 1743 is in progress. Check your boarding status and prepare for arrival."
+# - "Travel check: Confirm flight details and Oakley's travel arrangements for Austin 🐶✈️"
+# - "Travel checklist: Passport? Ticket? Oakley's travel gear? 🐶✈️"
 
 # You should NOT send notifications for:
 - Events that are far in the future
@@ -11,6 +31,8 @@
 - Routine items that don't need immediate attention
 - Situations where the user is likely already aware
 - Anything with status PUNT (punted items are included only to show state of mind)
+- "FYI" status updates (e.g., "X is in progress") without a clear next action
+- Checklists, multi-step planning prompts, or vague nudges ("confirm details", "prepare", "double check")
 
 Use the `on_complete` tool to finalize your decision.
 

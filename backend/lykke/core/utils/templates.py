@@ -146,6 +146,16 @@ def kv_line(indent: str, key: str, value: Any) -> str:
     return f"\n{indent}{key}: {value}"
 
 
+def minutes_between(later: Any, earlier: Any) -> int:
+    """Return whole minutes between two datetimes, clamped at 0.
+
+    Intended for templates: minutes_between(current_time, starts_at), etc.
+    """
+    if not isinstance(later, datetime) or not isinstance(earlier, datetime):
+        return 0
+    return max(0, int((later - earlier).total_seconds() // 60))
+
+
 def _register_template_helpers(environment: Environment) -> None:
     environment.globals["fmt_time"] = fmt_time
     environment.globals["fmt_date"] = fmt_date
@@ -154,6 +164,7 @@ def _register_template_helpers(environment: Environment) -> None:
     environment.globals["fmt_datetime_plain"] = fmt_datetime_plain
     environment.globals["is_today"] = is_today
     environment.globals["kv_line"] = kv_line
+    environment.globals["minutes_between"] = minutes_between
 
 
 env = Environment(

@@ -2,3 +2,30 @@
 {% block header %}
 # User context for notification decision.
 {% endblock %}
+
+{% block extra_context %}
+# Availability right now
+{# Ongoing = started already AND (no end OR ends in future). Prefer entries with an end time, ordered by soonest end. #}
+{% set ongoing_with_end = context.calendar_entries
+  | selectattr("starts_at", "le", current_time)
+  | rejectattr("ends_at", "none")
+  | selectattr("ends_at", "gt", current_time)
+  | sort(attribute="ends_at")
+  | list
+%}
+{% set ongoing_no_end = context.calendar_entries
+  | selectattr("starts_at", "le", current_time)
+  | selectattr("ends_at", "none")
+  | list
+%}
+{% set ongoing = ongoing_with_end + ongoing_no_end %}
+
+{% if ongoing %}
+- You are currently in:
+{% for entry in ongoing %}
+  - "{{ entry.name }}": started {{ minutes_between(current_time, entry.starts_at) }} mins ago{% if entry.ends_at %}, ends in {{ minutes_between(entry.ends_at, current_time) }} mins{% endif %}
+{% endfor %}
+{% else %}
+- You are not currently in a calendar event.
+{% endif %}
+{% endblock %}

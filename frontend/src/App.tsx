@@ -1,6 +1,6 @@
 import { Title, MetaProvider } from "@solidjs/meta";
-import { Navigate, Route, Router, useNavigate } from "@solidjs/router";
-import { onMount, onCleanup } from "solid-js";
+import { Navigate, Route, Router, useLocation, useNavigate } from "@solidjs/router";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import "@/index.css";
 
 import { NotificationProvider } from "@/providers/notifications";
@@ -103,8 +103,73 @@ import "@/utils/icons";
 
 function NavigationHandler() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isStandalonePwa = (): boolean => {
+    if (typeof window === "undefined") return false;
+    const nav = window.navigator as typeof window.navigator & { standalone?: boolean };
+    return (
+      window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
+      nav.standalone === true
+    );
+  };
+
+  const LAST_ME_PATH_KEY = "lykke:last-me-path";
+
+  const persistablePath = (): string =>
+    `${location.pathname}${location.search}${location.hash}`;
+
+  const shouldPersistMePath = (path: string): boolean => {
+    if (!path.startsWith("/me")) return false;
+    if (path === "/me" || path === "/me/") return false;
+    return true;
+  };
+
+  const getLastMePath = (): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const value = window.localStorage.getItem(LAST_ME_PATH_KEY);
+      if (!value) return null;
+      if (!value.startsWith("/me")) return null;
+      if (value === "/me" || value === "/me/") return null;
+      return value;
+    } catch {
+      return null;
+    }
+  };
+
+  // Persist last visited /me page (used for PWA resume and /me entry redirect).
+  createEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = persistablePath();
+    if (!shouldPersistMePath(path)) return;
+    // On older PWA installs the manifest start_url was /me/today. When launching
+    // standalone, don't overwrite an existing "last path" with the start_url
+    // before we've had a chance to restore it.
+    if (isStandalonePwa() && location.pathname === "/me/today") {
+      const existing = getLastMePath();
+      if (existing && existing !== path) {
+        return;
+      }
+    }
+    try {
+      window.localStorage.setItem(LAST_ME_PATH_KEY, path);
+    } catch {
+      // ignore storage failures (private mode, quota, etc.)
+    }
+  });
 
   onMount(() => {
+    // If the PWA was launched at the manifest start_url (older installs used
+    // /me/today), restore the last open /me page instead.
+    if (isStandalonePwa() && location.pathname === "/me/today") {
+      const last = getLastMePath();
+      const current = persistablePath();
+      if (last && last !== current) {
+        navigate(last, { replace: true });
+      }
+    }
+
     const handleSWMessage = (event: MessageEvent): void => {
       console.log("SW message received:", event);
       if (event.data?.type === "NAVIGATE" && event.data?.url) {
