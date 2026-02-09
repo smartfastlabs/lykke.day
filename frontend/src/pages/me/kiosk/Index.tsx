@@ -7,6 +7,7 @@ import {
   onMount,
 } from "solid-js";
 import { Portal } from "solid-js/web";
+import { useNavigate } from "@solidjs/router";
 import { KioskList } from "@/components/kiosk/KioskList";
 import { KioskPanel } from "@/components/kiosk/KioskPanel";
 import { useAlarmVideo } from "@/features/kiosk/alarms/useAlarmVideo";
@@ -26,13 +27,24 @@ import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
 import type { DayTemplate, Task } from "@/types/api";
+import ActionGridModal from "@/components/shared/ActionGridModal";
+import { Icon } from "@/components/shared/Icon";
+import {
+  faBars,
+  faCalendarDay,
+  faCompass,
+  faGear,
+  faHouse,
+} from "@fortawesome/free-solid-svg-icons";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
 const KioskPage: Component = () => {
+  const navigate = useNavigate();
   const { day, tasks, events, reminders, routines, alarms, isConnected } =
     useStreamingData();
   const [now, setNow] = createSignal(new Date());
+  const [isMenuOpen, setIsMenuOpen] = createSignal(false);
   const { weather, weatherError } = useWeatherSnapshot();
   const { activeAlarm, alarmVideoUrl, setFullscreenContainerRef } =
     useAlarmVideo(alarms);
@@ -320,6 +332,13 @@ const KioskPage: Component = () => {
 
   const timeLabel = createMemo(() => formatClock(now()));
 
+  const closeMenu = () => setIsMenuOpen(false);
+  const openMenu = () => setIsMenuOpen(true);
+  const menuNavigate = (url: string) => {
+    closeMenu();
+    navigate(url);
+  };
+
   return (
     <Page variant="app" hideFooter hideFloatingButtons>
       <div class="min-h-[100dvh] h-[100dvh] box-border relative overflow-hidden">
@@ -470,6 +489,37 @@ const KioskPage: Component = () => {
           </div>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={openMenu}
+        aria-label="Menu"
+        title="Menu"
+        class="fixed z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-800 shadow-lg shadow-stone-900/10 transition hover:bg-white active:scale-95 print:hidden"
+        style={{
+          top: "calc(env(safe-area-inset-top) + 1rem)",
+          right: "calc(env(safe-area-inset-right) + 1rem)",
+        }}
+      >
+        <Icon icon={faBars} class="h-5 w-5 fill-current" />
+      </button>
+
+      <ActionGridModal
+        isOpen={isMenuOpen()}
+        title="Menu"
+        subtitle="Navigate and settings"
+        onClose={closeMenu}
+        actions={[
+          { label: "Home", icon: faHouse, onClick: () => menuNavigate("/me/today") },
+          {
+            label: "Tomorrow",
+            icon: faCalendarDay,
+            onClick: () => menuNavigate("/me/tomorrow"),
+          },
+          { label: "Navigation", icon: faCompass, onClick: () => menuNavigate("/me/nav") },
+          { label: "Settings", icon: faGear, onClick: () => menuNavigate("/me/settings") },
+        ]}
+      />
     </Page>
   );
 };

@@ -12,10 +12,10 @@ export interface EventsSectionProps {
 }
 
 export const EventsSection: Component<EventsSectionProps> = (props) => {
-  const importantEvents = createMemo(() => {
+  const upcomingEvents = createMemo(() => {
     const now = new Date();
     return props.events
-      .filter((e) => new Date(e.starts_at) >= now && e.category === "WORK")
+      .filter((e) => new Date(e.starts_at) >= now)
       .sort(
         (a, b) =>
           new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
@@ -58,8 +58,8 @@ export const EventsSection: Component<EventsSectionProps> = (props) => {
             <Icon icon={faBars} class="w-4 h-4 fill-amber-600/80" />
           </a>
         </div>
-        <Show when={importantEvents().length > 0}>
-          <For each={importantEvents()}>
+        <Show when={upcomingEvents().length > 0}>
+          <For each={upcomingEvents()}>
             {(event) => <EventItem event={event} />}
           </For>
         </Show>

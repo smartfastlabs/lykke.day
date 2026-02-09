@@ -1,18 +1,25 @@
 import {
   faBell,
+  faBars,
   faBrain,
+  faCompass,
   faEnvelope,
+  faGear,
   faPenToSquare,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
-import { Show, Component, ParentProps, createMemo } from "solid-js";
+import { Show, Component, ParentProps, createMemo, createSignal } from "solid-js";
 import Page from "@/components/shared/layout/Page";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streamingData";
 import TimeBlocksSummary from "@/components/today/TimeBlocksSummary";
+import ActionGridModal from "@/components/shared/ActionGridModal";
+import { useNavigate } from "@solidjs/router";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
+  const navigate = useNavigate();
   const { day, sync } = useStreamingData();
+  const [isMenuOpen, setIsMenuOpen] = createSignal(false);
 
   const date = createMemo(() => {
     const dayValue = day();
@@ -50,15 +57,22 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
 
   const dateLabel = createMemo(() => `${weekday()} ${monthDay()}`);
 
+  const closeMenu = () => setIsMenuOpen(false);
+  const openMenu = () => setIsMenuOpen(true);
+  const menuNavigate = (url: string) => {
+    closeMenu();
+    navigate(url);
+  };
+
   return (
     <Page variant="app" hideFooter>
       <div class="min-h-[100dvh] box-border relative overflow-hidden">
         <div class="relative z-10 max-w-4xl mx-auto px-6 py-6">
           <div class="mb-5 md:mb-7">
             <div class="relative flex items-start justify-between mb-4">
-              <div>
+              <div class="min-w-0">
                 <div class="flex items-center gap-3 text-stone-600 mb-2">
-                  <span class="font-semibold text-lg text-amber-600/80">
+                  <span class="font-semibold text-lg text-amber-600/80 leading-snug break-words">
                     {planTitle() || dateLabel()}
                   </span>
                 </div>
@@ -67,57 +81,8 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                     {dateLabel()}
                   </p>
                 </Show>
-              </div>
-              <div class="flex items-center gap-2">
-                <a
-                  href="/me/today/brain-dumps"
-                  aria-label="Today's brain dumps"
-                  title="Today's brain dumps"
-                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                >
-                  <Icon icon={faBrain} class="w-4 h-4 fill-amber-600/70" />
-                </a>
-                <a
-                  href="/me/today/notifications"
-                  aria-label="Today's notifications"
-                  title="Today's notifications"
-                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                >
-                  <Icon icon={faBell} class="w-4 h-4 fill-amber-600/70" />
-                </a>
-                <a
-                  href="/me/today/messages"
-                  aria-label="Today's messages"
-                  title="Today's messages"
-                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                >
-                  <Icon
-                    icon={faEnvelope}
-                    class="w-4 h-4 fill-amber-600/70"
-                  />
-                </a>
-                <a
-                  href="/me/today/edit"
-                  aria-label="Edit day"
-                  title="Edit day"
-                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                >
-                  <Icon
-                    icon={faPenToSquare}
-                    class="w-4 h-4 fill-amber-600/70"
-                  />
-                </a>
-                <button
-                  type="button"
-                  onClick={sync}
-                  aria-label="Refresh"
-                  title="Refresh"
-                  class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                >
-                  <Icon icon={faRotate} class="w-4 h-4 fill-amber-600/70" />
-                </button>
                 <Show when={isWorkday()}>
-                  <span class="px-3 py-1.25 md:px-4 md:py-1.5 rounded-full bg-amber-50/95 text-amber-600 text-[11px] md:text-xs font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
+                  <span class="mt-3 inline-flex px-3 py-1.25 rounded-full bg-amber-50/95 text-amber-600 text-[11px] font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
                     Workday
                   </span>
                 </Show>
@@ -128,6 +93,67 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
           {props.children}
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={openMenu}
+        aria-label="Menu"
+        title="Menu"
+        class="fixed z-50 flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-white/95 text-amber-800 shadow-lg shadow-amber-900/10 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 print:hidden"
+        style={{
+          top: "calc(env(safe-area-inset-top) + 1rem)",
+          right: "calc(env(safe-area-inset-right) + 1rem)",
+        }}
+      >
+        <Icon icon={faBars} class="h-5 w-5 fill-amber-700" />
+      </button>
+
+      <ActionGridModal
+        isOpen={isMenuOpen()}
+        title="Menu"
+        subtitle="Quick actions for today"
+        onClose={closeMenu}
+        actions={[
+          {
+            label: "Brain dumps",
+            icon: faBrain,
+            onClick: () => menuNavigate("/me/today/brain-dumps"),
+          },
+          {
+            label: "Notifications",
+            icon: faBell,
+            onClick: () => menuNavigate("/me/today/notifications"),
+          },
+          {
+            label: "Messages",
+            icon: faEnvelope,
+            onClick: () => menuNavigate("/me/today/messages"),
+          },
+          {
+            label: "Edit day",
+            icon: faPenToSquare,
+            onClick: () => menuNavigate("/me/today/edit"),
+          },
+          {
+            label: "Refresh",
+            icon: faRotate,
+            onClick: () => {
+              closeMenu();
+              sync();
+            },
+          },
+          {
+            label: "Navigation",
+            icon: faCompass,
+            onClick: () => menuNavigate("/me/nav"),
+          },
+          {
+            label: "Settings",
+            icon: faGear,
+            onClick: () => menuNavigate("/me/settings"),
+          },
+        ]}
+      />
     </Page>
   );
 };

@@ -1,0 +1,9 @@
+{# Alarms are stored on the Day (context.day.alarms). #}
+{% set alarms = context.day.alarms or [] %}
+{% if alarms %}
+# Alarms (today):
+{% for alarm in alarms %}
+{% include "components/alarms/item.j2" %}
+{% endfor %}
+{% endif %}
+

@@ -1,5 +1,11 @@
 import { Title, MetaProvider } from "@solidjs/meta";
-import { Navigate, Route, Router, useLocation, useNavigate } from "@solidjs/router";
+import {
+  Navigate,
+  Route,
+  Router,
+  useLocation,
+  useNavigate,
+} from "@solidjs/router";
 import { createEffect, onCleanup, onMount } from "solid-js";
 import "@/index.css";
 
@@ -107,7 +113,9 @@ function NavigationHandler() {
 
   const isStandalonePwa = (): boolean => {
     if (typeof window === "undefined") return false;
-    const nav = window.navigator as typeof window.navigator & { standalone?: boolean };
+    const nav = window.navigator as typeof window.navigator & {
+      standalone?: boolean;
+    };
     return (
       window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
       nav.standalone === true
@@ -220,7 +228,7 @@ export default function App() {
           // Listen for controller change (new SW activated)
           navigator.serviceWorker.addEventListener(
             "controllerchange",
-            handleControllerChange,
+            handleControllerChange
           );
 
           // Listen for update found
@@ -261,11 +269,11 @@ export default function App() {
           onCleanup(() => {
             navigator.serviceWorker.removeEventListener(
               "controllerchange",
-              handleControllerChange,
+              handleControllerChange
             );
             document.removeEventListener(
               "visibilitychange",
-              handleVisibilityChange,
+              handleVisibilityChange
             );
             clearInterval(updateInterval);
           });
@@ -351,6 +359,10 @@ export default function App() {
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
                 <Route path="/add-alarm" component={AddAlarmPage} />
                 <Route path="/add-reminder" component={AddReminderPage} />
+                <Route
+                  path="/tasks"
+                  component={() => <Navigate href="/me/today/tasks" />}
+                />
                 <Route path="/tomorrow" component={TomorrowLayout}>
                   <Route path="/" component={TomorrowPreviewView} />
                   <Route path="/routines" component={TomorrowRoutinesView} />
@@ -372,7 +384,10 @@ export default function App() {
                   path="/notifications/:id"
                   component={TodayNotificationDetailPage}
                 />
-                <Route path="/messages/:id" component={TodayMessageDetailPage} />
+                <Route
+                  path="/messages/:id"
+                  component={TodayMessageDetailPage}
+                />
                 <Route
                   path="/brain-dumps/:id"
                   component={TodayBrainDumpDetailPage}

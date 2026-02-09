@@ -1,16 +1,18 @@
-import { Component } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { Component, Show, createMemo } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import BrainDumpButton from "@/components/shared/BrainDumpButton";
-import SettingsButton from "@/components/shared/SettingsButton";
+import MeMenuButton from "@/components/shared/MeMenuButton";
 
 const FloatingActionButtons: Component = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isMeRoute = createMemo(() => location.pathname.startsWith("/me"));
 
   return (
-    <>
+    <Show when={isMeRoute()}>
       <BrainDumpButton />
-      <SettingsButton onClick={() => navigate("/me/nav")} />
-    </>
+      <MeMenuButton />
+    </Show>
   );
 };
 

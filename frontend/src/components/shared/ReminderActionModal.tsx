@@ -18,6 +18,7 @@ const ReminderActionModal: Component<ReminderActionModalProps> = (props) => {
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         props.onClose();
       }
     };

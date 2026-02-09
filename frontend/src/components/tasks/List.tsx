@@ -74,11 +74,90 @@ const getStatusClasses = (status: TaskStatus): string => {
   }
 };
 
-const TaskItem: Component<{ task: Task }> = (props) => {
+const TaskRowContent: Component<{ task: Task }> = (props) => {
   const time = () => getTimeDisplay(props.task.time_window ?? undefined);
   const icon = () =>
     getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
 
+  return (
+    <div class="flex items-center justify-start gap-2">
+      {/* Category/Type icon */}
+      <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
+        <Show when={icon()}>
+          <Icon icon={icon()!} class="w-3 h-3" />
+        </Show>
+      </span>
+
+      {/* Task name */}
+      <div class="flex-1 min-w-0 text-left">
+        <span
+          class="text-xs truncate block text-left"
+          classList={{
+            "line-through text-stone-400": props.task.status === "COMPLETE",
+            "text-orange-700 italic": props.task.status === "PUNT",
+            "text-sky-700 italic": props.task.status === "SNOOZE",
+            "text-stone-800":
+              props.task.status !== "COMPLETE" &&
+              props.task.status !== "PUNT" &&
+              props.task.status !== "SNOOZE",
+          }}
+        >
+          {props.task.name
+            .replace("ROUTINE DEFINITION: ", "")
+            .replace("Routine Definition: ", "")}
+        </span>
+      </div>
+
+      {/* Time - right justified, only when present */}
+      <Show when={time()?.primary}>
+        <div class="flex-shrink-0 ml-auto text-right">
+          <span
+            class={`text-[10px] tabular-nums whitespace-nowrap ${
+              time()?.primary === "flexible"
+                ? "text-stone-400 italic"
+                : "text-stone-500"
+            }`}
+          >
+            {time()?.primary}
+          </span>
+        </div>
+      </Show>
+
+      <Show when={props.task.status === "COMPLETE"}>
+        <div class="flex-shrink-0 w-4 text-amber-600">
+          <Icon key="checkMark" class="w-3 h-3" />
+        </div>
+      </Show>
+      <Show when={props.task.status === "PUNT"}>
+        <div class="flex-shrink-0 w-4 text-red-500">
+          <Icon icon={faXmark} class="w-3 h-3" />
+        </div>
+      </Show>
+      <Show when={props.task.status === "SNOOZE"}>
+        <div class="flex-shrink-0 w-4 text-sky-600">
+          <Icon icon={faClock} class="w-3 h-3" />
+        </div>
+      </Show>
+    </div>
+  );
+};
+
+const StaticTaskItem: Component<{ task: Task }> = (props) => {
+  return (
+    <div class="relative w-full overflow-hidden select-none">
+      {/* Foreground Card (non-swipeable) */}
+      <div class="relative">
+        <div class="group bg-white rounded-xl hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300">
+          <div class={`px-5 py-1 ${getStatusClasses(props.task.status)}`}>
+            <TaskRowContent task={props.task} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SwipeableTaskItem: Component<{ task: Task }> = (props) => {
   const { setTaskStatus, snoozeTask } = useStreamingData();
   const [pendingTask, setPendingTask] = createSignal<Task | null>(null);
 
@@ -93,7 +172,9 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     const task = pendingTask();
     if (!task) return;
     handleClose();
-    const snoozedUntil = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+    const snoozedUntil = new Date(
+      Date.now() + minutes * 60 * 1000
+    ).toISOString();
     await snoozeTask(task, snoozedUntil);
   };
 
@@ -107,65 +188,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
         statusClass={getStatusClasses(props.task.status)}
         compact={true}
       >
-        <div class="flex items-center justify-start gap-2">
-          {/* Category/Type icon */}
-          <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
-            <Show when={icon()}>
-              <Icon icon={icon()!} class="w-3 h-3" />
-            </Show>
-          </span>
-
-          {/* Task name */}
-          <div class="flex-1 min-w-0 text-left">
-            <span
-              class="text-xs truncate block text-left"
-              classList={{
-                "line-through text-stone-400": props.task.status === "COMPLETE",
-                "text-orange-700 italic": props.task.status === "PUNT",
-                "text-sky-700 italic": props.task.status === "SNOOZE",
-                "text-stone-800":
-                  props.task.status !== "COMPLETE" &&
-                  props.task.status !== "PUNT" &&
-                  props.task.status !== "SNOOZE",
-              }}
-            >
-              {props.task.name
-                .replace("ROUTINE DEFINITION: ", "")
-                .replace("Routine Definition: ", "")}
-            </span>
-          </div>
-
-          {/* Time - right justified, only when present */}
-          <Show when={time()?.primary}>
-            <div class="flex-shrink-0 ml-auto text-right">
-              <span
-                class={`text-[10px] tabular-nums whitespace-nowrap ${
-                  time()?.primary === "flexible"
-                    ? "text-stone-400 italic"
-                    : "text-stone-500"
-                }`}
-              >
-                {time()?.primary}
-              </span>
-            </div>
-          </Show>
-
-          <Show when={props.task.status === "COMPLETE"}>
-            <div class="flex-shrink-0 w-4 text-amber-600">
-              <Icon key="checkMark" class="w-3 h-3" />
-            </div>
-          </Show>
-          <Show when={props.task.status === "PUNT"}>
-            <div class="flex-shrink-0 w-4 text-red-500">
-              <Icon icon={faXmark} class="w-3 h-3" />
-            </div>
-          </Show>
-          <Show when={props.task.status === "SNOOZE"}>
-            <div class="flex-shrink-0 w-4 text-sky-600">
-              <Icon icon={faClock} class="w-3 h-3" />
-            </div>
-          </Show>
-        </div>
+        <TaskRowContent task={props.task} />
       </SwipeableItem>
       <SnoozeActionModal
         isOpen={Boolean(pendingTask())}
@@ -221,14 +244,26 @@ const sortTasks = (tasks: Task[]): Task[] => {
 
 interface TaskListProps {
   tasks: Accessor<Task[]>;
+  interactive?: boolean;
 }
 
 const TaskList: Component<TaskListProps> = (props) => {
   const tasks = () => sortTasks(props.tasks() ?? []);
+  const interactive = () => props.interactive ?? true;
 
   return (
     <>
-      <For each={tasks()}>{(task) => <TaskItem task={task} />}</For>
+      <For each={tasks()}>
+        {(task) => (
+          <>
+            {interactive() ? (
+              <SwipeableTaskItem task={task} />
+            ) : (
+              <StaticTaskItem task={task} />
+            )}
+          </>
+        )}
+      </For>
     </>
   );
 };

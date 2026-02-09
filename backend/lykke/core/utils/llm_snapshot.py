@@ -35,6 +35,7 @@ def build_referenced_entities(
             )
 
     add_entities("day", [prompt_context.day])
+    add_entities("alarm", getattr(prompt_context.day, "alarms", []) or [])
     add_entities("calendar_entry", prompt_context.calendar_entries)
     add_entities("task", prompt_context.tasks)
     add_entities("routine", prompt_context.routines)

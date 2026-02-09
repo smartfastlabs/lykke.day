@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal } from "solid-js";
+import { Component, Show, createMemo, createSignal } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import TaskList from "@/components/tasks/List";
 import { Task, TaskCategory } from "@/types/api";
@@ -23,13 +23,34 @@ export const TodaysTasksView: Component = () => {
   const [taskCategory, setTaskCategory] = createSignal<TaskCategory>("WORK");
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
+  const [showDone, setShowDone] = createSignal(false);
+  const [showPunted, setShowPunted] = createSignal(false);
 
   // IMPORTANT: this is the "all tasks" view, so we intentionally do NOT filter
   // out tasks with `timing_status === "hidden"` (which the backend uses for
   // things like "later today" or snoozed items).
   const allTasks = createMemo(() => tasks() ?? []);
   const activeTasks = createMemo(() =>
-    allTasks().filter((task) => task.status !== "COMPLETE" && task.status !== "PUNT"),
+    allTasks().filter(
+<<<<<<< Updated upstream
+      (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
+    ),
+  );
+  const completedTasks = createMemo(() =>
+    allTasks().filter((task) => task.status === "COMPLETE"),
+  );
+  const puntedTasks = createMemo(() =>
+    allTasks().filter((task) => task.status === "PUNT"),
+=======
+      (task) => task.status !== "COMPLETE" && task.status !== "PUNT"
+    )
+  );
+  const completedTasks = createMemo(() =>
+    allTasks().filter((task) => task.status === "COMPLETE")
+  );
+  const puntedTasks = createMemo(() =>
+    allTasks().filter((task) => task.status === "PUNT")
+>>>>>>> Stashed changes
   );
   const stats = createMemo(() => getTaskStats(allTasks()));
   const completionPercentage = createMemo(() => {
@@ -79,7 +100,7 @@ export const TodaysTasksView: Component = () => {
       setTaskName("");
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : "Failed to add task.",
+        error instanceof Error ? error.message : "Failed to add task."
       );
     } finally {
       setIsSaving(false);
@@ -101,7 +122,7 @@ export const TodaysTasksView: Component = () => {
       <AnimatedSection delay="300ms">
         <SectionCard
           title="Your Tasks"
-          description="Swipe right to complete, left to punt or snooze"
+          description="Swipe right to complete, left to punt or snooze. Done & punted tasks are tucked below."
           hasItems={activeTasks().length > 0}
           emptyState={emptyState}
         >
@@ -134,6 +155,66 @@ export const TodaysTasksView: Component = () => {
           </form>
           <TaskList tasks={activeTasks} />
         </SectionCard>
+      </AnimatedSection>
+
+      <AnimatedSection delay="400ms">
+        <Show when={completedTasks().length > 0 || puntedTasks().length > 0}>
+          <div class="mt-6 space-y-3">
+            <Show when={completedTasks().length > 0}>
+              <details
+                class="bg-white/40 backdrop-blur-md border border-white/70 rounded-2xl shadow-sm shadow-amber-900/5 overflow-hidden"
+                open={showDone()}
+                onToggle={(e) => {
+                  const target = e.currentTarget as unknown as { open: boolean };
+                  setShowDone(target.open);
+                }}
+              >
+                <summary class="cursor-pointer select-none px-6 py-4 flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-medium text-stone-700">Done</span>
+                    <span class="text-xs text-stone-400">
+                      ({completedTasks().length})
+                    </span>
+                  </div>
+                  <span class="text-xs text-stone-400">
+                    {showDone() ? "Hide" : "Show"}
+                  </span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <TaskList tasks={completedTasks} interactive={false} />
+                </div>
+              </details>
+            </Show>
+
+            <Show when={puntedTasks().length > 0}>
+              <details
+                class="bg-white/40 backdrop-blur-md border border-white/70 rounded-2xl shadow-sm shadow-amber-900/5 overflow-hidden"
+                open={showPunted()}
+                onToggle={(e) => {
+                  const target = e.currentTarget as unknown as { open: boolean };
+                  setShowPunted(target.open);
+                }}
+              >
+                <summary class="cursor-pointer select-none px-6 py-4 flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-medium text-stone-700">
+                      Punted
+                    </span>
+                    <span class="text-xs text-stone-400">
+                      ({puntedTasks().length})
+                    </span>
+                  </div>
+                  <span class="text-xs text-stone-400">
+                    {showPunted() ? "Hide" : "Show"}
+                  </span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <TaskList tasks={puntedTasks} interactive={false} />
+                </div>
+              </details>
+            </Show>
+          </div>
+        </Show>
       </AnimatedSection>
 
       <AnimatedSection delay="500ms">

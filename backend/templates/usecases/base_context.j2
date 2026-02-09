@@ -13,6 +13,7 @@ Current time: {{ fmt_datetime_plain(current_time) }}
 
 {% block extra_context %}{% endblock %}
 
+{% block alarms_section %}{% include "components/alarms/list.j2" %}{% endblock %}
 {% block tasks_section %}{% include "components/tasks/list.j2" %}{% endblock %}
 {% block routines_section %}{% include "components/routines/list.j2" %}{% endblock %}
 {% block calendar_entries_section %}{% include "components/calendar_entries/list.j2" %}{% endblock %}

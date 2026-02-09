@@ -2,12 +2,14 @@ import { createSignal } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
+import { useAuth } from "@/providers/auth";
 import { authAPI } from "@/utils/api";
 
 type Mode = "phone" | "email" | "code";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { refetch } = useAuth();
   const [mode, setMode] = createSignal<Mode>("phone");
   const [phoneNumber, setPhoneNumber] = createSignal("");
   const [code, setCode] = createSignal("");
@@ -52,11 +54,14 @@ export default function Login() {
 
     try {
       await authAPI.verifySmsCode(phoneNumber().trim(), code().trim());
-      navigate("/me/today");
+      // Refresh auth context so AuthGuard doesn't bounce us back to /login.
+      refetch();
+      navigate("/me", { replace: true });
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Invalid or expired code";
       setError(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -79,11 +84,14 @@ export default function Login() {
 
     try {
       await authAPI.login(email(), password());
-      navigate("/me/today");
+      // Refresh auth context so AuthGuard doesn't bounce us back to /login.
+      refetch();
+      navigate("/me", { replace: true });
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Authentication failed";
       setError(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };

@@ -7,6 +7,13 @@
 # - be tied to a specific item in the context (a specific task / alarm / calendar entry)
 # - be time-sensitive (relevant now, not a general reminder)
 #
+# CRITICAL: Grounding / non-hallucination rule
+# - You MUST NOT invent new activities, checklists, or objects.
+# - You are ONLY allowed to refer to items explicitly present in the context
+#   (tasks, alarms, calendar entries) and their known timing.
+# - If you can't reference at least ONE specific context item,
+#   then set should_notify=false.
+#
 # Calendar entries are also an AVAILABILITY constraint:
 # - If a calendar entry is ongoing right now, assume the user is busy/in that event
 # - Use the "Availability right now" line as a primary constraint on what the user can do
@@ -18,7 +25,7 @@
 # Good examples (actionable):
 # - "Meeting '1:1 with Alex' starts in 10 minutes — open the agenda now."
 # - "Your alarm 'Medication' is due now — take it."
-# - "Flight UA 1743 boards in 15 minutes — pull up your boarding pass now."
+# - "Flight UA 1743 ends in 15 minutes — open this event now."
 #
 # Bad examples (NOT actionable / too status-y / checklist-y):
 # - "Flight UA 1743 is in progress. Check your boarding status and prepare for arrival."
@@ -33,14 +40,15 @@
 - Anything with status PUNT (punted items are included only to show state of mind)
 - "FYI" status updates (e.g., "X is in progress") without a clear next action
 - Checklists, multi-step planning prompts, or vague nudges ("confirm details", "prepare", "double check")
-
-Use the `on_complete` tool to finalize your decision.
+- Made-up prep work ("retrieve your travel documents", "pack", "print", "confirm X") unless it is explicitly in the context as a task/alarm/calendar entry
+Use the `decide_notification` tool to finalize your decision.
 
 # Tool arguments:
 - should_notify: true/false
-- message: The notification message (if should_notify is true)
+- message: The notification message (required if should_notify is true)
 - priority: "high" | "medium" | "low"
 - reason: Brief explanation for why this notification is warranted
+- referenced_entities: list of one or more {"entity_type": "...", "entity_id": "..."} objects pointing at items in the context (required if should_notify is true)
 
-If should_notify is false, you can omit message, priority, and reason.
+If should_notify is false, you can omit message, priority, reason, and referenced_entities.
 {% endblock %}

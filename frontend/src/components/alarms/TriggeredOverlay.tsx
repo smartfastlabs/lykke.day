@@ -1,4 +1,11 @@
-import { Component, For, Show, createEffect, createSignal } from "solid-js";
+import {
+  Component,
+  For,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { Portal } from "solid-js/web";
 import { Icon } from "@/components/shared/Icon";
 import {
@@ -52,12 +59,32 @@ const AlarmTriggeredOverlay: Component<AlarmTriggeredOverlayProps> = (
     }
   });
 
+  createEffect(() => {
+    if (!props.isOpen) return;
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        props.onCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
+  });
+
   return (
     <Show when={props.isOpen}>
       <Portal>
-        <div class="fixed inset-0 z-[70] flex items-center justify-center">
+        <div
+          class="fixed inset-0 z-[70] flex items-center justify-center"
+          onClick={() => props.onCancel()}
+        >
           <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-[2px]" />
-          <div class="relative flex h-full w-full flex-col items-center justify-center gap-6 px-6">
+          <div
+            class="relative flex h-full w-full flex-col items-center justify-center gap-6 px-6"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div class="text-center space-y-2">
               <p class="text-xs uppercase tracking-[0.2em] text-stone-200/80">
                 Alarm Triggered

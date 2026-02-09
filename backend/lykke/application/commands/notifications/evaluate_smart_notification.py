@@ -32,13 +32,71 @@ from lykke.application.repositories import (
 )
 from lykke.core.config import settings
 from lykke.core.utils.dates import get_current_datetime_in_timezone
-from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity, TaskEntity, UserEntity
 
 _SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
 _SMART_NOTIFICATION_FLOATING_TASK_WINDOW = timedelta(hours=2)
+
+def _coerce_uuid(value: object) -> UUID | None:
+    if isinstance(value, UUID):
+        return value
+    if isinstance(value, str):
+        try:
+            return UUID(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_referenced_entities(
+    *,
+    referenced_entities: list[object] | None,
+    prompt_context: value_objects.LLMPromptContext,
+) -> list[value_objects.LLMReferencedEntitySnapshot]:
+    """Coerce + validate referenced_entities against the prompt context."""
+    if not referenced_entities:
+        return []
+
+    allowed_ids_by_type: dict[str, set[UUID]] = {
+        "calendar_entry": {e.id for e in prompt_context.calendar_entries},
+        "task": {t.id for t in prompt_context.tasks},
+        "alarm": {
+            a.id
+            for a in (prompt_context.day.alarms or [])
+            if isinstance(getattr(a, "id", None), UUID)
+        },
+    }
+    day_id = getattr(prompt_context.day, "id", None)
+    if isinstance(day_id, UUID):
+        allowed_ids_by_type["day"] = {day_id}
+
+    coerced: list[value_objects.LLMReferencedEntitySnapshot] = []
+    seen: set[tuple[str, UUID]] = set()
+    for raw in referenced_entities:
+        if not isinstance(raw, dict):
+            continue
+        entity_type = raw.get("entity_type")
+        if not isinstance(entity_type, str) or not entity_type.strip():
+            continue
+        entity_id = _coerce_uuid(raw.get("entity_id"))
+        if entity_id is None:
+            continue
+        if entity_id not in allowed_ids_by_type.get(entity_type, set()):
+            continue
+        key = (entity_type, entity_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        coerced.append(
+            value_objects.LLMReferencedEntitySnapshot(
+                entity_type=entity_type,
+                entity_id=entity_id,
+            )
+        )
+
+    return coerced
 
 
 def _filter_prompt_context_for_smart_notifications(
@@ -193,6 +251,7 @@ class SmartNotificationHandler(
             *,
             tool_name: str,
             tool_args: dict[str, object | None],
+            referenced_entities: list[value_objects.LLMReferencedEntitySnapshot],
         ) -> value_objects.LLMRunResultSnapshot | None:
             snapshot_context = self._llm_snapshot_context
             if snapshot_context is None:
@@ -201,9 +260,7 @@ class SmartNotificationHandler(
                 current_time=snapshot_context.current_time,
                 llm_provider=snapshot_context.llm_provider,
                 system_prompt=snapshot_context.system_prompt,
-                referenced_entities=build_referenced_entities(
-                    snapshot_context.prompt_context
-                ),
+                referenced_entities=referenced_entities,
                 messages=snapshot_context.messages,
                 tools=snapshot_context.tools,
                 tool_choice=snapshot_context.tool_choice,
@@ -215,6 +272,7 @@ class SmartNotificationHandler(
             message: str | None = None,
             priority: Literal["high", "medium", "low"] | None = None,
             reason: str | None = None,
+            referenced_entities: list[object] | None = None,
         ) -> None:
             """Decide whether to send a smart notification."""
             if not should_notify:
@@ -224,6 +282,14 @@ class SmartNotificationHandler(
                 return None
             if message is None or not message.strip():
                 return None
+
+            coerced_references = _coerce_referenced_entities(
+                referenced_entities=referenced_entities,
+                prompt_context=prompt_context,
+            )
+            if not coerced_references:
+                return None
+
             decision = value_objects.NotificationDecision(
                 message=message,
                 priority=priority or "medium",
@@ -257,7 +323,9 @@ class SmartNotificationHandler(
                     "message": message,
                     "priority": priority,
                     "reason": reason,
+                    "referenced_entities": referenced_entities,
                 },
+                referenced_entities=coerced_references,
             )
             message_hash = hashlib.sha256(decision.message.encode("utf-8")).hexdigest()
             payload = build_notification_payload_for_smart_notification(decision)
@@ -283,9 +351,7 @@ class SmartNotificationHandler(
                             message_hash=message_hash,
                             triggered_by=self._triggered_by,
                             llm_snapshot=llm_snapshot,
-                            referenced_entities=(
-                                llm_snapshot.referenced_entities if llm_snapshot else []
-                            ),
+                            referenced_entities=coerced_references,
                         )
                         await uow.create(notification)
                         await uow.commit()
@@ -300,9 +366,7 @@ class SmartNotificationHandler(
                         message_hash=message_hash,
                         triggered_by=self._triggered_by,
                         llm_snapshot=llm_snapshot,
-                        referenced_entities=(
-                            llm_snapshot.referenced_entities if llm_snapshot else None
-                        ),
+                        referenced_entities=coerced_references,
                     )
                 )
                 logger.info(

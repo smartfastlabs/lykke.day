@@ -1,0 +1,6 @@
+- name: {{ alarm.name }}
+  id: {{ alarm.id }}
+  time: {{ fmt_time(alarm.time) }}
+  {{- kv_line("  ", "status", alarm.status and alarm.status.value) -}}
+  {{- kv_line("  ", "datetime", alarm.datetime and fmt_datetime(alarm.datetime)) -}}
+

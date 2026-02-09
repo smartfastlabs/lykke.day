@@ -1,4 +1,11 @@
-import { Component, Show, createEffect, createMemo, createSignal } from "solid-js";
+import {
+  Component,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { useAuth } from "@/providers/auth";
@@ -123,6 +130,20 @@ const TimezoneMismatchPrompt: Component = () => {
     if (signature) writeDismissedSignature(signature);
     setIsOpen(false);
   };
+
+  createEffect(() => {
+    if (!isOpen()) return;
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
+  });
 
   const handleUpdateTimezone = async () => {
     const detected = mismatch();

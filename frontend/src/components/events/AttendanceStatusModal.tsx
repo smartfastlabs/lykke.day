@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js";
+import { Component, For, Show, createEffect, onCleanup } from "solid-js";
 import { Portal } from "solid-js/web";
 import { Icon } from "@/components/shared/Icon";
 import {
@@ -88,6 +88,20 @@ const toneClasses = (
 const AttendanceStatusModal: Component<AttendanceStatusModalProps> = (
   props,
 ) => {
+  createEffect(() => {
+    if (!props.isOpen) return;
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        props.onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
+  });
+
   const options = () => {
     if (props.direction === "positive") return POSITIVE_OPTIONS;
 

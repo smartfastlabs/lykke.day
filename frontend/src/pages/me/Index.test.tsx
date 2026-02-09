@@ -5,20 +5,35 @@ import MeIndexPage from "./Index";
 
 const navigateMock = vi.fn();
 
-vi.mock("@solidjs/router", async () => {
-  const actual = await vi.importActual<typeof import("@solidjs/router")>(
-    "@solidjs/router",
-  );
+vi.mock("@solidjs/router", () => ({
+  useNavigate: () => navigateMock,
+}));
+
+const createLocalStorageMock = () => {
+  const store = new Map<string, string>();
   return {
-    ...actual,
-    useNavigate: () => navigateMock,
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
   };
-});
+};
 
 describe("/me entry route", () => {
   beforeEach(() => {
     navigateMock.mockReset();
-    window.localStorage.clear();
+
+    // Ensure a stable localStorage API regardless of test environment.
+    Object.defineProperty(window, "localStorage", {
+      value: createLocalStorageMock(),
+      configurable: true,
+    });
   });
 
   it("redirects to the last stored /me path", async () => {

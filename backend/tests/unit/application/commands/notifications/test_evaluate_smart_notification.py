@@ -107,9 +107,22 @@ class _Recorder:
 def _build_prompt_context(user_id: Any) -> value_objects.LLMPromptContext:
     template = DayTemplateEntity(user_id=user_id, slug="default")
     day = DayEntity.create_for_date(dt_date(2025, 11, 27), user_id, template)
+    task = TaskEntity(
+        user_id=user_id,
+        scheduled_date=day.date,
+        name="quick task",
+        status=value_objects.TaskStatus.READY,
+        type=value_objects.TaskType.WORK,
+        category=value_objects.TaskCategory.WORK,
+        frequency=value_objects.TaskFrequency.ONCE,
+        time_window=value_objects.TimeWindow(
+            available_time=dt_time(8, 0),
+            cutoff_time=dt_time(9, 30),
+        ),
+    )
     return value_objects.LLMPromptContext(
         day=day,
-        tasks=[],
+        tasks=[task],
         calendar_entries=[],
         brain_dumps=[],
         messages=[],
@@ -461,7 +474,48 @@ async def test_smart_tool_skips_low_priority() -> None:
     )
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Heads up", priority="low")
+    task_id = prompt_context.tasks[0].id
+    await tool.callback(
+        should_notify=True,
+        message="Heads up",
+        priority="low",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
+
+    assert send_recorder.commands == []
+
+
+@pytest.mark.asyncio
+async def test_smart_tool_skips_when_no_referenced_entities() -> None:
+    user_id = uuid4()
+    prompt_context = _build_prompt_context(user_id)
+    send_recorder = _Recorder(commands=[])
+    handler = SmartNotificationHandler(
+        user=_build_user(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _PromptContextHandler(
+        prompt_context=prompt_context
+    )
+    handler.send_push_notification_handler = send_recorder
+
+    tools = handler.build_tools(
+        current_time=datetime.now(UTC),
+        prompt_context=prompt_context,
+        llm_provider=value_objects.LLMProvider.OPENAI,
+    )
+    tool = tools[0]
+
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[],
+    )
 
     assert send_recorder.commands == []
 
@@ -489,7 +543,7 @@ async def test_smart_tool_skips_when_llm_declines() -> None:
     )
     tool = tools[0]
 
-    await tool.callback(should_notify=False, message="Nope", priority="high")
+    await tool.callback(should_notify=False, priority="high")
 
     assert send_recorder.commands == []
 
@@ -539,7 +593,15 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
     )
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Check in", priority="high")
+    task_id = prompt_context.tasks[0].id
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
 
     assert len(uow.created) == 1
     notification = uow.created[0]
@@ -588,7 +650,15 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
     allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
+    task_id = prompt_context.tasks[0].id
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
 
     assert len(send_recorder.commands) == 1
     command = send_recorder.commands[0]
@@ -648,7 +718,15 @@ async def test_smart_tool_skips_when_recent_notification_sent() -> None:
     )
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Time to check in", priority="high")
+    task_id = prompt_context.tasks[0].id
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
 
     assert send_recorder.commands == []
 
@@ -699,8 +777,23 @@ async def test_smart_tool_handles_send_errors() -> None:
     allow(push_notification_repo).search.and_return([])
     tool = tools[0]
 
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
-    await tool.callback(should_notify=True, message="Urgent", priority="high")
+    task_id = prompt_context.tasks[0].id
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
+    await tool.callback(
+        should_notify=True,
+        message="Urgent",
+        priority="high",
+        referenced_entities=[
+            {"entity_type": "task", "entity_id": str(task_id)},
+        ],
+    )
 
 
 @pytest.mark.asyncio

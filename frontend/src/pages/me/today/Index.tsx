@@ -108,9 +108,10 @@ export const TodayPage: Component = () => {
     navigate("/me/thats-all-for-today", { replace: true });
   });
 
-  const hasUpcomingEvents = createMemo(() =>
-    allEvents().some((event) => new Date(event.starts_at) >= new Date()),
-  );
+  const hasEventsSectionUpcomingEvents = createMemo(() => {
+    const now = new Date();
+    return eventsForSections().some((event) => new Date(event.starts_at) >= now);
+  });
 
   const rightNowEventIds = createMemo(() => {
     const currentTime = now();
@@ -249,7 +250,7 @@ export const TodayPage: Component = () => {
         </div>
       </Show>
       <div class="mb-6 flex flex-col md:flex-row gap-4">
-        <Show when={isEventsLoading() || hasUpcomingEvents()}>
+        <Show when={isEventsLoading() || hasEventsSectionUpcomingEvents()}>
           <div class="w-full md:w-1/2">
             <EventsSection
               events={eventsForSections()}
@@ -260,7 +261,7 @@ export const TodayPage: Component = () => {
         </Show>
         <div
           class={
-            isEventsLoading() || hasUpcomingEvents()
+            isEventsLoading() || hasEventsSectionUpcomingEvents()
               ? "w-full md:w-1/2"
               : "w-full"
           }
