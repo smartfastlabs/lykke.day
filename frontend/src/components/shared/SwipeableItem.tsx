@@ -17,12 +17,10 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
   // If props change, the hook won't see changes anyway, so untrack is appropriate
   const {
     translateX,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
   } = useSwipeGesture(
     untrack(() => ({
       onSwipeRight: props.onSwipeRight,
@@ -31,29 +29,14 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
     })),
   );
 
-  // Attach global mouse listeners when dragging starts
-  const handleMouseDownWithListeners = (e: globalThis.MouseEvent) => {
-    handleMouseDown(e);
-    // Attach global listeners for mouse move and up
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUpGlobal);
-  };
-
-  const handleMouseUpGlobal = () => {
-    handleMouseUp();
-    // Remove global listeners
-    window.removeEventListener("mousemove", handleMouseMove);
-    window.removeEventListener("mouseup", handleMouseUpGlobal);
-  };
-
   return (
     <div
       class="relative w-full overflow-hidden select-none"
       style="touch-action: pan-y"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDownWithListeners}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
     >
       <div class="absolute inset-0 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 flex justify-between items-center px-6 text-sm font-medium pointer-events-none rounded-xl">
         <span class="text-amber-600">{props.rightLabel}</span>

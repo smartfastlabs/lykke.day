@@ -8,18 +8,26 @@ interface SwipeCallbacks {
 
 export function useSwipeGesture(callbacks: SwipeCallbacks) {
   const [translateX, setTranslateX] = createSignal(0);
+  const threshold = callbacks.threshold ?? 100;
+
   let startX = 0;
   let startY = 0;
   let isSwiping = false;
-  const threshold = callbacks.threshold ?? 100;
+
+  // Prefer Pointer Events for consistent cross-device behavior.
+  // We still keep the swipe math isolated so it's reusable across event types.
+  let activePointerId: number | null = null;
+  let pointerTarget: HTMLElement | null = null;
+  let hasPointerCapture = false;
 
   const startSwipe = (clientX: number, clientY: number) => {
     startX = clientX;
     startY = clientY;
     isSwiping = false;
+    hasPointerCapture = false;
   };
 
-  const updateSwipe = (clientX: number, clientY: number, preventDefault?: () => void) => {
+  const updateSwipe = (clientX: number, clientY: number) => {
     const dx = clientX - startX;
     const dy = clientY - startY;
 
@@ -34,9 +42,6 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
     }
 
     if (isSwiping) {
-      if (preventDefault) {
-        preventDefault(); // only prevent default when actually swiping horizontally
-      }
       setTranslateX(dx);
     }
   };
@@ -54,42 +59,59 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
     isSwiping = false;
   };
 
-  // Touch event handlers
-  const handleTouchStart = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    startSwipe(touch.clientX, touch.clientY);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    updateSwipe(touch.clientX, touch.clientY, () => e.preventDefault());
-  };
-
-  const handleTouchEnd = () => {
+  const finishPointerGesture = () => {
     endSwipe();
+    activePointerId = null;
+    pointerTarget = null;
+    hasPointerCapture = false;
   };
 
-  // Mouse event handlers for desktop
-  const handleMouseDown = (e: globalThis.MouseEvent) => {
-    e.preventDefault();
-    startSwipe(e.clientX, e.clientY);
+  const handlePointerDown = (event: globalThis.PointerEvent) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.pointerType === "mouse") {
+      // Prevent text selection / drag ghost image while swiping with mouse.
+      event.preventDefault();
+    }
+    activePointerId = event.pointerId;
+    pointerTarget = event.currentTarget as HTMLElement;
+    startSwipe(event.clientX, event.clientY);
   };
 
-  const handleMouseMove = (e: globalThis.MouseEvent) => {
-    updateSwipe(e.clientX, e.clientY);
+  const handlePointerMove = (event: globalThis.PointerEvent) => {
+    if (activePointerId === null) return;
+    if (event.pointerId !== activePointerId) return;
+
+    // Once we detect a horizontal swipe, capture the pointer so we keep receiving moves
+    // even if the user drags outside the element.
+    const prevIsSwiping = isSwiping;
+    updateSwipe(event.clientX, event.clientY);
+    if (!prevIsSwiping && isSwiping && pointerTarget && !hasPointerCapture) {
+      try {
+        pointerTarget.setPointerCapture(activePointerId);
+        hasPointerCapture = true;
+      } catch {
+        // Non-fatal: some browsers / edge cases may throw.
+      }
+    }
   };
 
-  const handleMouseUp = () => {
-    endSwipe();
+  const handlePointerUp = (event: globalThis.PointerEvent) => {
+    if (activePointerId === null) return;
+    if (event.pointerId !== activePointerId) return;
+    finishPointerGesture();
+  };
+
+  const handlePointerCancel = (event: globalThis.PointerEvent) => {
+    if (activePointerId === null) return;
+    if (event.pointerId !== activePointerId) return;
+    finishPointerGesture();
   };
 
   return {
     translateX,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
   };
 }
