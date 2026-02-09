@@ -108,11 +108,6 @@ export const TodayPage: Component = () => {
     navigate("/me/thats-all-for-today", { replace: true });
   });
 
-  const hasEventsSectionUpcomingEvents = createMemo(() => {
-    const now = new Date();
-    return eventsForSections().some((event) => new Date(event.starts_at) >= now);
-  });
-
   const rightNowEventIds = createMemo(() => {
     const currentTime = now();
     return new Set(
@@ -183,6 +178,11 @@ export const TodayPage: Component = () => {
       if (!eventId) return true;
       return !ids.has(eventId);
     });
+  });
+
+  const hasEventsSectionUpcomingEvents = createMemo(() => {
+    const now = new Date();
+    return eventsForSections().some((event) => new Date(event.starts_at) >= now);
   });
 
   const tasksForSections = createMemo(() => {
