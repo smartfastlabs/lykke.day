@@ -1,12 +1,10 @@
 import {
   Component,
-  Show,
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
 } from "solid-js";
-import { Portal } from "solid-js/web";
+import ModalOverlay from "@/components/shared/ModalOverlay";
 
 import { useAuth } from "@/providers/auth";
 import { globalNotifications } from "@/providers/notifications";
@@ -131,20 +129,6 @@ const TimezoneMismatchPrompt: Component = () => {
     setIsOpen(false);
   };
 
-  createEffect(() => {
-    if (!isOpen()) return;
-
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        handleClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
-  });
-
   const handleUpdateTimezone = async () => {
     const detected = mismatch();
     if (!detected) {
@@ -173,53 +157,44 @@ const TimezoneMismatchPrompt: Component = () => {
   });
 
   return (
-    <Show when={isOpen()}>
-      <Portal>
-        <div
-          class="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={handleClose}
-        >
-          <div class="absolute inset-0 bg-stone-900/45 backdrop-blur-[1px]" />
-          <div
-            class="relative w-full max-w-xl mx-auto px-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div class="rounded-2xl border border-amber-100/80 bg-white/90 shadow-sm shadow-amber-900/10 backdrop-blur-sm p-6 sm:p-7 space-y-5">
-              <div class="text-center space-y-2">
-                <p class="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">
-                  New timezone detected
-                </p>
-              </div>
-
-              <div class="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <button
-                  type="button"
-                  onClick={handleUpdateTimezone}
-                  disabled={isSaving()}
-                  class="w-full rounded-full bg-amber-600 px-6 py-4 text-base sm:text-lg font-semibold text-white shadow-lg shadow-amber-900/15 transition hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
-                  aria-label={`Use timezone ${mismatch() ?? ""}`}
-                >
-                  {isSaving() ? "Updating..." : `Use ${mismatch() ?? ""}`}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isSaving()}
-                  class="w-full rounded-full border border-stone-200 bg-white px-6 py-4 text-base sm:text-lg font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
-                  aria-label={`Keep account timezone ${accountTimezoneLabel()}`}
-                >
-                  {`Keep ${accountTimezoneLabel()}`}
-                </button>
-              </div>
-
-              <p class="text-center text-sm sm:text-base text-stone-600">
-                This affects how days, alarms, and “today” timing are computed.
-              </p>
-            </div>
-          </div>
+    <ModalOverlay
+      isOpen={isOpen()}
+      onClose={handleClose}
+      contentClass="relative w-full max-w-xl mx-auto px-6"
+    >
+      <div class="rounded-2xl border border-amber-100/80 bg-white/90 shadow-sm shadow-amber-900/10 backdrop-blur-sm p-6 sm:p-7 space-y-5">
+        <div class="text-center space-y-2">
+          <p class="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">
+            New timezone detected
+          </p>
         </div>
-      </Portal>
-    </Show>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <button
+            type="button"
+            onClick={handleUpdateTimezone}
+            disabled={isSaving()}
+            class="w-full rounded-full bg-amber-600 px-6 py-4 text-base sm:text-lg font-semibold text-white shadow-lg shadow-amber-900/15 transition hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label={`Use timezone ${mismatch() ?? ""}`}
+          >
+            {isSaving() ? "Updating..." : `Use ${mismatch() ?? ""}`}
+          </button>
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isSaving()}
+            class="w-full rounded-full border border-stone-200 bg-white px-6 py-4 text-base sm:text-lg font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label={`Keep account timezone ${accountTimezoneLabel()}`}
+          >
+            {`Keep ${accountTimezoneLabel()}`}
+          </button>
+        </div>
+
+        <p class="text-center text-sm sm:text-base text-stone-600">
+          This affects how days, alarms, and “today” timing are computed.
+        </p>
+      </div>
+    </ModalOverlay>
   );
 };
 

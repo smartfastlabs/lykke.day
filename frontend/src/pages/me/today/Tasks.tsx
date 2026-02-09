@@ -32,7 +32,6 @@ export const TodaysTasksView: Component = () => {
   const allTasks = createMemo(() => tasks() ?? []);
   const activeTasks = createMemo(() =>
     allTasks().filter(
-<<<<<<< Updated upstream
       (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
     ),
   );
@@ -41,16 +40,6 @@ export const TodaysTasksView: Component = () => {
   );
   const puntedTasks = createMemo(() =>
     allTasks().filter((task) => task.status === "PUNT"),
-=======
-      (task) => task.status !== "COMPLETE" && task.status !== "PUNT"
-    )
-  );
-  const completedTasks = createMemo(() =>
-    allTasks().filter((task) => task.status === "COMPLETE")
-  );
-  const puntedTasks = createMemo(() =>
-    allTasks().filter((task) => task.status === "PUNT")
->>>>>>> Stashed changes
   );
   const stats = createMemo(() => getTaskStats(allTasks()));
   const completionPercentage = createMemo(() => {

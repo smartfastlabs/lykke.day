@@ -1,6 +1,6 @@
-import { Component, For, Show, createEffect, onCleanup } from "solid-js";
-import { Portal } from "solid-js/web";
+import { Component, For, Show } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
+import ModalOverlay from "@/components/shared/ModalOverlay";
 import {
   faArrowLeft,
   faBan,
@@ -88,20 +88,6 @@ const toneClasses = (
 const AttendanceStatusModal: Component<AttendanceStatusModalProps> = (
   props,
 ) => {
-  createEffect(() => {
-    if (!props.isOpen) return;
-
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        props.onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
-  });
-
   const options = () => {
     if (props.direction === "positive") return POSITIVE_OPTIONS;
 
@@ -120,61 +106,49 @@ const AttendanceStatusModal: Component<AttendanceStatusModalProps> = (
     (props.direction === "positive" ? "Mark attendance" : "Not attending");
 
   return (
-    <Show when={props.isOpen}>
-      <Portal>
-        <div
-          class="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={() => props.onClose()}
-        >
-          <div class="absolute inset-0 bg-stone-900/45 backdrop-blur-[1px]" />
-          <div
-            class="relative flex h-full w-full flex-col items-center justify-center gap-6 px-6"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div class="text-center space-y-1">
-              <p class="text-xs uppercase tracking-[0.2em] text-stone-200/80">
-                {headerTitle()}
-              </p>
-              <Show when={props.subtitle}>
-                <p class="text-xs text-stone-200/70">{props.subtitle}</p>
-              </Show>
-            </div>
+    <ModalOverlay
+      isOpen={props.isOpen}
+      onClose={props.onClose}
+      contentClass="relative flex h-full w-full flex-col items-center justify-center gap-6 px-6"
+    >
+      <div class="text-center space-y-1">
+        <p class="text-xs uppercase tracking-[0.2em] text-stone-200/80">
+          {headerTitle()}
+        </p>
+        <Show when={props.subtitle}>
+          <p class="text-xs text-stone-200/70">{props.subtitle}</p>
+        </Show>
+      </div>
 
-            <div class="grid grid-cols-2 gap-x-10 gap-y-6">
-              <For each={options()}>
-                {(option) => {
-                  const isSelected = () =>
-                    option.status === props.currentStatus;
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => props.onSelect(option.status)}
-                      class="flex flex-col items-center gap-2"
-                    >
-                      <span class={toneClasses(option.tone, isSelected())}>
-                        <Icon icon={option.icon} class="h-7 w-7 fill-current" />
-                      </span>
-                      <span class="text-xs text-stone-200/85">
-                        {option.label}
-                      </span>
-                    </button>
-                  );
-                }}
-              </For>
-            </div>
+      <div class="grid grid-cols-2 gap-x-10 gap-y-6">
+        <For each={options()}>
+          {(option) => {
+            const isSelected = () => option.status === props.currentStatus;
+            return (
+              <button
+                type="button"
+                onClick={() => props.onSelect(option.status)}
+                class="flex flex-col items-center gap-2"
+              >
+                <span class={toneClasses(option.tone, isSelected())}>
+                  <Icon icon={option.icon} class="h-7 w-7 fill-current" />
+                </span>
+                <span class="text-xs text-stone-200/85">{option.label}</span>
+              </button>
+            );
+          }}
+        </For>
+      </div>
 
-            <button
-              type="button"
-              onClick={() => props.onClose()}
-              class="mt-2 flex items-center gap-2 text-xs text-stone-200/70 underline-offset-2 transition hover:text-white hover:underline"
-            >
-              <Icon icon={faArrowLeft} class="h-3 w-3 fill-current" />
-              Back
-            </button>
-          </div>
-        </div>
-      </Portal>
-    </Show>
+      <button
+        type="button"
+        onClick={() => props.onClose()}
+        class="mt-2 flex items-center gap-2 text-xs text-stone-200/70 underline-offset-2 transition hover:text-white hover:underline"
+      >
+        <Icon icon={faArrowLeft} class="h-3 w-3 fill-current" />
+        Back
+      </button>
+    </ModalOverlay>
   );
 };
 

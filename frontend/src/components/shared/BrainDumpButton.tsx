@@ -2,13 +2,13 @@ import { useLocation, useNavigate } from "@solidjs/router";
 import {
   Component,
   Show,
-  createEffect,
   createMemo,
   createSignal,
   onCleanup,
 } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import AddActionModal from "@/components/shared/AddActionModal";
+import ModalOverlay from "@/components/shared/ModalOverlay";
 import { useStreamingData } from "@/providers/streamingData";
 import {
   faHouse,
@@ -199,20 +199,6 @@ const BrainDumpButton: Component = () => {
     recognition?.stop();
   });
 
-  createEffect(() => {
-    if (!isModalOpen()) return;
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeDictationModal();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    onCleanup(() => {
-      window.removeEventListener("keydown", handleKeyDown);
-    });
-  });
-
   const displayText = createMemo(() => {
     const base = newItemText();
     const interim = dictationInterim();
@@ -282,66 +268,59 @@ const BrainDumpButton: Component = () => {
         }}
       />
 
-      <Show when={isModalOpen()}>
-        <div
-          class="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={closeDictationModal}
-        >
-          <div class="absolute inset-0 bg-stone-900/45 backdrop-blur-[1px]" />
-          <div
-            class="relative flex flex-col items-center justify-center"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Show when={hasTranscript()}>
-              <div class="mb-6 max-w-[320px] rounded-3xl bg-amber-100 px-5 py-4 text-sm text-stone-800 shadow-md shadow-stone-900/10">
-                <span class="text-left leading-relaxed">{displayText()}</span>
-              </div>
-            </Show>
-            <button
-              type="button"
-              onClick={() => void handlePrimaryMicClick()}
-              class={`flex h-20 w-20 items-center justify-center rounded-full border shadow-lg transition-colors ${
-                hasTranscript()
-                  ? "border-amber-200 bg-amber-500 text-white hover:bg-amber-400"
-                  : "border-stone-200 bg-stone-100 text-stone-700 hover:bg-stone-50"
-              }`}
-              aria-label={
-                hasTranscript()
-                  ? "Stop dictation and save brain dump"
-                  : isDictating()
-                    ? "Stop dictation"
-                    : "Start dictation"
-              }
-              disabled={isSaving() || isLoading() || !isSpeechSupported()}
-            >
-              <Icon
-                icon={hasTranscript() ? faStop : faMicrophone}
-                class={`h-7 w-7 fill-current ${isDictating() ? "animate-pulse" : ""}`}
-              />
-            </button>
-            <Show when={dictationError()}>
-              <p class="mt-6 text-xs text-rose-100">
-                Dictation stopped: {dictationError()}
-              </p>
-            </Show>
-            <Show when={!isSpeechSupported()}>
-              <p class="mt-6 text-xs text-stone-200">
-                Speech recognition is not supported.
-              </p>
-            </Show>
-            <Show when={!hasTranscript()}>
-              <button
-                type="button"
-                onClick={closeDictationModal}
-                class="mt-6 text-xs text-stone-200/80 underline-offset-2 transition hover:text-white hover:underline"
-                aria-label="Cancel dictation"
-              >
-                Cancel
-              </button>
-            </Show>
+      <ModalOverlay
+        isOpen={isModalOpen()}
+        onClose={closeDictationModal}
+        contentClass="relative flex flex-col items-center justify-center"
+      >
+        <Show when={hasTranscript()}>
+          <div class="mb-6 max-w-[320px] rounded-3xl bg-amber-100 px-5 py-4 text-sm text-stone-800 shadow-md shadow-stone-900/10">
+            <span class="text-left leading-relaxed">{displayText()}</span>
           </div>
-        </div>
-      </Show>
+        </Show>
+        <button
+          type="button"
+          onClick={() => void handlePrimaryMicClick()}
+          class={`flex h-20 w-20 items-center justify-center rounded-full border shadow-lg transition-colors ${
+            hasTranscript()
+              ? "border-amber-200 bg-amber-500 text-white hover:bg-amber-400"
+              : "border-stone-200 bg-stone-100 text-stone-700 hover:bg-stone-50"
+          }`}
+          aria-label={
+            hasTranscript()
+              ? "Stop dictation and save brain dump"
+              : isDictating()
+                ? "Stop dictation"
+                : "Start dictation"
+          }
+          disabled={isSaving() || isLoading() || !isSpeechSupported()}
+        >
+          <Icon
+            icon={hasTranscript() ? faStop : faMicrophone}
+            class={`h-7 w-7 fill-current ${isDictating() ? "animate-pulse" : ""}`}
+          />
+        </button>
+        <Show when={dictationError()}>
+          <p class="mt-6 text-xs text-rose-100">
+            Dictation stopped: {dictationError()}
+          </p>
+        </Show>
+        <Show when={!isSpeechSupported()}>
+          <p class="mt-6 text-xs text-stone-200">
+            Speech recognition is not supported.
+          </p>
+        </Show>
+        <Show when={!hasTranscript()}>
+          <button
+            type="button"
+            onClick={closeDictationModal}
+            class="mt-6 text-xs text-stone-200/80 underline-offset-2 transition hover:text-white hover:underline"
+            aria-label="Cancel dictation"
+          >
+            Cancel
+          </button>
+        </Show>
+      </ModalOverlay>
     </>
   );
 };
