@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class CalendarEntity(BaseEntityObject[CalendarUpdateObject, "CalendarUpdatedEvent"]):
     user_id: UUID
     name: str
-    auth_token_id: UUID
+    auth_token_id: UUID | None = None
     platform_id: str
     platform: str
     default_event_category: EventCategory | None = None

@@ -44,6 +44,7 @@ import TomorrowAddReminderPage from "@/pages/me/tomorrow/AddReminder";
 import TomorrowAddAdhocTaskPage from "@/pages/me/tomorrow/AddAdhocTask";
 import TomorrowAddAlarmPage from "@/pages/me/tomorrow/AddAlarm";
 import TomorrowRoutinesView from "@/pages/me/tomorrow/Routines";
+import TomorrowEditPage from "@/pages/me/tomorrow/Edit";
 import TodayNotificationsPage from "@/pages/me/today/notifications/Index";
 import TodayNotificationDetailPage from "@/pages/me/today/notifications/Detail";
 import TodayMessagesPage from "@/pages/me/today/messages/Index";
@@ -366,6 +367,13 @@ export default function App() {
                 <Route path="/tomorrow" component={TomorrowLayout}>
                   <Route path="/" component={TomorrowPreviewView} />
                   <Route path="/routines" component={TomorrowRoutinesView} />
+                </Route>
+                <Route path="/tommorrow" component={TomorrowLayout}>
+                  <Route
+                    path="/"
+                    component={() => <Navigate href="/me/tomorrow" />}
+                  />
+                  <Route path="/edit" component={TomorrowEditPage} />
                 </Route>
                 <Route
                   path="/tomorrow/add-reminder"

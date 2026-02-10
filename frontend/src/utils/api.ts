@@ -928,6 +928,20 @@ export const calendarEntrySeriesAPI = {
 };
 
 export const calendarEntryAPI = {
+  create: (payload: {
+    name: string;
+    starts_at: string;
+    ends_at: string;
+    category?: import("@/types/api").Event["category"] | null;
+  }): Promise<import("@/types/api").Event> =>
+    fetchData<import("@/types/api").Event>("/api/calendar-entries/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  delete: (id: string): Promise<void> =>
+    fetchData<void>(`/api/calendar-entries/${id}`, { method: "DELETE" }),
+
   update: (
     id: string,
     patch: Partial<{

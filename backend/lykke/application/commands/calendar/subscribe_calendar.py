@@ -47,6 +47,10 @@ class SubscribeCalendarHandler(
             NotImplementedError: If the calendar platform is not supported.
         """
         calendar = command.calendar
+        if calendar.platform == "lykke":
+            return calendar
+        if calendar.auth_token_id is None:
+            raise ValueError("Calendar has no auth token; cannot subscribe")
         uow = self.new_uow()
         async with uow:
             token = await self.auth_token_ro_repo.get(calendar.auth_token_id)

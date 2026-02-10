@@ -13,7 +13,11 @@ from .calendar import (
     CalendarUpdateSchema,
     SyncSubscriptionSchema,
 )
-from .calendar_entry import CalendarEntrySchema, CalendarEntryUpdateSchema
+from .calendar_entry import (
+    CalendarEntryCreateSchema,
+    CalendarEntrySchema,
+    CalendarEntryUpdateSchema,
+)
 from .calendar_entry_series import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
@@ -97,6 +101,7 @@ from .websocket_message import (
 CalendarCreateSchema.model_rebuild()
 CalendarSchema.model_rebuild()
 SyncSubscriptionSchema.model_rebuild()
+CalendarEntryCreateSchema.model_rebuild()
 CalendarEntrySchema.model_rebuild()
 CalendarEntryUpdateSchema.model_rebuild()
 CalendarUpdateSchema.model_rebuild()
@@ -169,6 +174,7 @@ __all__ = [
     "CalendarCreateSchema",
     "CalendarEntryNotificationRuleSchema",
     "CalendarEntryNotificationSettingsSchema",
+    "CalendarEntryCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
     "CalendarEntrySeriesUpdateSchema",

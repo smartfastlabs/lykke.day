@@ -65,6 +65,8 @@ class ResetCalendarDataHandler(
             for calendar in calendars:
                 if calendar.sync_subscription is None:
                     continue
+                if calendar.platform == "lykke" or calendar.auth_token_id is None:
+                    continue
 
                 token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                 refreshed = await self._refresh_subscription(calendar, token, uow)

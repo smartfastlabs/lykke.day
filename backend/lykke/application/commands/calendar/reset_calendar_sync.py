@@ -62,10 +62,14 @@ class ResetCalendarSyncHandler(
         logger.info(f"Resetting calendar sync for user {self.user.id}")
 
         async with self.new_uow() as uow:
-            # Step 1: Get all calendars with sync_subscription enabled
+            # Step 1: Get all calendars with sync_subscription enabled (exclude Lykke)
             all_calendars = await self.calendar_ro_repo.all()
             subscribed_calendars = [
-                cal for cal in all_calendars if cal.sync_subscription is not None
+                cal
+                for cal in all_calendars
+                if cal.sync_subscription is not None
+                and cal.auth_token_id is not None
+                and cal.platform != "lykke"
             ]
 
             logger.info(
@@ -81,6 +85,7 @@ class ResetCalendarSyncHandler(
 
             # Step 2: Unsubscribe all calendars
             for calendar in subscribed_calendars:
+                assert calendar.auth_token_id is not None
                 try:
                     token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     await self._unsubscribe(calendar, token, uow)
@@ -96,6 +101,8 @@ class ResetCalendarSyncHandler(
             for calendar_id in calendar_ids:
                 try:
                     calendar = await self.calendar_ro_repo.get(calendar_id)
+                    if calendar.auth_token_id is None:
+                        continue
                     token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     calendar = await self._subscribe(calendar, token, uow)
                     updated_calendars.append(calendar)

@@ -12,7 +12,7 @@ from lykke.domain.value_objects.task import (
     TaskFrequency,
 )
 
-from .base import BaseEntitySchema
+from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
     from .action import ActionSchema
@@ -38,7 +38,16 @@ class CalendarEntrySchema(BaseEntitySchema):
     date: date  # Computed field from starts_at
 
 
-class CalendarEntryUpdateSchema(BaseEntitySchema):
+class CalendarEntryCreateSchema(BaseSchema):
+    """API schema for creating a first-party (Lykke) calendar entry. Timed events only."""
+
+    name: str
+    starts_at: datetime
+    ends_at: datetime
+    category: EventCategory | None = None
+
+
+class CalendarEntryUpdateSchema(BaseSchema):
     """API schema for updating a CalendarEntry entity."""
 
     name: str | None = None

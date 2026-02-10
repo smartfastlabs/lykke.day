@@ -27,6 +27,8 @@ class UnsubscribeCalendarHandler(
     async def handle(self, command: UnsubscribeCalendarCommand) -> CalendarEntity:
         """Remove the existing sync subscription for a calendar."""
         calendar = command.calendar
+        if calendar.platform == "lykke":
+            return calendar
         async with self.new_uow() as uow:
             if calendar.platform != "google":
                 raise NotImplementedError(
@@ -36,6 +38,8 @@ class UnsubscribeCalendarHandler(
             if not calendar.sync_subscription:
                 return calendar
 
+            if calendar.auth_token_id is None:
+                return calendar
             token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
 
             await self.google_gateway.unsubscribe_from_calendar(

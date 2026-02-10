@@ -5,6 +5,7 @@ import {
   faCompass,
   faGear,
   faListCheck,
+  faPenToSquare,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -136,6 +137,11 @@ const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
                 setIsRescheduling(false);
               }
             },
+          },
+          {
+            label: "Edit day",
+            icon: faPenToSquare,
+            onClick: () => menuNavigate("/me/tommorrow/edit"),
           },
           {
             label: "Navigation",

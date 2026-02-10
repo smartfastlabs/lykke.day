@@ -4,6 +4,7 @@ import ModalOverlay from "@/components/shared/ModalOverlay";
 import {
   faBell,
   faBullseye,
+  faCalendarPlus,
   faListCheck,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -14,6 +15,7 @@ type AddActionModalProps = {
   onAddTask: () => void;
   onAddReminder: () => void;
   onAddAlarm: () => void;
+  onAddEvent?: () => void;
 };
 
 const AddActionModal: Component<AddActionModalProps> = (props) => {
@@ -30,41 +32,63 @@ const AddActionModal: Component<AddActionModalProps> = (props) => {
             Add
           </p>
           <p class="text-xs text-stone-200/70">
-            Create a task, reminder, or alarm
+            Create a task, reminder, alarm, or event
           </p>
         </div>
 
-        <div class="grid grid-cols-3 gap-6">
-          <button
-            type="button"
-            onClick={() => props.onAddTask()}
-            class="flex h-20 w-20 items-center justify-center rounded-full border border-amber-200/70 bg-amber-500/80 text-white shadow-lg shadow-amber-900/20 transition hover:bg-amber-400"
-            aria-label="Add task"
-          >
-            <Icon icon={faListCheck} class="h-7 w-7 fill-current" />
-          </button>
-          <button
-            type="button"
-            onClick={() => props.onAddReminder()}
-            class="flex h-20 w-20 items-center justify-center rounded-full border border-sky-200/70 bg-sky-500/80 text-white shadow-lg shadow-sky-900/20 transition hover:bg-sky-400"
-            aria-label="Add reminder"
-          >
-            <Icon icon={faBullseye} class="h-7 w-7 fill-current" />
-          </button>
-          <button
-            type="button"
-            onClick={() => props.onAddAlarm()}
-            class="flex h-20 w-20 items-center justify-center rounded-full border border-rose-200/70 bg-rose-500/80 text-white shadow-lg shadow-rose-900/20 transition hover:bg-rose-400"
-            aria-label="Add alarm"
-          >
-            <Icon icon={faBell} class="h-7 w-7 fill-current" />
-          </button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-6 text-center text-xs text-stone-200/80">
-          <span>Task</span>
-          <span>Reminder</span>
-          <span>Alarm</span>
+        <div
+          classList={{
+            "grid gap-6 text-center text-xs text-stone-200/80": true,
+            "grid-cols-3": !props.onAddEvent,
+            "grid-cols-2 sm:grid-cols-4": !!props.onAddEvent,
+          }}
+        >
+          <div class="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={() => props.onAddTask()}
+              class="flex h-20 w-20 items-center justify-center rounded-full border border-amber-200/70 bg-amber-500/80 text-white shadow-lg shadow-amber-900/20 transition hover:bg-amber-400"
+              aria-label="Add task"
+            >
+              <Icon icon={faListCheck} class="h-7 w-7 fill-current" />
+            </button>
+            <span>Task</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={() => props.onAddReminder()}
+              class="flex h-20 w-20 items-center justify-center rounded-full border border-sky-200/70 bg-sky-500/80 text-white shadow-lg shadow-sky-900/20 transition hover:bg-sky-400"
+              aria-label="Add reminder"
+            >
+              <Icon icon={faBullseye} class="h-7 w-7 fill-current" />
+            </button>
+            <span>Reminder</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={() => props.onAddAlarm()}
+              class="flex h-20 w-20 items-center justify-center rounded-full border border-rose-200/70 bg-rose-500/80 text-white shadow-lg shadow-rose-900/20 transition hover:bg-rose-400"
+              aria-label="Add alarm"
+            >
+              <Icon icon={faBell} class="h-7 w-7 fill-current" />
+            </button>
+            <span>Alarm</span>
+          </div>
+          {props.onAddEvent && (
+            <div class="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => props.onAddEvent!()}
+                class="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-200/70 bg-emerald-500/80 text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-400"
+                aria-label="Add event"
+              >
+                <Icon icon={faCalendarPlus} class="h-7 w-7 fill-current" />
+              </button>
+              <span>Event</span>
+            </div>
+          )}
         </div>
 
         <button

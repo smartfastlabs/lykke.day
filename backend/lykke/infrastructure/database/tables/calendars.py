@@ -14,7 +14,7 @@ class Calendar(Base):
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
-    auth_token_id = Column(PGUUID, ForeignKey("auth_tokens.id"), nullable=False)
+    auth_token_id = Column(PGUUID, ForeignKey("auth_tokens.id"), nullable=True)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     default_event_category = Column(String)

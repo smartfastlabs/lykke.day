@@ -97,7 +97,7 @@ class HandleGoogleLoginCallbackHandler(
                     ),
                     None,
                 )
-                if matching_calendar:
+                if matching_calendar and matching_calendar.auth_token_id is not None:
                     try:
                         existing_auth_token = await self.auth_token_ro_repo.get(
                             matching_calendar.auth_token_id

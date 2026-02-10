@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import AddActionModal from "@/components/shared/AddActionModal";
+import AddEventModal from "@/components/events/AddEventModal";
 import ModalOverlay from "@/components/shared/ModalOverlay";
 import { useStreamingData } from "@/providers/streamingData";
 import {
@@ -43,9 +44,10 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 const BrainDumpButton: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addBrainDump, isLoading } = useStreamingData();
+  const { addBrainDump, isLoading, sync } = useStreamingData();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
   const [isAddModalOpen, setIsAddModalOpen] = createSignal(false);
+  const [showAddEventModal, setShowAddEventModal] = createSignal(false);
   const [newItemText, setNewItemText] = createSignal("");
   const [dictationInterim, setDictationInterim] = createSignal("");
   const [isDictating, setIsDictating] = createSignal(false);
@@ -265,6 +267,20 @@ const BrainDumpButton: Component = () => {
         onAddAlarm={() => {
           closeAddModal();
           navigate("/me/add-alarm");
+        }}
+        onAddEvent={() => {
+          closeAddModal();
+          setShowAddEventModal(true);
+        }}
+      />
+
+      <AddEventModal
+        isOpen={showAddEventModal()}
+        onClose={() => setShowAddEventModal(false)}
+        defaultDate={new Date().toISOString().slice(0, 10)}
+        onCreated={() => {
+          sync();
+          setShowAddEventModal(false);
         }}
       />
 

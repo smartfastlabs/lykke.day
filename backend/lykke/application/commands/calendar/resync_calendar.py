@@ -47,6 +47,8 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
     async def handle(self, command: ResyncCalendarCommand) -> CalendarEntity:
         """Perform a full resync of the given calendar."""
         calendar = command.calendar
+        if calendar.platform == "lykke" or calendar.auth_token_id is None:
+            return calendar
         uow = self.new_uow()
         async with uow:
             token = await self.auth_token_ro_repo.get(calendar.auth_token_id)

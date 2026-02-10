@@ -2,6 +2,7 @@ import {
   faBell,
   faBars,
   faBrain,
+  faCalendarDay,
   faCompass,
   faEnvelope,
   faGear,
@@ -128,6 +129,16 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
             label: "Messages",
             icon: faEnvelope,
             onClick: () => menuNavigate("/me/today/messages"),
+          },
+          {
+            label: "Tomorrow",
+            icon: faCalendarDay,
+            onClick: () => menuNavigate("/me/tomorrow"),
+          },
+          {
+            label: "Events",
+            icon: faCalendarDay,
+            onClick: () => menuNavigate("/me/today/events"),
           },
           {
             label: "Edit day",

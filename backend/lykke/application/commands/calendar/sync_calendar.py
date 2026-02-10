@@ -72,11 +72,15 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
         uow = self.new_uow()
         async with uow:
             calendar = await self.calendar_ro_repo.get(calendar_id)
+            if calendar.platform == "lykke" or calendar.auth_token_id is None:
+                return calendar
             token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
             return await self.sync_calendar_with_uow(calendar, token, uow)
 
     async def sync_calendar_entity(self, calendar: CalendarEntity) -> CalendarEntity:
         """Sync a provided calendar entity using a fresh unit of work."""
+        if calendar.platform == "lykke" or calendar.auth_token_id is None:
+            return calendar
         uow = self.new_uow()
         async with uow:
             token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
@@ -584,6 +588,8 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         async with uow:
             calendars = await self.calendar_ro_repo.all()
             for calendar in calendars:
+                if calendar.platform == "lykke" or calendar.auth_token_id is None:
+                    continue
                 try:
                     token = await self.auth_token_ro_repo.get(calendar.auth_token_id)
                     await self.sync_calendar_handler.sync_calendar_with_uow(

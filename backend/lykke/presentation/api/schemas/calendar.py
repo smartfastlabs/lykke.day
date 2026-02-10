@@ -24,7 +24,7 @@ class CalendarCreateSchema(BaseSchema):
     """API schema for creating a Calendar entity."""
 
     name: str
-    auth_token_id: UUID
+    auth_token_id: UUID | None = None
     platform_id: str
     platform: str
     last_sync_at: datetime | None = None
