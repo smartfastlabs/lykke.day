@@ -8,12 +8,7 @@ from uuid import UUID
 
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.events.day_template_events import (
-    DayTemplateRoutineDefinitionAddedEvent,
-    DayTemplateRoutineDefinitionRemovedEvent,
-    DayTemplateTimeBlockAddedEvent,
-    DayTemplateTimeBlockRemovedEvent,
-)
+from lykke.domain.events.day_template_events import DayTemplateUpdatedEvent
 from lykke.domain.value_objects.update import DayTemplateUpdateObject
 
 from .base import BaseEntityObject
@@ -79,10 +74,11 @@ class DayTemplateEntity(
             [*self.routine_definition_ids, routine_definition_id]
         )
         updated._add_event(
-            DayTemplateRoutineDefinitionAddedEvent(
+            DayTemplateUpdatedEvent(
+                update_object=DayTemplateUpdateObject(
+                    routine_definition_ids=updated.routine_definition_ids
+                ),
                 user_id=self.user_id,
-                day_template_id=updated.id,
-                routine_definition_id=routine_definition_id,
             )
         )
         return updated
@@ -98,10 +94,11 @@ class DayTemplateEntity(
             [rid for rid in self.routine_definition_ids if rid != routine_definition_id]
         )
         updated._add_event(
-            DayTemplateRoutineDefinitionRemovedEvent(
+            DayTemplateUpdatedEvent(
+                update_object=DayTemplateUpdateObject(
+                    routine_definition_ids=updated.routine_definition_ids
+                ),
                 user_id=self.user_id,
-                day_template_id=updated.id,
-                routine_definition_id=routine_definition_id,
             )
         )
         return updated
@@ -137,12 +134,11 @@ class DayTemplateEntity(
 
         updated = self._copy_with_time_blocks([*self.time_blocks, time_block])
         updated._add_event(
-            DayTemplateTimeBlockAddedEvent(
+            DayTemplateUpdatedEvent(
+                update_object=DayTemplateUpdateObject(
+                    time_blocks=updated.time_blocks
+                ),
                 user_id=self.user_id,
-                day_template_id=updated.id,
-                time_block_definition_id=time_block.time_block_definition_id,
-                start_time=time_block.start_time,
-                end_time=time_block.end_time,
             )
         )
         return updated
@@ -168,11 +164,11 @@ class DayTemplateEntity(
             [tb for tb in self.time_blocks if tb != time_block_to_remove]
         )
         updated._add_event(
-            DayTemplateTimeBlockRemovedEvent(
+            DayTemplateUpdatedEvent(
+                update_object=DayTemplateUpdateObject(
+                    time_blocks=updated.time_blocks
+                ),
                 user_id=self.user_id,
-                day_template_id=updated.id,
-                time_block_definition_id=time_block_definition_id,
-                start_time=start_time,
             )
         )
         return updated

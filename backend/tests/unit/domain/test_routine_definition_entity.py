@@ -10,11 +10,7 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineDefinitionEntity
-from lykke.domain.events.routine_definition import (
-    RoutineDefinitionTaskAddedEvent,
-    RoutineDefinitionTaskRemovedEvent,
-    RoutineDefinitionTaskUpdatedEvent,
-)
+from lykke.domain.events.routine_definition import RoutineDefinitionUpdatedEvent
 
 
 def _build_routine_definition() -> RoutineDefinitionEntity:
@@ -46,8 +42,8 @@ def test_add_task_emits_event() -> None:
 
     assert updated.tasks == [task]
     event = updated.collect_events()[0]
-    assert isinstance(event, RoutineDefinitionTaskAddedEvent)
-    assert event.task == task
+    assert isinstance(event, RoutineDefinitionUpdatedEvent)
+    assert event.update_object.tasks == [task]
 
 
 def test_update_task_updates_fields_and_emits_event() -> None:
@@ -79,8 +75,8 @@ def test_update_task_updates_fields_and_emits_event() -> None:
     assert updated.tasks[0].name == "Stretch and breathe"
     assert updated.tasks[1] == extra_task
     event = updated.collect_events()[0]
-    assert isinstance(event, RoutineDefinitionTaskUpdatedEvent)
-    assert event.task == update
+    assert isinstance(event, RoutineDefinitionUpdatedEvent)
+    assert event.update_object.tasks == updated.tasks
 
 
 def test_update_task_raises_when_missing() -> None:
@@ -106,8 +102,8 @@ def test_remove_task_emits_event() -> None:
 
     assert updated.tasks == []
     event = updated.collect_events()[0]
-    assert isinstance(event, RoutineDefinitionTaskRemovedEvent)
-    assert event.routine_definition_task_id == task.id
+    assert isinstance(event, RoutineDefinitionUpdatedEvent)
+    assert event.update_object.tasks == []
 
 
 def test_remove_task_raises_when_missing() -> None:

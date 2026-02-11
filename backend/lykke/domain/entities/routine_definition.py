@@ -8,11 +8,8 @@ from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
-from lykke.domain.events.routine_definition import (
-    RoutineDefinitionTaskAddedEvent,
-    RoutineDefinitionTaskRemovedEvent,
-    RoutineDefinitionTaskUpdatedEvent,
-)
+from lykke.domain.events.routine_definition import RoutineDefinitionUpdatedEvent
+from lykke.domain.value_objects.update import RoutineDefinitionUpdateObject
 
 if TYPE_CHECKING:
     from lykke.domain.events.base import DomainEvent
@@ -54,10 +51,9 @@ class RoutineDefinitionEntity(BaseEntityObject, AuditableEntity):
         """Attach a task to the routine definition."""
         updated = self._copy_with_tasks([*self.tasks, task])
         updated.record_event(
-            RoutineDefinitionTaskAddedEvent(
+            RoutineDefinitionUpdatedEvent(
+                update_object=RoutineDefinitionUpdateObject(tasks=updated.tasks),
                 user_id=self.user_id,
-                routine_definition_id=updated.id,
-                task=task,
             )
         )
         return updated
@@ -99,10 +95,9 @@ class RoutineDefinitionEntity(BaseEntityObject, AuditableEntity):
 
         updated = self._copy_with_tasks(updated_tasks)
         updated.record_event(
-            RoutineDefinitionTaskUpdatedEvent(
+            RoutineDefinitionUpdatedEvent(
+                update_object=RoutineDefinitionUpdateObject(tasks=updated.tasks),
                 user_id=self.user_id,
-                routine_definition_id=updated.id,
-                task=task_update,
             )
         )
         return updated
@@ -124,11 +119,9 @@ class RoutineDefinitionEntity(BaseEntityObject, AuditableEntity):
             raise NotFoundError("Routine task not found")
         updated = self._copy_with_tasks(filtered_tasks)
         updated.record_event(
-            RoutineDefinitionTaskRemovedEvent(
+            RoutineDefinitionUpdatedEvent(
+                update_object=RoutineDefinitionUpdateObject(tasks=updated.tasks),
                 user_id=self.user_id,
-                routine_definition_id=updated.id,
-                routine_definition_task_id=routine_definition_task_id,
-                task_definition_id=removed_task.task_definition_id,
             )
         )
         return updated
