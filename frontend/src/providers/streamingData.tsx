@@ -52,6 +52,7 @@ import {
   type DomainEventEnvelope,
   type WsClient,
 } from "@/utils/wsClient";
+import { getDateString } from "@/utils/dates";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -251,6 +252,10 @@ export function StreamingDataProvider(props: ParentProps) {
   let wsClient: WsClient<DomainEventEnvelope> | null = null;
   let fullSyncBaseContext: DayContextWithRoutines | undefined = undefined;
   let nowInterval: number | null = null;
+  let lastRolloverTargetDate: string | null = null;
+  const [lastSeenLocalDate, setLastSeenLocalDate] = createSignal(
+    getDateString(new Date()),
+  );
 
   type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
     id?: string | null;
@@ -397,6 +402,73 @@ export function StreamingDataProvider(props: ParentProps) {
   // alarms that have already passed). This avoids relying on websocket updates
   // for purely "time moved forward" changes.
   const [now, setNow] = createSignal(new Date());
+
+  const resetStreamingStateForNewDay = () => {
+    // Reset cached context and timestamps so we start clean on the new day.
+    fullSyncBaseContext = undefined;
+    setDayContextStore({ data: undefined });
+    setIsLoading(true);
+    setLoadingForParts(DAY_CONTEXT_PARTS, true);
+    setError(undefined);
+    setIsOutOfSync(false);
+    setLastProcessedTimestamp(null);
+    setLastChangeStreamId(null);
+  };
+
+  const forceReconnectForNewDay = (reason: string) => {
+    const localDate = getDateString(new Date());
+    const contextDate = dayContextStore.data?.day?.date ?? null;
+
+    // Avoid reconnect loops if the backend keeps sending an unexpected day date.
+    if (lastRolloverTargetDate === localDate) return;
+    lastRolloverTargetDate = localDate;
+
+    logDebugEvent("state", "day_rollover_reconnect", {
+      reason,
+      from_context_date: contextDate,
+      to_local_date: localDate,
+    });
+
+    resetStreamingStateForNewDay();
+
+    // Prefer a full sync on the existing connection (fast, preserves topics).
+    const client = getOrCreateWsClient();
+    if (client?.isOpen()) {
+      requestFullSync();
+      return;
+    }
+
+    // Fall back to reconnecting (e.g. if the socket got wedged during sleep).
+    wsClient?.close();
+    wsClient = null;
+    connectWebSocket();
+  };
+
+  const maybeHandleDayRollover = (reason: string) => {
+    const localDate = getDateString(new Date());
+    const contextDate = dayContextStore.data?.day?.date;
+    const lastSeen = lastSeenLocalDate();
+
+    // If we have a context loaded and it doesn't match local "today", roll over.
+    if (contextDate && contextDate !== localDate) {
+      if (lastSeen !== localDate) setLastSeenLocalDate(localDate);
+      forceReconnectForNewDay(reason);
+      return;
+    }
+
+    // If we don't have a context yet, still keep track of local date changes
+    // and ensure we don't stay stuck on an old pending state.
+    if (lastSeen && lastSeen !== localDate) {
+      // Update the signal first so future checks don't repeatedly trigger.
+      setLastSeenLocalDate(localDate);
+      // If the app is mounted and on /me routes, reconnect to ensure we get
+      // the correct "today" context after sleep/wake. Only do this if we don't
+      // have a loaded context yet (if the context exists and matches, no-op).
+      if (!contextDate && isMounted && isOnMeRoute()) {
+        forceReconnectForNewDay(reason);
+      }
+    }
+  };
 
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
@@ -1395,7 +1467,32 @@ export function StreamingDataProvider(props: ParentProps) {
     if (typeof window !== "undefined" && import.meta.env.MODE !== "test") {
       nowInterval = window.setInterval(() => {
         setNow(new Date());
+        maybeHandleDayRollover("interval_tick");
       }, 30000);
+    }
+
+    // When a PWA/tab wakes up, timers and sockets may be paused; proactively
+    // check for day rollover when the document becomes visible or gains focus.
+    if (typeof window !== "undefined" && import.meta.env.MODE !== "test") {
+      const handleVisibilityOrFocus = () => {
+        setNow(new Date());
+        maybeHandleDayRollover("resume");
+      };
+
+      const handleVisibilityChange = () => {
+        if (!document.hidden) handleVisibilityOrFocus();
+      };
+
+      window.addEventListener("focus", handleVisibilityOrFocus);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      // Initial check on mount (covers cold start right after midnight).
+      maybeHandleDayRollover("mount");
+
+      onCleanup(() => {
+        window.removeEventListener("focus", handleVisibilityOrFocus);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      });
     }
   });
 

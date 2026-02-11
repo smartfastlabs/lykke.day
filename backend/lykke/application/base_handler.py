@@ -28,16 +28,16 @@ if TYPE_CHECKING:
 
 
 class BaseHandler:
-    """Base class for handlers with lazy repository access.
+    """Base class for handlers with dependency wiring via annotations.
 
     This class provides common initialization for command handlers, query handlers,
-    and event handlers. Repository access is lazy via __getattr__, so handlers only
-    access the repositories they actually need.
+    and event handlers. Dependencies are populated from factories based on type
+    annotations declared on the handler class (or its base classes).
 
     Usage:
         class MyHandler(BaseHandler):
             async def handle(self, command: MyCommand) -> None:
-                # Access repositories as needed - they're resolved lazily
+                # Access repositories as needed - they are wired from annotations
                 task = await self.task_ro_repo.get(command.task_id)
                 day = await self.day_ro_repo.get(command.day_id)
     """

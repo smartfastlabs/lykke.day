@@ -13,6 +13,7 @@ from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
@@ -26,7 +27,6 @@ from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
 
 if TYPE_CHECKING:
-    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
     from lykke.application.unit_of_work import UnitOfWorkProtocol
 
 

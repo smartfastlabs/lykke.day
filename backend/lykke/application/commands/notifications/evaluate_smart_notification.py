@@ -29,6 +29,7 @@ from lykke.application.queries.get_llm_prompt_context import (
 from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
+    UseCaseConfigRepositoryReadOnlyProtocol,
 )
 from lykke.core.config import settings
 from lykke.core.utils.dates import get_current_datetime_in_timezone
@@ -208,6 +209,7 @@ class SmartNotificationHandler(
 
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     send_push_notification_handler: SendPushNotificationHandler

@@ -7,12 +7,12 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.repositories import AuditLogRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from lykke.application.repositories import AuditLogRepositoryReadOnlyProtocol
     from lykke.domain.entities import TaskEntity
 
 

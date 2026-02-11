@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
@@ -19,14 +20,12 @@ from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
+from .sync_calendar import SyncCalendarHandler
 
 if TYPE_CHECKING:
-    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
     from lykke.application.unit_of_work import (
         UnitOfWorkProtocol,
     )
-
-    from .sync_calendar import SyncCalendarHandler
 
 
 @dataclass(frozen=True)
