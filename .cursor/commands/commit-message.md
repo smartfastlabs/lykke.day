@@ -24,15 +24,15 @@ If there are no issues, then do:
 
 - write a commit message, follow this pattern:
 
-(cleanup|bug|feature|refactor): QUICK DESCRIPTION
+(cleanup|bug|feature|refactor): quick overview 3-10 words
 
 - Important thing 1
 - Important thing 2
 - NOTE: Surprising thing
-- WARNING: Dangerous Thing
+- WARNING: Dangerous Thingq
 - DEBT: Explain techincal debt introduced
 
-Examples:
+Example #1:
 
 bug: Fix handler wiring and day rollover after midnight / wake
 
@@ -48,6 +48,8 @@ bug: Fix handler wiring and day rollover after midnight / wake
   ComputeTaskRiskHandler
 - NOTE: streamingData.tsx has new solid/reactivity lint warning on
   maybeHandleDayRollover; checks still pass
+
+Example #2:
 
 feature: Add first-party Lykke calendar events
 
