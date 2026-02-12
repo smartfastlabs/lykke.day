@@ -167,3 +167,48 @@ async def test_send_push_notification_tracks_all_failures() -> None:
 
     notification = uow.created[0]
     assert notification.status == "failed"
+
+
+@pytest.mark.asyncio
+async def test_send_push_notification_includes_click_target_url() -> None:
+    """Verify push payload includes url for service worker notificationclick handler."""
+    user_id = uuid4()
+    uow = create_uow_double()
+    web_push_gateway = create_web_push_gateway_double()
+    captured_content: list[dict[str, Any]] = []
+
+    async def send_notification(
+        *, subscription: PushSubscriptionEntity, content: object
+    ) -> None:
+        _ = subscription
+        if isinstance(content, dict):
+            captured_content.append(dict(content))
+        else:
+            captured_content.append({"raw": content})
+
+    web_push_gateway.send_notification = send_notification
+    subscription = _build_subscription(user_id)
+    handler = SendPushNotificationHandler(
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(web_push_gateway),
+    )
+
+    payload = value_objects.NotificationPayload(
+        title="Task reminder",
+        body="Your task is ready",
+        actions=[],
+    )
+    await handler.handle(
+        SendPushNotificationCommand(subscriptions=[subscription], content=payload)
+    )
+
+    assert len(captured_content) == 1
+    content = captured_content[0]
+    assert "url" in content
+    assert content["url"].startswith("/me/notifications/")
+
+    notification = uow.created[0]
+    expected_id = str(notification.id)
+    assert content["url"] == f"/me/notifications/{expected_id}"

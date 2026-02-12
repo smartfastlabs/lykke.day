@@ -69,16 +69,23 @@ class SendPushNotificationHandler(
             content_dict = dataclass_to_json_dict(command.content)
             filtered_content = {k: v for k, v in content_dict.items() if v is not None}
             content_str = json.dumps(filtered_content)
-            content_for_push = filtered_content
+            content_for_push = dict(filtered_content)
         elif isinstance(command.content, dict):
             filtered_content = {
                 k: v for k, v in command.content.items() if v is not None
             }
             content_str = json.dumps(filtered_content)
-            content_for_push = filtered_content
+            content_for_push = dict(filtered_content)
         else:
             content_str = command.content
-            content_for_push = command.content
+            content_for_push = (
+                {"title": command.message or "Notification", "body": str(command.content)}
+                if isinstance(command.content, str)
+                else dict(command.content)
+            )
+
+        # Add click target URL for service worker notificationclick handler
+        content_for_push["url"] = f"/me/notifications/{notification_id}"
 
         # Track results for each subscription
         successful_subscription_ids: list = []

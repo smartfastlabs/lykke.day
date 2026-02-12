@@ -24,7 +24,7 @@ If there are no issues, then do:
 
 - write a commit message, follow this pattern:
 
-Non Technical Explanation (max 100 characters)
+(cleanup|bug|feature|refactor): QUICK DESCRIPTION
 
 - Important thing 1
 - Important thing 2
@@ -32,4 +32,27 @@ Non Technical Explanation (max 100 characters)
 - WARNING: Dangerous Thing
 - DEBT: Explain techincal debt introduced
 
-NOTE: Don't convert the bullets to markdown, they don't copy paste well.
+Examples:
+
+bug: Fix handler wiring and day rollover after midnight / wake
+
+- Move protocol imports from TYPE_CHECKING to top level so BaseHandler
+  can resolve annotations for dependency wiring
+- Add SmartNotificationHandler usecase_config_ro_repo annotation to
+  fix prod AttributeError
+- Add ComputeTaskRiskHandler audit_log_ro_repo wiring (was under
+  TYPE_CHECKING)
+- Add day rollover handling in StreamingDataProvider: reconnect/resync
+  when local date changes (midnight, app wake, tab focus)
+- Add wiring tests for SmartNotificationHandler and
+  ComputeTaskRiskHandler
+- NOTE: streamingData.tsx has new solid/reactivity lint warning on
+  maybeHandleDayRollover; checks still pass
+
+feature: Add first-party Lykke calendar events
+
+- Allow calendars without auth tokens to support a built-in Lykke calendar
+- Add API commands + routes for creating/deleting timed Lykke calendar entries
+- Add frontend "Add event" modal and wire to calendar entry API
+- Add unit tests for ensuring Lykke calendar and create/delete entry commands
+- NOTE: Poetry lock regenerated (Poetry 2.3.2)
