@@ -3,7 +3,6 @@ import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
 import { TaskStatus, Task, TimeWindow } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
-import { faClock, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import SnoozeActionModal from "@/components/shared/SnoozeActionModal";
@@ -74,10 +73,35 @@ const getStatusClasses = (status: TaskStatus): string => {
   }
 };
 
+const getStatusPill = (
+  status: TaskStatus
+): { label: string; className: string } | null => {
+  switch (status) {
+    case "COMPLETE":
+      return {
+        label: "Done",
+        className: "bg-emerald-100 text-emerald-700",
+      };
+    case "PUNT":
+      return {
+        label: "Punted",
+        className: "bg-amber-100 text-amber-700",
+      };
+    case "SNOOZE":
+      return {
+        label: "Snoozed",
+        className: "bg-sky-100 text-sky-700",
+      };
+    default:
+      return null;
+  }
+};
+
 const TaskRowContent: Component<{ task: Task }> = (props) => {
   const time = () => getTimeDisplay(props.task.time_window ?? undefined);
   const icon = () =>
     getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
+  const statusPill = () => getStatusPill(props.task.status);
 
   return (
     <div class="flex items-center justify-start gap-2">
@@ -109,7 +133,13 @@ const TaskRowContent: Component<{ task: Task }> = (props) => {
       </div>
 
       {/* Time - right justified, only when present */}
-      <Show when={time()?.primary}>
+      <Show
+        when={
+          time()?.primary &&
+          props.task.status !== "COMPLETE" &&
+          props.task.status !== "PUNT"
+        }
+      >
         <div class="flex-shrink-0 ml-auto text-right">
           <span
             class={`text-[10px] tabular-nums whitespace-nowrap ${
@@ -123,20 +153,12 @@ const TaskRowContent: Component<{ task: Task }> = (props) => {
         </div>
       </Show>
 
-      <Show when={props.task.status === "COMPLETE"}>
-        <div class="flex-shrink-0 w-4 text-amber-600">
-          <Icon key="checkMark" class="w-3 h-3" />
-        </div>
-      </Show>
-      <Show when={props.task.status === "PUNT"}>
-        <div class="flex-shrink-0 w-4 text-red-500">
-          <Icon icon={faXmark} class="w-3 h-3" />
-        </div>
-      </Show>
-      <Show when={props.task.status === "SNOOZE"}>
-        <div class="flex-shrink-0 w-4 text-sky-600">
-          <Icon icon={faClock} class="w-3 h-3" />
-        </div>
+      <Show when={statusPill()}>
+        <span
+          class={`flex-shrink-0 ml-2 px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide ${statusPill()!.className}`}
+        >
+          {statusPill()!.label}
+        </span>
       </Show>
     </div>
   );

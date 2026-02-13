@@ -15,8 +15,18 @@
         "npm:@fortawesome/free-solid-svg-icons@^6.5.1",
         "npm:@solidjs/meta@~0.29.4",
         "npm:@solidjs/router@0.15.3",
+        "npm:@solidjs/testing-library@~0.8.10",
         "npm:@tailwindcss/vite@^4.1.13",
+        "npm:@testing-library/jest-dom@^6.9.1",
         "npm:@types/node@^25.0.3",
+        "npm:@typescript-eslint/eslint-plugin@^8.53.0",
+        "npm:@typescript-eslint/parser@^8.53.0",
+        "npm:@vitest/coverage-v8@^4.0.17",
+        "npm:@vitest/ui@^4.0.17",
+        "npm:eslint-plugin-solid@~0.14.5",
+        "npm:eslint@^9.39.2",
+        "npm:happy-dom@^20.3.0",
+        "npm:jsdom@^27.4.0",
         "npm:json-schema-to-typescript@^15.0.4",
         "npm:openapi-typescript@^7.4.2",
         "npm:solid-devtools@~0.34.3",
@@ -28,6 +38,7 @@
         "npm:vite-plugin-pwa@^1.2.0",
         "npm:vite-plugin-solid@^2.11.8",
         "npm:vite@^7.1.4",
+        "npm:vitest@^4.0.17",
         "npm:web-push@^3.6.7"
       ]
     }

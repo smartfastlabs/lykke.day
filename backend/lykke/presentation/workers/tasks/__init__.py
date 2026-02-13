@@ -49,6 +49,10 @@ from .registry import (
     set_worker_override,
 )
 from .scheduling import schedule_all_users_day_task, schedule_user_day_task
+from .timing_status import (
+    evaluate_timing_status_for_all_users_task,
+    evaluate_timing_status_for_user_task,
+)
 
 # Create a scheduler for periodic tasks
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
@@ -69,6 +73,8 @@ __all__ = [
     "evaluate_morning_overview_task",
     "evaluate_morning_overviews_for_all_users_task",
     "evaluate_smart_notification_task",
+    "evaluate_timing_status_for_all_users_task",
+    "evaluate_timing_status_for_user_task",
     "evaluate_smart_notifications_for_all_users_task",
     "example_triggered_task",
     "get_calendar_entry_notification_handler",

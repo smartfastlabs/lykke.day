@@ -43,6 +43,9 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
   );
 
   const primaryTasks = createMemo(() => [...importantTasks(), ...adhocTasks()]);
+  const hasVisibleTasks = createMemo(
+    () => primaryTasks().length > 0 || availableTasks().length > 0,
+  );
 
   return (
     <Show
@@ -74,7 +77,11 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
         </FuzzyCard>
       }
     >
-      <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+      <div
+        class={`bg-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4 ${
+          hasVisibleTasks() ? "border border-white/70" : ""
+        }`}
+      >
         <div class="flex items-center justify-between">
           <button
             type="button"
@@ -97,7 +104,7 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
             </button>
           </div>
         </div>
-        <Show when={primaryTasks().length > 0 || availableTasks().length > 0}>
+        <Show when={hasVisibleTasks()}>
           <div class="space-y-3">
             <Show when={primaryTasks().length > 0}>
               <div class="space-y-1">
@@ -105,7 +112,13 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
               </div>
             </Show>
             <Show when={availableTasks().length > 0}>
-              <div class="border-t border-amber-100/80 pt-3">
+              <div
+                class={
+                  primaryTasks().length > 0
+                    ? "border-t border-amber-100/80 pt-3"
+                    : ""
+                }
+              >
                 <button
                   type="button"
                   class="w-full flex items-center justify-between text-left"

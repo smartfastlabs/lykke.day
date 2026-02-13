@@ -56,8 +56,8 @@ const BrainDumpItemRow: Component<{ item: BrainDump }> = (props) => {
         </div>
 
         <Show when={props.item.status === "COMPLETE"}>
-          <div class="flex-shrink-0 w-4 text-sky-600">
-            <Icon key="checkMark" />
+          <div class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <Icon key="checkMark" class="w-3 h-3 fill-current" />
           </div>
         </Show>
       </div>

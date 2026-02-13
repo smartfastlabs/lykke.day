@@ -18,6 +18,7 @@ from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
 if TYPE_CHECKING:
     from lykke.application.commands import ScheduleDayHandler
+    from lykke.application.commands.timing_status import EvaluateTimingStatusHandler
     from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
     from lykke.application.commands.calendar import (
         SubscribeCalendarHandler,
@@ -158,6 +159,23 @@ def get_schedule_day_handler(
         uow_factory=uow_factory,
     )
     return factory.create(ScheduleDayHandler)
+
+
+def get_evaluate_timing_status_handler(
+    user: UserEntity,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> EvaluateTimingStatusHandler:
+    """Get an EvaluateTimingStatusHandler instance for a user."""
+    from lykke.application.commands.timing_status import EvaluateTimingStatusHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
+    factory = CommandHandlerFactory(
+        user=user,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(EvaluateTimingStatusHandler)
 
 
 def get_smart_notification_handler(

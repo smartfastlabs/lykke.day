@@ -320,15 +320,15 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
             if (isPunted())
               return "!bg-gradient-to-br !from-red-50 !to-rose-50";
             if (statusInfo().status === "past-due") {
-              return "!bg-rose-50/70 !border !border-rose-100/70";
+              return "!bg-rose-50/70";
             }
             if (statusInfo().status === "active") {
-              return "!bg-emerald-50/70 !border !border-emerald-100/70";
+              return "!bg-emerald-50/70";
             }
             if (statusInfo().status === "inactive") {
               return "!bg-stone-50/70";
             }
-            return "!bg-amber-50/60 !border !border-amber-50/60";
+            return "!bg-amber-50/60";
           };
 
           return (
