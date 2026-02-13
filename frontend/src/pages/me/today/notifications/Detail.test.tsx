@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render } from "@solidjs/testing-library";
+import type { JSX } from "solid-js";
 import type { PushNotification } from "@/types/api";
 import TodayNotificationDetailPage from "./Detail";
 
@@ -31,7 +32,7 @@ vi.mock("@/components/notifications/LLMDebugView", () => ({
 }));
 
 vi.mock("@/pages/me/today/Layout", () => ({
-  default: (props: { children: unknown }) => <div>{props.children}</div>,
+  default: (props: { children: JSX.Element }) => <div>{props.children}</div>,
 }));
 
 const buildNotification = (

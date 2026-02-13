@@ -20,6 +20,7 @@ from lykke.application.llm.mixin import LLMRunSnapshotContext
 from lykke.application.llm.prompt_rendering import render_context_prompt
 from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.core.config import settings
+from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     CalendarEntryEntity,
@@ -861,3 +862,48 @@ async def test_run_llm_injects_usecase_config_ro_repo(
 
     assert result is None
     assert called["system"] == 2
+
+
+@pytest.mark.asyncio
+async def test_run_llm_logs_not_found_context_as_debug(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Missing day context should skip quietly without error logging."""
+
+    class _FailingPromptContextHandler:
+        async def handle(self, _: Any) -> value_objects.LLMPromptContext:
+            raise NotFoundError("DayEntity with id deadbeef not found")
+
+    class _CapturingLogger:
+        def __init__(self) -> None:
+            self.debug_calls: list[str] = []
+            self.error_calls: list[str] = []
+
+        def debug(self, message: str) -> None:
+            self.debug_calls.append(message)
+
+        def error(self, message: str) -> None:
+            self.error_calls.append(message)
+
+    user_id = uuid4()
+    ro_repos = create_read_only_repos_double()
+    handler = SmartNotificationHandler(
+        user=_build_user_with_llm(user_id),
+        uow_factory=create_uow_factory_double(create_uow_double()),
+        repository_factory=_RepositoryFactory(ro_repos),
+    )
+    handler.llm_gateway_factory = _LLMGatewayFactory()
+    handler.get_llm_prompt_context_handler = _FailingPromptContextHandler()
+    handler.send_push_notification_handler = _Recorder(commands=[])
+
+    from lykke.application.llm import mixin as llm_mixin
+
+    fake_logger = _CapturingLogger()
+    monkeypatch.setattr(llm_mixin, "logger", fake_logger)
+
+    result = await handler.run_llm()
+
+    assert result is None
+    assert len(fake_logger.error_calls) == 0
+    assert len(fake_logger.debug_calls) == 1
+    assert "Skipping LLM prompt context for user" in fake_logger.debug_calls[0]

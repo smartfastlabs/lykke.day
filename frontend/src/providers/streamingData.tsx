@@ -4,7 +4,6 @@ import {
   createSignal,
   onCleanup,
   onMount,
-  untrack,
   useContext,
   type Accessor,
   type ParentProps,
@@ -53,6 +52,7 @@ import {
   type WsClient,
 } from "@/utils/wsClient";
 import { getDateString } from "@/utils/dates";
+import { computeSyncStateChecksum } from "@/providers/streaming/checksum";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -82,7 +82,6 @@ interface StreamingDataContextValue {
   clearDebugEvents: () => void;
   // Actions
   sync: () => void;
-  syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   snoozeTask: (task: Task, snoozedUntil: string) => Promise<void>;
   rescheduleTask: (task: Task, scheduledDate: string) => Promise<void>;
@@ -164,6 +163,7 @@ interface SyncRequestMessage extends WebSocketMessage {
   type: "sync_request";
   since_timestamp?: string | null;
   since_change_stream_id?: string | null;
+  client_checksum?: string | null;
   partial_key?: DayContextPartKey | null;
   partial_keys?: DayContextPartKey[] | null;
 }
@@ -177,21 +177,8 @@ interface SyncResponseMessage extends WebSocketMessage {
   sync_complete?: boolean | null;
   last_audit_log_timestamp?: string | null;
   last_change_stream_id?: string | null;
-}
-
-// Deprecated: audit_log_event messages are no longer sent by the backend
-// The backend now sends sync_response messages with changes for real-time updates
-interface AuditLogEventMessage extends WebSocketMessage {
-  type: "audit_log_event";
-  audit_log?: {
-    id: string;
-    user_id: string;
-    activity_type: string;
-    occurred_at: string;
-    entity_id: string | null;
-    entity_type: string | null;
-    meta: Record<string, unknown>;
-  };
+  state_checksum?: string | null;
+  checksum_matches_client?: boolean | null;
 }
 
 interface ConnectionAckMessage extends WebSocketMessage {
@@ -247,12 +234,12 @@ export function StreamingDataProvider(props: ParentProps) {
     return context?.routines ?? [];
   });
 
-  let syncDebounceTimeout: number | null = null;
   let isMounted = false;
   let wsClient: WsClient<DomainEventEnvelope> | null = null;
   let fullSyncBaseContext: DayContextWithRoutines | undefined = undefined;
   let nowInterval: number | null = null;
   let lastRolloverTargetDate: string | null = null;
+  let checksumRecoveryPending = false;
   const [lastSeenLocalDate, setLastSeenLocalDate] = createSignal(
     getDateString(new Date()),
   );
@@ -382,6 +369,8 @@ export function StreamingDataProvider(props: ParentProps) {
       syncComplete: message.sync_complete ?? null,
       lastAuditLogTimestamp: message.last_audit_log_timestamp ?? null,
       lastChangeStreamId: message.last_change_stream_id ?? null,
+      stateChecksum: message.state_checksum ?? null,
+      checksumMatchesClient: message.checksum_matches_client ?? null,
     };
   };
 
@@ -434,7 +423,7 @@ export function StreamingDataProvider(props: ParentProps) {
     // Prefer a full sync on the existing connection (fast, preserves topics).
     const client = getOrCreateWsClient();
     if (client?.isOpen()) {
-      requestFullSync();
+      void requestFullSync();
       return;
     }
 
@@ -610,7 +599,7 @@ export function StreamingDataProvider(props: ParentProps) {
         setIsConnected(true);
         setError(undefined);
         logDebugEvent("state", "socket_open");
-        requestFullSync();
+        void requestFullSync();
       },
       onClose: () => {
         setIsConnected(false);
@@ -637,13 +626,6 @@ export function StreamingDataProvider(props: ParentProps) {
             summarizeSyncResponse(message as SyncResponseMessage),
           );
           await handleSyncResponse(message as SyncResponseMessage);
-        } else if (message.type === "audit_log_event") {
-          logDebugEvent("in", "audit_log_event", {
-            hasAuditLog: Boolean((message as AuditLogEventMessage).audit_log),
-          });
-          // Deprecated: This handler is kept for backward compatibility
-          // The backend now sends sync_response messages for real-time updates
-          await handleAuditLogEvent(message as AuditLogEventMessage);
         } else if (message.type === "error") {
           const errorMsg = message as ErrorMessage;
           setError(new Error(errorMsg.message || "Unknown error"));
@@ -676,15 +658,18 @@ export function StreamingDataProvider(props: ParentProps) {
   // Request full sync
   const requestFullSync = () => {
     fullSyncBaseContext = dayContextStore.data;
+    const clientChecksum = computeSyncStateChecksum(dayContextStore.data);
     const request: SyncRequestMessage = {
       type: "sync_request",
       since_timestamp: null,
+      client_checksum: clientChecksum,
       partial_keys: DAY_CONTEXT_PARTS,
     };
     const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
     logDebugEvent("out", "sync_request", {
       since_timestamp: request.since_timestamp,
       since_change_stream_id: request.since_change_stream_id ?? null,
+      client_checksum: request.client_checksum ?? null,
       partial_keys: request.partial_keys ?? null,
       sent,
     });
@@ -694,18 +679,26 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  // Request incremental sync
-  const requestIncrementalSync = (sinceTimestamp: string) => {
-    const request: SyncRequestMessage = {
-      type: "sync_request",
-      since_timestamp: sinceTimestamp ?? null,
-      since_change_stream_id: lastChangeStreamId(),
-    };
-    const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
-    logDebugEvent("out", "sync_request", {
-      since_timestamp: request.since_timestamp,
-      since_change_stream_id: request.since_change_stream_id ?? null,
-      sent,
+  const verifyChecksumAndRecover = (
+    message: SyncResponseMessage,
+    reason: "full" | "partial" | "incremental",
+  ) => {
+    if (!message.state_checksum) return;
+    const localChecksum = computeSyncStateChecksum(dayContextStore.data);
+    if (!localChecksum || localChecksum === message.state_checksum) return;
+
+    setIsOutOfSync(true);
+    logDebugEvent("state", "checksum_mismatch_detected", {
+      reason,
+      local_checksum: localChecksum,
+      server_checksum: message.state_checksum,
+      checksum_matches_client: message.checksum_matches_client ?? null,
+    });
+    if (checksumRecoveryPending) return;
+    checksumRecoveryPending = true;
+    Promise.resolve().then(() => {
+      checksumRecoveryPending = false;
+      void requestFullSync();
     });
   };
 
@@ -806,6 +799,7 @@ export function StreamingDataProvider(props: ParentProps) {
             );
           }
         }
+        verifyChecksumAndRecover(message, "partial");
       }
       return;
     }
@@ -825,6 +819,7 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
       setIsOutOfSync(false);
+      verifyChecksumAndRecover(message, "full");
 
       void refreshAuxiliaryData();
 
@@ -856,6 +851,7 @@ export function StreamingDataProvider(props: ParentProps) {
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
+      verifyChecksumAndRecover(message, "incremental");
       if (didApplyChanges && isOnMeRoute() && currentContext) {
         const completedCount = countCompletedTasksFromChanges(
           currentContext,
@@ -879,7 +875,7 @@ export function StreamingDataProvider(props: ParentProps) {
       if (!current.data) {
         // If no current context, we can't apply incremental changes
         // This shouldn't happen, but request full sync if it does
-        requestFullSync();
+        void requestFullSync();
         return current;
       }
 
@@ -890,115 +886,6 @@ export function StreamingDataProvider(props: ParentProps) {
       return { data: result.nextContext };
     });
     return didUpdate;
-  };
-
-  // Handle real-time audit log events
-  // Deprecated: This handler is for backward compatibility only
-  // The backend now sends sync_response messages with changes for real-time updates
-  const handleAuditLogEvent = async (message: AuditLogEventMessage) => {
-    if (!message.audit_log) {
-      return;
-    }
-
-    // If we haven't loaded initial data yet, ignore events
-    if (!dayContextStore) {
-      return;
-    }
-
-    const auditLog = message.audit_log;
-    const occurredAt = auditLog.occurred_at;
-
-    // Check for sync issues
-    const lastTimestamp = lastProcessedTimestamp();
-    if (lastTimestamp && occurredAt < lastTimestamp) {
-      // Received older event than what we've already processed
-      setIsOutOfSync(true);
-      logDebugEvent("state", "out_of_sync_detected", {
-        occurredAt,
-        lastProcessed: lastTimestamp,
-      });
-      console.warn(
-        "StreamingDataProvider: Out of sync detected - received older event",
-      );
-    }
-
-    // Update timestamp (always move forward)
-    if (!lastTimestamp || occurredAt > lastTimestamp) {
-      setLastProcessedTimestamp(occurredAt);
-    }
-
-    // Apply the change based on audit log
-    // We need to determine the change type from activity_type
-    const activityType = auditLog.activity_type;
-    let changeType: "created" | "updated" | "deleted" | null = null;
-
-    if (
-      activityType.includes("Created") ||
-      activityType === "EntityCreatedEvent"
-    ) {
-      changeType = "created";
-    } else if (
-      activityType.includes("Deleted") ||
-      activityType === "EntityDeletedEvent"
-    ) {
-      changeType = "deleted";
-    } else if (
-      activityType.includes("Updated") ||
-      activityType === "EntityUpdatedEvent" ||
-      activityType === "BrainDumpAddedEvent" ||
-      activityType === "BrainDumpStatusChangedEvent" ||
-      activityType === "BrainDumpRemovedEvent"
-    ) {
-      changeType = "updated";
-    }
-
-    if (!changeType || !auditLog.entity_type || !auditLog.entity_id) {
-      // Can't process this event
-      return;
-    }
-
-    // For created/updated, request incremental sync to get entity data
-    // We debounce this to avoid too many requests
-    if (changeType === "created" || changeType === "updated") {
-      // Use a small delay to batch multiple rapid updates
-      const syncDelay = 500; // 500ms debounce
-      if (syncDebounceTimeout) {
-        clearTimeout(syncDebounceTimeout);
-      }
-      // Use occurredAt directly since we just updated the timestamp to this value
-      // This avoids reactivity warnings and ensures we use the correct timestamp
-      const timestampToUse = occurredAt;
-      syncDebounceTimeout = window.setTimeout(() => {
-        untrack(() => requestIncrementalSync(timestampToUse));
-      }, syncDelay);
-    } else if (changeType === "deleted") {
-      // Apply deletion immediately
-      setDayContextStore((current) => {
-        if (!current.data) return current;
-
-        const updated = { ...current.data };
-        if (auditLog.entity_type === "task") {
-          updated.tasks = (updated.tasks ?? []).filter(
-            (t) => t.id !== auditLog.entity_id,
-          );
-        } else if (
-          auditLog.entity_type === "calendar_entry" ||
-          auditLog.entity_type === "calendarentry"
-        ) {
-          updated.calendar_entries = (updated.calendar_entries ?? []).filter(
-            (e) => e.id !== auditLog.entity_id,
-          );
-        } else if (auditLog.entity_type === "routine") {
-          const routinesList =
-            (updated as DayContextWithRoutines).routines ?? [];
-          (updated as DayContextWithRoutines).routines = routinesList.filter(
-            (routine) => routine.id !== auditLog.entity_id,
-          );
-        }
-
-        return { data: updated };
-      });
-    }
   };
 
   // Optimistically update a task in the local state
@@ -1408,11 +1295,7 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const sync = () => {
-    requestFullSync();
-  };
-
-  const syncIncremental = (sinceTimestamp: string) => {
-    requestIncrementalSync(sinceTimestamp);
+    void requestFullSync();
   };
 
   const loadNotifications = async () => {
@@ -1505,9 +1388,6 @@ export function StreamingDataProvider(props: ParentProps) {
       clearInterval(nowInterval);
       nowInterval = null;
     }
-    if (syncDebounceTimeout) {
-      clearTimeout(syncDebounceTimeout);
-    }
     wsClient?.close();
     wsClient = null;
   });
@@ -1536,7 +1416,6 @@ export function StreamingDataProvider(props: ParentProps) {
     debugEvents,
     clearDebugEvents,
     sync,
-    syncIncremental,
     setTaskStatus,
     snoozeTask,
     rescheduleTask,

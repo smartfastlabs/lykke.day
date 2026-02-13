@@ -20,7 +20,7 @@ from lykke.application.llm.prompt_rendering import (
     render_system_prompt,
 )
 from lykke.application.llm.tools_prompt import render_tools_prompt
-from lykke.core.exceptions import DomainError
+from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 
 # NOTE: This import is intentionally runtime (not TYPE_CHECKING-only).
@@ -115,6 +115,11 @@ class LLMHandlerMixin(ABC):
         try:
             prompt_input = await self.build_prompt_input(current_date)
         except Exception as exc:  # pylint: disable=broad-except
+            if isinstance(exc, NotFoundError):
+                logger.debug(
+                    f"Skipping LLM prompt context for user {self.user.id}: {exc}"
+                )
+                return None
             logger.error(
                 f"Failed to load LLM prompt context for user {self.user.id}: {exc}"
             )

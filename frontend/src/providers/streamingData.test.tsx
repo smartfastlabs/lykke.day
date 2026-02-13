@@ -188,6 +188,7 @@ describe("StreamingDataProvider", () => {
         expect(sentMessages).toContainEqual({
           type: "sync_request",
           since_timestamp: null,
+          client_checksum: null,
           partial_keys: [
             "day",
             "tasks",
@@ -292,6 +293,40 @@ describe("StreamingDataProvider", () => {
       await waitFor(() => {
         expect(getByTestId("tasks-count").textContent).toBe("1");
         expect(getByTestId("is-loading").textContent).toBe("false");
+      });
+    });
+
+    it("should mark out-of-sync and request full sync on checksum mismatch", async () => {
+      const { getByTestId } = render(() => (
+        <StreamingDataProvider>
+          <TestComponent />
+        </StreamingDataProvider>
+      ));
+
+      await waitFor(() => {
+        expect(ControllableWebSocket.instances.length).toBe(1);
+      });
+
+      const ws = ControllableWebSocket.instances[0];
+      ws.simulateOpen();
+      ws.simulateMessage({
+        type: "sync_response",
+        day_context: mockDayContext,
+        state_checksum: "deadbeef",
+        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+      });
+
+      await waitFor(() => {
+        expect(getByTestId("is-out-of-sync").textContent).toBe("true");
+      });
+
+      await waitFor(() => {
+        const sentMessages = ws._sentData.map((d) => JSON.parse(d));
+        const fullSyncCount = sentMessages.filter(
+          (message) =>
+            message.type === "sync_request" && message.since_timestamp === null,
+        ).length;
+        expect(fullSyncCount).toBeGreaterThan(1);
       });
     });
 
@@ -476,172 +511,6 @@ describe("StreamingDataProvider", () => {
 
       await waitFor(() => {
         expect(getByTestId("tasks-count").textContent).toBe("0");
-      });
-    });
-  });
-
-  describe("Audit Log Events", () => {
-    const mockDayContext: DayContext = {
-      day: {
-        id: "day-1",
-        user_id: "user-1",
-        date: "2026-01-15",
-        status: "STARTED",
-      },
-      tasks: [
-        {
-          id: "task-1",
-          user_id: "user-1",
-          name: "Test Task",
-          status: "NOT_STARTED" as TaskStatus,
-          scheduled_date: "2026-01-15",
-          type: "WORK",
-          category: "WORK",
-          frequency: "ONCE",
-          description: null,
-        },
-      ],
-      calendar_entries: [],
-      events: [],
-    };
-
-    it("should handle audit log deletion events immediately", async () => {
-      const { getByTestId } = render(() => (
-        <StreamingDataProvider>
-          <TestComponent />
-        </StreamingDataProvider>
-      ));
-
-      await waitFor(() => {
-        expect(ControllableWebSocket.instances.length).toBe(1);
-      });
-
-      const ws = ControllableWebSocket.instances[0];
-      ws.simulateOpen();
-
-      ws.simulateMessage({
-        type: "sync_response",
-        day_context: mockDayContext,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
-      });
-
-      await waitFor(() => {
-        expect(getByTestId("tasks-count").textContent).toBe("1");
-      });
-
-      ws.simulateMessage({
-        type: "audit_log_event",
-        audit_log: {
-          id: "audit-1",
-          user_id: "user-1",
-          activity_type: "TaskDeleted",
-          occurred_at: "2026-01-15T12:01:00Z",
-          entity_id: "task-1",
-          entity_type: "task",
-          meta: {},
-        },
-      });
-
-      await waitFor(() => {
-        expect(getByTestId("tasks-count").textContent).toBe("0");
-      });
-    });
-
-    it("should request incremental sync for created/updated events", async () => {
-      const { getByTestId } = render(() => (
-        <StreamingDataProvider>
-          <TestComponent />
-        </StreamingDataProvider>
-      ));
-
-      await waitFor(() => {
-        expect(ControllableWebSocket.instances.length).toBe(1);
-      });
-
-      const ws = ControllableWebSocket.instances[0];
-      ws.simulateOpen();
-
-      ws.simulateMessage({
-        type: "sync_response",
-        day_context: mockDayContext,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
-      });
-
-      await waitFor(() => {
-        expect(getByTestId("tasks-count").textContent).toBe("1");
-      });
-
-      ws.simulateMessage({
-        type: "audit_log_event",
-        audit_log: {
-          id: "audit-1",
-          user_id: "user-1",
-          activity_type: "TaskCreated",
-          occurred_at: "2026-01-15T12:01:00Z",
-          entity_id: "task-2",
-          entity_type: "task",
-          meta: {},
-        },
-      });
-
-      // Advance timer to trigger debounced sync request
-      // Advance slightly more than the debounce delay (500ms) to ensure it fires
-      await vi.advanceTimersByTimeAsync(600);
-
-      await waitFor(
-        () => {
-          const sentMessages = ws._sentData.map((d) => JSON.parse(d));
-          const syncRequest = sentMessages.find(
-            (m) => m.type === "sync_request" && m.since_timestamp !== null,
-          );
-          expect(syncRequest).toBeDefined();
-          // The timestamp is updated to the audit log's occurred_at before the debounced sync
-          expect(syncRequest?.since_timestamp).toBe("2026-01-15T12:01:00Z");
-        },
-        { timeout: 1000 },
-      );
-    });
-
-    it("should detect out-of-sync when receiving older events", async () => {
-      const { getByTestId } = render(() => (
-        <StreamingDataProvider>
-          <TestComponent />
-        </StreamingDataProvider>
-      ));
-
-      await waitFor(() => {
-        expect(ControllableWebSocket.instances.length).toBe(1);
-      });
-
-      const ws = ControllableWebSocket.instances[0];
-      ws.simulateOpen();
-
-      ws.simulateMessage({
-        type: "sync_response",
-        day_context: mockDayContext,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
-      });
-
-      await waitFor(() => {
-        expect(getByTestId("is-out-of-sync").textContent).toBe("false");
-      });
-
-      // Receive an older event
-      ws.simulateMessage({
-        type: "audit_log_event",
-        audit_log: {
-          id: "audit-1",
-          user_id: "user-1",
-          activity_type: "TaskCreated",
-          occurred_at: "2026-01-15T11:00:00Z", // Before last processed
-          entity_id: "task-2",
-          entity_type: "task",
-          meta: {},
-        },
-      });
-
-      await waitFor(() => {
-        expect(getByTestId("is-out-of-sync").textContent).toBe("true");
       });
     });
   });

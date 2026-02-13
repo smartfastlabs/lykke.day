@@ -102,6 +102,8 @@ async def test_partial_sync_sends_part_payloads_in_order() -> None:
         date_value=date_value,
         user_timezone="UTC",
         parts=["day", "tasks"],
+        state_checksum="deadbeef",
+        checksum_matches_client=None,
     )
 
     assert last_id == "123-0"
@@ -115,6 +117,7 @@ async def test_partial_sync_sends_part_payloads_in_order() -> None:
     assert first["sync_complete"] is False
     assert first["last_change_stream_id"] == "123-0"
     assert first["last_audit_log_timestamp"] == "2026-01-15T12:00:00Z"
+    assert first["state_checksum"] == "deadbeef"
     assert "day" in (first["partial_context"] or {})
 
     assert second["type"] == "sync_response"
@@ -122,4 +125,5 @@ async def test_partial_sync_sends_part_payloads_in_order() -> None:
     assert second["sync_complete"] is True
     assert second["last_change_stream_id"] == "123-0"
     assert second["last_audit_log_timestamp"] == "2026-01-15T12:00:00Z"
+    assert second["state_checksum"] == "deadbeef"
     assert len((second["partial_context"] or {}).get("tasks", [])) == 1

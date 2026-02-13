@@ -88,7 +88,6 @@ from .user import (
 )
 from .websocket_message import (
     EntityChangeSchema,
-    WebSocketAuditLogEventSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
     WebSocketMessageEventSchema,
@@ -152,7 +151,6 @@ BasePersonalitySchema.model_rebuild()
 SmsLoginCodeSchema.model_rebuild()
 WebSocketUserMessageSchema.model_rebuild()
 WebSocketMessageEventSchema.model_rebuild()
-WebSocketAuditLogEventSchema.model_rebuild()
 WebSocketConnectionAckSchema.model_rebuild()
 WebSocketErrorSchema.model_rebuild()
 EntityChangeSchema.model_rebuild()
@@ -238,7 +236,6 @@ __all__ = [
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
     "UserUpdateSchema",
-    "WebSocketAuditLogEventSchema",
     "WebSocketConnectionAckSchema",
     "WebSocketErrorSchema",
     "WebSocketMessageEventSchema",

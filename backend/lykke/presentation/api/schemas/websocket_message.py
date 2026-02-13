@@ -3,7 +3,6 @@
 from typing import Any, Literal
 from uuid import UUID
 
-from .audit_log import AuditLogSchema
 from .base import BaseSchema
 from .brain_dump import BrainDumpSchema
 from .calendar_entry import CalendarEntrySchema
@@ -52,13 +51,6 @@ class WebSocketMessageEventSchema(BaseSchema):
     message: MessageSchema
 
 
-class WebSocketAuditLogEventSchema(BaseSchema):
-    """Server → Client: AuditLog event occurred."""
-
-    type: Literal["audit_log_event"] = "audit_log_event"
-    audit_log: AuditLogSchema
-
-
 class WebSocketErrorSchema(BaseSchema):
     """Server → Client: Error message."""
 
@@ -84,6 +76,7 @@ class WebSocketSyncRequestSchema(BaseSchema):
     since_change_stream_id: str | None = (
         None  # Redis stream id for entity change stream incremental sync
     )
+    client_checksum: str | None = None
     partial_key: DayContextPartKey | None = None
     partial_keys: list[DayContextPartKey] | None = None
 
@@ -123,6 +116,8 @@ class WebSocketSyncResponseSchema(BaseSchema):
     sync_complete: bool | None = None
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
     last_change_stream_id: str | None = None
+    state_checksum: str | None = None
+    checksum_matches_client: bool | None = None
 
 
 class WebSocketTopicEventSchema(BaseSchema):

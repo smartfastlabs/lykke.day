@@ -2,7 +2,6 @@
 
 import asyncio
 import contextlib
-import hashlib
 import json
 from datetime import UTC, date, datetime as dt_datetime
 from typing import Annotated, Any
@@ -26,6 +25,7 @@ from lykke.application.queries import (
     GetDayCalendarEntriesHandler,
     GetDayCalendarEntriesQuery,
     GetDayContextHandler,
+    GetDayContextQuery,
     GetDayEntityHandler,
     GetDayEntityQuery,
     GetDayMessagesHandler,
@@ -40,6 +40,7 @@ from lykke.application.queries import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import NotFoundError
+from lykke.core.utils.checksum import jcs_sha256
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.domain_event_serialization import (
     deserialize_domain_event,
@@ -218,6 +219,27 @@ async def _get_last_sync_state(
     if last_audit_timestamp is None:
         last_audit_timestamp = dt_datetime.now(UTC).isoformat()
     return last_change_stream_id, last_audit_timestamp
+
+
+async def _compute_day_context_checksum(
+    *,
+    date_value: date,
+    user_timezone: str | None,
+    get_day_context_handler: GetDayContextHandler,
+    schedule_day_handler: ScheduleDayHandler,
+) -> str:
+    """Compute checksum for the server's current day context."""
+    try:
+        day_context = await get_day_context_handler.handle(
+            GetDayContextQuery(date=date_value)
+        )
+    except NotFoundError:
+        day_context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
+    day_context_schema = map_day_context_to_schema(
+        day_context, user_timezone=user_timezone
+    )
+    payload = day_context_schema.model_dump(mode="json", exclude_none=True)
+    return jcs_sha256(payload)
 
 
 def _build_partial_context(
@@ -481,6 +503,8 @@ async def _send_day_context_parts(
     date_value: date,
     user_timezone: str | None,
     parts: list[DayContextPartKey],
+    state_checksum: str,
+    checksum_matches_client: bool | None,
 ) -> str | None:
     if not parts:
         parts = list(DAY_CONTEXT_PART_ORDER)
@@ -517,6 +541,8 @@ async def _send_day_context_parts(
             sync_complete=index == len(parts) - 1,
             last_audit_log_timestamp=last_audit_timestamp,
             last_change_stream_id=last_change_stream_id,
+            state_checksum=state_checksum,
+            checksum_matches_client=checksum_matches_client,
         )
         await send_ws_message(websocket, response.model_dump(mode="json"))
 
@@ -613,7 +639,9 @@ async def days_context_websocket(
                 _handle_change_stream_events(
                     websocket,
                     pubsub_gateway,
+                    day_context_handler,
                     incremental_changes_handler_ws,
+                    schedule_day_handler,
                     date_state,
                     user_timezone,
                     stream_state,
@@ -711,6 +739,18 @@ async def _handle_client_messages(
                 await send_error(websocket, "INVALID_REQUEST", f"Invalid request: {e}")
                 continue
 
+            state_checksum = await _compute_day_context_checksum(
+                date_value=date_state["value"],
+                user_timezone=user_timezone,
+                get_day_context_handler=get_day_context_handler,
+                schedule_day_handler=schedule_day_handler,
+            )
+            checksum_matches_client: bool | None = None
+            if sync_request.client_checksum:
+                checksum_matches_client = (
+                    sync_request.client_checksum == state_checksum
+                )
+
             if sync_request.since_change_stream_id or sync_request.since_timestamp:
                 try:
                     since_stream_id = sync_request.since_change_stream_id
@@ -747,6 +787,8 @@ async def _handle_client_messages(
                         sync_complete=None,
                         last_audit_log_timestamp=last_timestamp,
                         last_change_stream_id=last_stream_id,
+                        state_checksum=state_checksum,
+                        checksum_matches_client=checksum_matches_client,
                     )
                 except WebSocketDisconnect:
                     break
@@ -777,6 +819,8 @@ async def _handle_client_messages(
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
                         parts=parts,
+                        state_checksum=state_checksum,
+                        checksum_matches_client=checksum_matches_client,
                     )
                     if last_stream_id:
                         stream_state["last_id"] = last_stream_id
@@ -843,6 +887,12 @@ async def _handle_realtime_domain_events(
                         f"New day detected ({current_date} -> {next_date}). Sending full sync.",
                     )
                     date_state["value"] = next_date
+                    state_checksum = await _compute_day_context_checksum(
+                        date_value=next_date,
+                        user_timezone=user_timezone,
+                        get_day_context_handler=day_context_handler,
+                        schedule_day_handler=schedule_day_handler,
+                    )
                     last_stream_id = await _send_day_context_parts(
                         websocket=websocket,
                         part_handlers=day_context_part_handlers,
@@ -852,6 +902,8 @@ async def _handle_realtime_domain_events(
                         date_value=next_date,
                         user_timezone=user_timezone,
                         parts=list(DAY_CONTEXT_PART_ORDER),
+                        state_checksum=state_checksum,
+                        checksum_matches_client=None,
                     )
                     if last_stream_id:
                         stream_state["last_id"] = last_stream_id
@@ -976,7 +1028,9 @@ async def _build_change_from_stream_payload(
 async def _handle_change_stream_events(
     websocket: WebSocket,
     pubsub_gateway: PubSubGatewayProtocol,
+    get_day_context_handler: GetDayContextHandler,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
+    schedule_day_handler: ScheduleDayHandler,
     date_state: dict[str, date],
     user_timezone: str | None,
     stream_state: dict[str, str],
@@ -1015,11 +1069,19 @@ async def _handle_change_stream_events(
                     continue
 
                 last_timestamp = payload.get("occurred_at") or payload.get("stored_at")
+                state_checksum = await _compute_day_context_checksum(
+                    date_value=date_state["value"],
+                    user_timezone=user_timezone,
+                    get_day_context_handler=get_day_context_handler,
+                    schedule_day_handler=schedule_day_handler,
+                )
                 response = WebSocketSyncResponseSchema(
                     changes=[change],
                     day_context=None,
                     last_audit_log_timestamp=last_timestamp,
                     last_change_stream_id=stream_id,
+                    state_checksum=state_checksum,
+                    checksum_matches_client=None,
                 )
                 await send_ws_message(websocket, response.model_dump(mode="json"))
         except WebSocketDisconnect:
