@@ -76,7 +76,7 @@ class WebSocketSyncRequestSchema(BaseSchema):
     since_change_stream_id: str | None = (
         None  # Redis stream id for entity change stream incremental sync
     )
-    client_checksum: str | None = None
+    last_seen_domain_event_id: str | None = None
     partial_key: DayContextPartKey | None = None
     partial_keys: list[DayContextPartKey] | None = None
 
@@ -116,8 +116,7 @@ class WebSocketSyncResponseSchema(BaseSchema):
     sync_complete: bool | None = None
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
     last_change_stream_id: str | None = None
-    state_checksum: str | None = None
-    checksum_matches_client: bool | None = None
+    latest_domain_event_id: str | None = None
 
 
 class WebSocketTopicEventSchema(BaseSchema):

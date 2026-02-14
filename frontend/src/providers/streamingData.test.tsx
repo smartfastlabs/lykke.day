@@ -188,7 +188,7 @@ describe("StreamingDataProvider", () => {
         expect(sentMessages).toContainEqual({
           type: "sync_request",
           since_timestamp: null,
-          client_checksum: null,
+          last_seen_domain_event_id: null,
           partial_keys: [
             "day",
             "tasks",
@@ -296,7 +296,7 @@ describe("StreamingDataProvider", () => {
       });
     });
 
-    it("should mark out-of-sync and request full sync on checksum mismatch", async () => {
+    it("should not trigger repeated full sync requests from response metadata", async () => {
       const { getByTestId } = render(() => (
         <StreamingDataProvider>
           <TestComponent />
@@ -312,22 +312,20 @@ describe("StreamingDataProvider", () => {
       ws.simulateMessage({
         type: "sync_response",
         day_context: mockDayContext,
-        state_checksum: "deadbeef",
+        latest_domain_event_id: "100-0",
         last_audit_log_timestamp: "2026-01-15T12:00:00Z",
       });
 
       await waitFor(() => {
-        expect(getByTestId("is-out-of-sync").textContent).toBe("true");
+        expect(getByTestId("is-out-of-sync").textContent).toBe("false");
       });
 
-      await waitFor(() => {
-        const sentMessages = ws._sentData.map((d) => JSON.parse(d));
-        const fullSyncCount = sentMessages.filter(
-          (message) =>
-            message.type === "sync_request" && message.since_timestamp === null,
-        ).length;
-        expect(fullSyncCount).toBeGreaterThan(1);
-      });
+      const sentMessages = ws._sentData.map((d) => JSON.parse(d));
+      const fullSyncCount = sentMessages.filter(
+        (message) =>
+          message.type === "sync_request" && message.since_timestamp === null,
+      ).length;
+      expect(fullSyncCount).toBe(1);
     });
 
     it("should merge partial sync responses and finish on sync_complete", async () => {

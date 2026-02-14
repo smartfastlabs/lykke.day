@@ -896,6 +896,12 @@ class SqlAlchemyUnitOfWork:
                     channel_type="domain-events",
                     message=message_with_meta,
                 )
+                await self._pubsub_gateway.append_to_user_stream(
+                    user_id=self.user.id,
+                    stream_type="latest-domain-event",
+                    message=message_with_meta,
+                    maxlen=1,
+                )
 
             except Exception as e:
                 # Log error but don't fail the commit

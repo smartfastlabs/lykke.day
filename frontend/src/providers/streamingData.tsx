@@ -52,7 +52,6 @@ import {
   type WsClient,
 } from "@/utils/wsClient";
 import { getDateString } from "@/utils/dates";
-import { computeSyncStateChecksum } from "@/providers/streaming/checksum";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -163,7 +162,7 @@ interface SyncRequestMessage extends WebSocketMessage {
   type: "sync_request";
   since_timestamp?: string | null;
   since_change_stream_id?: string | null;
-  client_checksum?: string | null;
+  last_seen_domain_event_id?: string | null;
   partial_key?: DayContextPartKey | null;
   partial_keys?: DayContextPartKey[] | null;
 }
@@ -177,8 +176,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   sync_complete?: boolean | null;
   last_audit_log_timestamp?: string | null;
   last_change_stream_id?: string | null;
-  state_checksum?: string | null;
-  checksum_matches_client?: boolean | null;
+  latest_domain_event_id?: string | null;
 }
 
 interface ConnectionAckMessage extends WebSocketMessage {
@@ -239,7 +237,9 @@ export function StreamingDataProvider(props: ParentProps) {
   let fullSyncBaseContext: DayContextWithRoutines | undefined = undefined;
   let nowInterval: number | null = null;
   let lastRolloverTargetDate: string | null = null;
-  let checksumRecoveryPending = false;
+  const [lastSeenDomainEventId, setLastSeenDomainEventId] = createSignal<
+    string | null
+  >(null);
   const [lastSeenLocalDate, setLastSeenLocalDate] = createSignal(
     getDateString(new Date()),
   );
@@ -369,8 +369,7 @@ export function StreamingDataProvider(props: ParentProps) {
       syncComplete: message.sync_complete ?? null,
       lastAuditLogTimestamp: message.last_audit_log_timestamp ?? null,
       lastChangeStreamId: message.last_change_stream_id ?? null,
-      stateChecksum: message.state_checksum ?? null,
-      checksumMatchesClient: message.checksum_matches_client ?? null,
+      latestDomainEventId: message.latest_domain_event_id ?? null,
     };
   };
 
@@ -402,6 +401,7 @@ export function StreamingDataProvider(props: ParentProps) {
     setIsOutOfSync(false);
     setLastProcessedTimestamp(null);
     setLastChangeStreamId(null);
+    setLastSeenDomainEventId(null);
   };
 
   const forceReconnectForNewDay = (reason: string) => {
@@ -658,18 +658,17 @@ export function StreamingDataProvider(props: ParentProps) {
   // Request full sync
   const requestFullSync = () => {
     fullSyncBaseContext = dayContextStore.data;
-    const clientChecksum = computeSyncStateChecksum(dayContextStore.data);
     const request: SyncRequestMessage = {
       type: "sync_request",
       since_timestamp: null,
-      client_checksum: clientChecksum,
+      last_seen_domain_event_id: lastSeenDomainEventId(),
       partial_keys: DAY_CONTEXT_PARTS,
     };
     const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
     logDebugEvent("out", "sync_request", {
       since_timestamp: request.since_timestamp,
       since_change_stream_id: request.since_change_stream_id ?? null,
-      client_checksum: request.client_checksum ?? null,
+      last_seen_domain_event_id: request.last_seen_domain_event_id ?? null,
       partial_keys: request.partial_keys ?? null,
       sent,
     });
@@ -677,29 +676,6 @@ export function StreamingDataProvider(props: ParentProps) {
       setIsLoading(true);
       setLoadingForParts(request.partial_keys ?? DAY_CONTEXT_PARTS, true);
     }
-  };
-
-  const verifyChecksumAndRecover = (
-    message: SyncResponseMessage,
-    reason: "full" | "partial" | "incremental",
-  ) => {
-    if (!message.state_checksum) return;
-    const localChecksum = computeSyncStateChecksum(dayContextStore.data);
-    if (!localChecksum || localChecksum === message.state_checksum) return;
-
-    setIsOutOfSync(true);
-    logDebugEvent("state", "checksum_mismatch_detected", {
-      reason,
-      local_checksum: localChecksum,
-      server_checksum: message.state_checksum,
-      checksum_matches_client: message.checksum_matches_client ?? null,
-    });
-    if (checksumRecoveryPending) return;
-    checksumRecoveryPending = true;
-    Promise.resolve().then(() => {
-      checksumRecoveryPending = false;
-      void requestFullSync();
-    });
   };
 
   const mergePartialContext = (
@@ -778,6 +754,9 @@ export function StreamingDataProvider(props: ParentProps) {
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
+      if (message.latest_domain_event_id) {
+        setLastSeenDomainEventId(message.latest_domain_event_id);
+      }
       if (message.sync_complete) {
         setIsLoading(false);
         setLoadingForParts(DAY_CONTEXT_PARTS, false);
@@ -799,7 +778,6 @@ export function StreamingDataProvider(props: ParentProps) {
             );
           }
         }
-        verifyChecksumAndRecover(message, "partial");
       }
       return;
     }
@@ -818,8 +796,10 @@ export function StreamingDataProvider(props: ParentProps) {
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
+      if (message.latest_domain_event_id) {
+        setLastSeenDomainEventId(message.latest_domain_event_id);
+      }
       setIsOutOfSync(false);
-      verifyChecksumAndRecover(message, "full");
 
       void refreshAuxiliaryData();
 
@@ -851,7 +831,9 @@ export function StreamingDataProvider(props: ParentProps) {
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
       }
-      verifyChecksumAndRecover(message, "incremental");
+      if (message.latest_domain_event_id) {
+        setLastSeenDomainEventId(message.latest_domain_event_id);
+      }
       if (didApplyChanges && isOnMeRoute() && currentContext) {
         const completedCount = countCompletedTasksFromChanges(
           currentContext,
