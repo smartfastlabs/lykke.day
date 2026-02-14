@@ -1,7 +1,7 @@
 """Fixtures for e2e tests - full API tests with test client."""
 
 import datetime
-from datetime import UTC, time
+from datetime import time
 from uuid import UUID, uuid4
 
 import pytest
@@ -11,18 +11,13 @@ from passlib.context import CryptContext
 
 from lykke.app import app
 from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
-from lykke.domain.entities import AuditLogEntity, UserEntity
+from lykke.domain.entities import UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.database.tables import User as UserDB
 from lykke.infrastructure.database.utils import reset_engine
 from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
-from lykke.infrastructure.repositories import (
-    AuditLogRepository,
-    CalendarEntryRepository,
-    DayTemplateRepository,
-    TaskRepository,
-)
+from lykke.infrastructure.repositories import DayTemplateRepository
 from lykke.infrastructure.repository_factories import SqlAlchemyReadOnlyRepositoryFactory
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
@@ -123,13 +118,13 @@ def authenticated_client(test_client, setup_test_user_day_template, request):
 
 @pytest.fixture
 def create_entity_with_uow(test_client):
-    """Helper fixture to create entities through UOW so audit logs are broadcast.
+    """Helper fixture to create entities through UOW so events are broadcast.
 
-    When tests create entities directly via repository.put(), audit logs are NOT
-    created or broadcast to Redis. This helper ensures entities are properly created
+    When tests create entities directly via repository.put(), no websocket events are
+    broadcast. This helper ensures entities are properly created
     through the UOW so that:
-    1. Audit logs are created
-    2. Audit logs are broadcast to Redis for WebSocket tests
+    1. Domain events are emitted
+    2. entity-changes stream messages are published for WebSocket tests
     """
 
     async def _create_entity(entity, user):
@@ -151,72 +146,8 @@ def create_entity_with_uow(test_client):
             if not hasattr(entity, "_events") or not entity._events:
                 entity.create()
             uow.add(entity)
-            # UOW commit will create audit logs and broadcast to Redis
+            # UOW commit will broadcast domain/entity change messages to Redis
 
     return _create_entity
 
 
-@pytest.fixture
-def create_entity_with_audit_log():
-    """Helper to create entities with audit logs directly in DB (no real-time broadcast).
-
-    This is useful for tests that need audit logs in the database but don't need
-    real-time WebSocket notifications. Avoids event loop issues with TestClient.
-    """
-
-    async def _create_with_audit(entity, user_id):
-        """Create an entity and its audit log directly in the DB.
-
-        Args:
-            entity: The entity to create
-            user_id: The user ID
-        """
-        identity_access = UnauthenticatedIdentityAccess()
-        user = await identity_access.get_user_by_id(user_id)
-        if user is None:
-            raise ValueError(f"User {user_id} not found")
-
-        # Get the appropriate repository for the entity
-        if hasattr(entity, "scheduled_date"):
-            # Task entity
-            repo = TaskRepository(user=user)
-        elif hasattr(entity, "platform"):
-            # Calendar entry
-            repo = CalendarEntryRepository(user=user)
-        else:
-            raise ValueError(f"Unknown entity type: {type(entity)}")
-
-        # Save the entity
-        await repo.put(entity)
-
-        # Create audit log manually
-        entity_type = type(entity).__name__.replace("Entity", "").lower()
-        audit_log = AuditLogEntity(
-            user_id=user_id,
-            activity_type="EntityCreatedEvent",
-            entity_id=entity.id,
-            entity_type=entity_type,
-            occurred_at=datetime.datetime.now(UTC),
-            meta={
-                "entity_data": {
-                    "id": str(entity.id),
-                    "user_id": str(entity.user_id),
-                    **(
-                        {"scheduled_date": entity.scheduled_date.isoformat()}
-                        if hasattr(entity, "scheduled_date")
-                        else {}
-                    ),
-                    **(
-                        {"date": entity.date.isoformat()}
-                        if hasattr(entity, "date")
-                        else {}
-                    ),
-                }
-            },
-        )
-        audit_log_repo = AuditLogRepository(user=user)
-        await audit_log_repo.put(audit_log)
-
-        return entity
-
-    return _create_with_audit

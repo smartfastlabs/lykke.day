@@ -212,6 +212,28 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
         entry_id_text = entry_id.decode("utf-8") if isinstance(entry_id, bytes) else entry_id
         return entry_id_text, message
 
+    async def get_oldest_user_stream_entry(
+        self, user_id: UUID, stream_type: str
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Get the oldest entry from a user-specific Redis stream."""
+        redis = await self._get_redis()
+        stream = self._get_stream_name(user_id, stream_type)
+
+        entries = await redis.xrange(stream, min="-", max="+", count=1)
+        if not entries:
+            return None
+        entry_id, fields = entries[0]
+        payload = fields.get(b"payload") if isinstance(fields, dict) else None
+        if payload is None:
+            return None
+        payload_text = payload.decode("utf-8") if isinstance(payload, bytes) else str(payload)
+        try:
+            message = json.loads(payload_text)
+        except json.JSONDecodeError:
+            return None
+        entry_id_text = entry_id.decode("utf-8") if isinstance(entry_id, bytes) else entry_id
+        return entry_id_text, message
+
     def subscribe_to_user_channel(
         self,
         user_id: UUID,

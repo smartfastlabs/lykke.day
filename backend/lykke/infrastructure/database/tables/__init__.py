@@ -1,6 +1,5 @@
 """SQLAlchemy ORM table definitions."""
 
-from .audit_logs import AuditLog
 from .auth_tokens import AuthToken
 from .base import Base, metadata
 from .bot_personalities import BotPersonality
@@ -27,7 +26,6 @@ from .usecase_config import UseCaseConfig
 from .users import User
 
 # Export table objects for Core-style queries
-audit_logs_tbl = AuditLog.__table__
 auth_tokens_tbl = AuthToken.__table__
 bot_personalities_tbl = BotPersonality.__table__
 brain_dumps_tbl = BrainDump.__table__
@@ -54,7 +52,6 @@ users_tbl = User.__table__
 
 __all__ = [
     # ORM Models
-    "AuditLog",
     "AuthToken",
     # Base and metadata
     "Base",
@@ -81,7 +78,6 @@ __all__ = [
     "UseCaseConfig",
     "User",
     # Table objects (for Core-style queries)
-    "audit_logs_tbl",
     "auth_tokens_tbl",
     "bot_personalities_tbl",
     "brain_dumps_tbl",

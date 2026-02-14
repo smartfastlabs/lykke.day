@@ -12,12 +12,11 @@ from lykke.domain.events.task_events import (
 )
 from lykke.domain.value_objects.update import TaskUpdateObject
 
-from .auditable import AuditableEntity
 from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class TaskEntity(BaseEntityObject, AuditableEntity):
+class TaskEntity(BaseEntityObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str

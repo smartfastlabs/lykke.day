@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.application.repositories import AuditLogRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
@@ -43,14 +41,10 @@ class TaskRiskResult:
 class ComputeTaskRiskHandler(BaseQueryHandler[ComputeTaskRiskQuery, TaskRiskResult]):
     """Compute risk scores for tasks based on tags and completion history."""
 
-    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
-
     async def handle(self, query: ComputeTaskRiskQuery) -> TaskRiskResult:
         """Compute risk scores for tasks."""
         high_risk_tasks: list[TaskRiskScore] = []
-
-        # Calculate lookback window
-        lookback_start = datetime.now(UTC) - timedelta(days=query.lookback_days)
+        _ = query.lookback_days
 
         for task in query.tasks:
             # Skip completed tasks
@@ -75,41 +69,13 @@ class ComputeTaskRiskHandler(BaseQueryHandler[ComputeTaskRiskQuery, TaskRiskResu
                 risk_score += 20.0
                 risk_reasons.append("marked as urgent")
 
-            # Compute completion rate from audit logs
-            # Look for TaskCompletedEvent and TaskPuntedEvent for this task
-            completion_events = await self.audit_log_ro_repo.search(
-                value_objects.AuditLogQuery(
-                    entity_id=task.id,
-                    entity_type="task",
-                    activity_type="TaskCompletedEvent",
-                    occurred_after=lookback_start,
-                )
-            )
-
-            punt_events = await self.audit_log_ro_repo.search(
-                value_objects.AuditLogQuery(
-                    entity_id=task.id,
-                    entity_type="task",
-                    activity_type="TaskPuntedEvent",
-                    occurred_after=lookback_start,
-                )
-            )
-
-            # Also check for task state updates that show completion
-            # Look for any task-related events for this task definition or routine
-            total_attempts = len(completion_events) + len(punt_events)
-
-            if total_attempts > 0:
-                completion_rate = (len(completion_events) / total_attempts) * 100.0
+            # Completion history is no longer persisted. Use a conservative
+            # heuristic baseline by task frequency.
+            if task.frequency == value_objects.TaskFrequency.ONCE:
+                completion_rate = 50.0
+                risk_reasons.append("one-time task with no completion history")
             else:
-                # No history - check if it's a new task or one-time task
-                if task.frequency == value_objects.TaskFrequency.ONCE:
-                    # One-time tasks with no history are medium risk
-                    completion_rate = 50.0
-                    risk_reasons.append("one-time task with no completion history")
-                else:
-                    # Recurring tasks with no history might be new - lower risk
-                    completion_rate = 70.0
+                completion_rate = 70.0
 
             # Adjust risk score based on completion rate
             if completion_rate < 40.0:

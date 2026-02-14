@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from lykke.domain import value_objects
-from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 
 if TYPE_CHECKING:
@@ -15,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class RoutineEntity(BaseEntityObject, AuditableEntity):
+class RoutineEntity(BaseEntityObject):
     user_id: UUID
     date: dt_date
     routine_definition_id: UUID

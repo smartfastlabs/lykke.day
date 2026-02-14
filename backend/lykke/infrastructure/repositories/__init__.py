@@ -1,4 +1,3 @@
-from .audit_log import AuditLogRepository
 from .auth_token import AuthTokenRepository
 from .bot_personality import BotPersonalityRepository
 from .brain_dump import BrainDumpRepository
@@ -21,7 +20,6 @@ from .trigger import TriggerRepository
 from .usecase_config import UseCaseConfigRepository
 
 __all__ = [
-    "AuditLogRepository",
     "AuthTokenRepository",
     "BotPersonalityRepository",
     "BrainDumpRepository",

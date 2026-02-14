@@ -105,6 +105,12 @@ DAY_CONTEXT_PART_ORDER: tuple[DayContextPartKey, ...] = (
     "push_notifications",
     "messages",
 )
+REPLAY_WINDOW_MAX_AGE_SECONDS = 60 * 60
+REPLAY_WINDOW_MAX_CHANGES = 50
+
+
+class _ReplayLimitExceededError(RuntimeError):
+    """Raised when incremental replay exceeds safe response size."""
 
 
 # ============================================================================
@@ -204,7 +210,7 @@ async def _get_last_sync_state(
     *, pubsub_gateway: PubSubGatewayProtocol, user_id: UUID
 ) -> tuple[str | None, str | None, str | None]:
     last_change_stream_id: str | None = None
-    last_audit_timestamp: str | None = None
+    last_change_timestamp: str | None = None
     latest_domain_event_id: str | None = None
     latest_entry = await pubsub_gateway.get_latest_user_stream_entry(
         user_id=user_id, stream_type="entity-changes"
@@ -212,18 +218,18 @@ async def _get_last_sync_state(
     if latest_entry:
         last_change_stream_id, latest_payload = latest_entry
         if isinstance(latest_payload, dict):
-            last_audit_timestamp = latest_payload.get(
+            last_change_timestamp = latest_payload.get(
                 "occurred_at"
             ) or latest_payload.get("stored_at")
-    if last_audit_timestamp is None:
-        last_audit_timestamp = dt_datetime.now(UTC).isoformat()
+    if last_change_timestamp is None:
+        last_change_timestamp = dt_datetime.now(UTC).isoformat()
     latest_domain_event_entry = await pubsub_gateway.get_latest_user_stream_entry(
         user_id=user_id, stream_type="latest-domain-event"
     )
     if latest_domain_event_entry:
         latest_domain_event_id = latest_domain_event_entry[0]
 
-    return last_change_stream_id, last_audit_timestamp, latest_domain_event_id
+    return last_change_stream_id, last_change_timestamp, latest_domain_event_id
 
 
 def _is_client_domain_event_out_of_date(
@@ -234,6 +240,33 @@ def _is_client_domain_event_out_of_date(
     if not last_seen_domain_event_id or not latest_domain_event_id:
         return False
     return last_seen_domain_event_id != latest_domain_event_id
+
+
+def _stream_id_timestamp(stream_id: str) -> int | None:
+    if "-" not in stream_id:
+        return None
+    raw_ms = stream_id.split("-", maxsplit=1)[0]
+    try:
+        return int(raw_ms)
+    except ValueError:
+        return None
+
+
+def _is_replay_window_expired(
+    *,
+    since_stream_id: str,
+    oldest_stream_id: str | None,
+    now_utc: dt_datetime,
+) -> bool:
+    since_ms = _stream_id_timestamp(since_stream_id)
+    if since_ms is None:
+        return True
+    if oldest_stream_id is not None:
+        oldest_ms = _stream_id_timestamp(oldest_stream_id)
+        if oldest_ms is None or since_ms < oldest_ms:
+            return True
+    now_ms = int(now_utc.timestamp() * 1000)
+    return (now_ms - since_ms) > (REPLAY_WINDOW_MAX_AGE_SECONDS * 1000)
 
 
 def _build_partial_context(
@@ -512,7 +545,7 @@ async def _send_day_context_parts(
 
     (
         last_change_stream_id,
-        last_audit_timestamp,
+        last_change_timestamp,
         latest_domain_event_id,
     ) = await _get_last_sync_state(
         pubsub_gateway=pubsub_gateway,
@@ -535,7 +568,7 @@ async def _send_day_context_parts(
             partial_context=partial_context,
             partial_key=part_key,
             sync_complete=index == len(parts) - 1,
-            last_audit_log_timestamp=last_audit_timestamp,
+            last_change_timestamp=last_change_timestamp,
             last_change_stream_id=last_change_stream_id,
             latest_domain_event_id=latest_domain_event_id,
         )
@@ -568,8 +601,8 @@ async def days_context_websocket(
     1. Accepts WebSocket connection
     2. Authenticates user
     3. Handles sync_request messages (full context or incremental changes)
-    4. Subscribes to user's AuditLog channel for real-time updates
-    5. Filters audit log events to only include entities for today
+    4. Subscribes to user's stream channels for real-time updates
+    5. Filters entity change events to only include entities for today
 
     Args:
         websocket: WebSocket connection
@@ -734,7 +767,7 @@ async def _handle_client_messages(
 
             (
                 _latest_change_stream_id,
-                _latest_audit_timestamp,
+                _latest_change_timestamp,
                 latest_domain_event_id,
             ) = await _get_last_sync_state(
                 pubsub_gateway=pubsub_gateway,
@@ -785,6 +818,42 @@ async def _handle_client_messages(
                             since_dt = since_dt.astimezone(UTC)
                         since_stream_id = f"{int(since_dt.timestamp() * 1000)}-0"
 
+                    since_stream_id = since_stream_id or "0-0"
+                    oldest_entry = await pubsub_gateway.get_oldest_user_stream_entry(
+                        user_id=get_day_context_handler.user.id,
+                        stream_type="entity-changes",
+                    )
+                    oldest_stream_id = oldest_entry[0] if oldest_entry else None
+                    if _is_replay_window_expired(
+                        since_stream_id=since_stream_id,
+                        oldest_stream_id=oldest_stream_id,
+                        now_utc=dt_datetime.now(UTC),
+                    ):
+                        logger.info(
+                            "Replay window expired; forcing full resync "
+                            f"for user {get_day_context_handler.user.id}"
+                        )
+                        parts = []
+                        if sync_request.partial_keys:
+                            parts = list(sync_request.partial_keys)
+                        elif sync_request.partial_key:
+                            parts = [sync_request.partial_key]
+                        else:
+                            parts = list(DAY_CONTEXT_PART_ORDER)
+                        last_stream_id = await _send_day_context_parts(
+                            websocket=websocket,
+                            part_handlers=day_context_part_handlers,
+                            schedule_day_handler=schedule_day_handler,
+                            pubsub_gateway=pubsub_gateway,
+                            user_id=get_day_context_handler.user.id,
+                            date_value=date_state["value"],
+                            user_timezone=user_timezone,
+                            parts=parts,
+                        )
+                        if last_stream_id:
+                            stream_state["last_id"] = last_stream_id
+                        continue
+
                     (
                         changes,
                         last_stream_id,
@@ -795,7 +864,7 @@ async def _handle_client_messages(
                         user_id=get_day_context_handler.user.id,
                         date_value=date_state["value"],
                         user_timezone=user_timezone,
-                        since_stream_id=since_stream_id or "0-0",
+                        since_stream_id=since_stream_id,
                     )
                     if last_stream_id:
                         stream_state["last_id"] = last_stream_id
@@ -812,7 +881,7 @@ async def _handle_client_messages(
                         partial_context=None,
                         partial_key=None,
                         sync_complete=None,
-                        last_audit_log_timestamp=last_timestamp,
+                        last_change_timestamp=last_timestamp,
                         last_change_stream_id=last_stream_id,
                         latest_domain_event_id=(
                             latest_domain_event_entry[0]
@@ -822,6 +891,27 @@ async def _handle_client_messages(
                     )
                 except WebSocketDisconnect:
                     break
+                except _ReplayLimitExceededError:
+                    parts = []
+                    if sync_request.partial_keys:
+                        parts = list(sync_request.partial_keys)
+                    elif sync_request.partial_key:
+                        parts = [sync_request.partial_key]
+                    else:
+                        parts = list(DAY_CONTEXT_PART_ORDER)
+                    last_stream_id = await _send_day_context_parts(
+                        websocket=websocket,
+                        part_handlers=day_context_part_handlers,
+                        schedule_day_handler=schedule_day_handler,
+                        pubsub_gateway=pubsub_gateway,
+                        user_id=get_day_context_handler.user.id,
+                        date_value=date_state["value"],
+                        user_timezone=user_timezone,
+                        parts=parts,
+                    )
+                    if last_stream_id:
+                        stream_state["last_id"] = last_stream_id
+                    continue
                 except Exception as e:
                     logger.error(f"Error getting incremental changes: {e}")
                     with contextlib.suppress(WebSocketDisconnect):
@@ -990,6 +1080,10 @@ async def _read_change_stream_since(
                 continue
             last_timestamp = payload.get("occurred_at") or payload.get("stored_at")
             changes.append(change)
+            if len(changes) > REPLAY_WINDOW_MAX_CHANGES:
+                raise _ReplayLimitExceededError(
+                    "Incremental replay exceeded change cap"
+                )
 
     return changes, last_stream_id, last_timestamp
 
@@ -1093,7 +1187,7 @@ async def _handle_change_stream_events(
                 response = WebSocketSyncResponseSchema(
                     changes=[change],
                     day_context=None,
-                    last_audit_log_timestamp=last_timestamp,
+                    last_change_timestamp=last_timestamp,
                     last_change_stream_id=stream_id,
                     latest_domain_event_id=(
                         latest_domain_event_entry[0]

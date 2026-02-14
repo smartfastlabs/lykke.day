@@ -1,5 +1,3 @@
-from .audit_log import AuditLogEntity
-from .auditable import AuditableEntity
 from .auth_token import AuthTokenEntity
 from .base import BaseEntityObject, BaseObject
 from .bot_personality import BotPersonalityEntity
@@ -25,8 +23,6 @@ from .usecase_config import UseCaseConfigEntity
 from .user import UserEntity
 
 __all__ = [
-    "AuditLogEntity",
-    "AuditableEntity",
     "AuthTokenEntity",
     "BaseEntityObject",
     "BaseObject",

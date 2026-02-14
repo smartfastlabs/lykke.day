@@ -16,7 +16,6 @@ from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.ai_chat import LLMProvider
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.repositories import (
-    AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
     BrainDumpRepository,
@@ -258,12 +257,6 @@ async def message_repo(test_user):
 async def factoid_repo(test_user):
     """FactoidRepository scoped to test_user."""
     return FactoidRepository(user=test_user)
-
-
-@pytest_asyncio.fixture
-async def audit_log_repo(test_user):
-    """AuditLogRepository scoped to test_user."""
-    return AuditLogRepository(user=test_user)
 
 
 # AI Chatbot test data fixtures

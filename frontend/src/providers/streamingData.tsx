@@ -174,7 +174,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   partial_context?: PartialDayContext;
   partial_key?: DayContextPartKey | null;
   sync_complete?: boolean | null;
-  last_audit_log_timestamp?: string | null;
+  last_change_timestamp?: string | null;
   last_change_stream_id?: string | null;
   latest_domain_event_id?: string | null;
 }
@@ -367,7 +367,7 @@ export function StreamingDataProvider(props: ParentProps) {
           }
         : undefined,
       syncComplete: message.sync_complete ?? null,
-      lastAuditLogTimestamp: message.last_audit_log_timestamp ?? null,
+      lastChangeTimestamp: message.last_change_timestamp ?? null,
       lastChangeStreamId: message.last_change_stream_id ?? null,
       latestDomainEventId: message.latest_domain_event_id ?? null,
     };
@@ -599,7 +599,11 @@ export function StreamingDataProvider(props: ParentProps) {
         setIsConnected(true);
         setError(undefined);
         logDebugEvent("state", "socket_open");
-        void requestFullSync();
+        if (lastChangeStreamId() && dayContextStore.data) {
+          void requestIncrementalSync();
+        } else {
+          void requestFullSync();
+        }
       },
       onClose: () => {
         setIsConnected(false);
@@ -678,6 +682,25 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const requestIncrementalSync = () => {
+    const sinceId = lastChangeStreamId();
+    if (!sinceId) {
+      void requestFullSync();
+      return;
+    }
+    const request: SyncRequestMessage = {
+      type: "sync_request",
+      since_change_stream_id: sinceId,
+      last_seen_domain_event_id: lastSeenDomainEventId(),
+    };
+    const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
+    logDebugEvent("out", "sync_request_incremental", {
+      since_change_stream_id: request.since_change_stream_id,
+      last_seen_domain_event_id: request.last_seen_domain_event_id ?? null,
+      sent,
+    });
+  };
+
   const mergePartialContext = (
     current: DayContextWithRoutines,
     partial: PartialDayContext,
@@ -748,8 +771,8 @@ export function StreamingDataProvider(props: ParentProps) {
         partialKey: message.partial_key ?? null,
         didApplyChanges,
       });
-      if (message.last_audit_log_timestamp) {
-        setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      if (message.last_change_timestamp) {
+        setLastProcessedTimestamp(message.last_change_timestamp);
       }
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
@@ -790,8 +813,8 @@ export function StreamingDataProvider(props: ParentProps) {
       // Full context - replace store
       setDayContextStore({ data: message.day_context });
 
-      if (message.last_audit_log_timestamp) {
-        setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      if (message.last_change_timestamp) {
+        setLastProcessedTimestamp(message.last_change_timestamp);
       }
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
@@ -825,8 +848,8 @@ export function StreamingDataProvider(props: ParentProps) {
         changesCount: message.changes.length,
         didApplyChanges,
       });
-      if (message.last_audit_log_timestamp) {
-        setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      if (message.last_change_timestamp) {
+        setLastProcessedTimestamp(message.last_change_timestamp);
       }
       if (message.last_change_stream_id) {
         setLastChangeStreamId(message.last_change_stream_id);
@@ -1277,6 +1300,10 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const sync = () => {
+    if (lastChangeStreamId() && dayContextStore.data) {
+      void requestIncrementalSync();
+      return;
+    }
     void requestFullSync();
   };
 

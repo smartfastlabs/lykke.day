@@ -16,7 +16,6 @@ from lykke.application.gateways import (
     WebPushGatewayProtocol,
 )
 from lykke.application.repositories import (
-    AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
     BrainDumpRepositoryReadOnlyProtocol,
@@ -184,7 +183,6 @@ def _protocol_to_string(protocol_class: type) -> str:
 
 def create_read_only_repos_double(
     *,
-    audit_log_repo: InstanceDouble | None = None,
     auth_token_repo: InstanceDouble | None = None,
     bot_personality_repo: InstanceDouble | None = None,
     brain_dump_repo: InstanceDouble | None = None,
@@ -218,9 +216,6 @@ def create_read_only_repos_double(
     repos_double = InstanceDouble(_protocol_to_string(ReadOnlyRepositories))
 
     # Set all repository properties
-    repos_double.audit_log_ro_repo = audit_log_repo or create_repo_double(
-        AuditLogRepositoryReadOnlyProtocol
-    )
     repos_double.auth_token_ro_repo = auth_token_repo or create_repo_double(
         AuthTokenRepositoryReadOnlyProtocol
     )
@@ -291,7 +286,6 @@ def create_read_only_repos_double(
 
 def create_uow_double(
     *,
-    audit_log_repo: InstanceDouble | None = None,
     auth_token_repo: InstanceDouble | None = None,
     bot_personality_repo: InstanceDouble | None = None,
     brain_dump_repo: InstanceDouble | None = None,
@@ -325,9 +319,6 @@ def create_uow_double(
     uow_double = InstanceDouble(_protocol_to_string(UnitOfWorkProtocol))
 
     # Set all repository properties
-    uow_double.audit_log_ro_repo = audit_log_repo or create_repo_double(
-        AuditLogRepositoryReadOnlyProtocol
-    )
     uow_double.auth_token_ro_repo = auth_token_repo or create_repo_double(
         AuthTokenRepositoryReadOnlyProtocol
     )
@@ -403,7 +394,6 @@ def create_uow_double(
     allow(uow_double).bulk_delete_tasks.and_return(None)
     allow(uow_double).bulk_delete_routines.and_return(None)
     allow(uow_double).bulk_delete_calendar_entries.and_return(None)
-    allow(uow_double).bulk_delete_audit_logs.and_return(None)
     allow(uow_double).set_trigger_tactics.and_return(None)
 
     # Stub add method (synchronous)

@@ -9,7 +9,6 @@ from loguru import logger
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.domain.events.base import (
     EntityCreatedEvent,
@@ -25,7 +24,7 @@ from lykke.domain.value_objects.update import CalendarEntryUpdateObject
 
 
 @dataclass(kw_only=True)
-class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
+class CalendarEntryEntity(BaseEntityObject):
     user_id: UUID
     name: str
     calendar_id: UUID

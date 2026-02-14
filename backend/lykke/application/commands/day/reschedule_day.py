@@ -30,7 +30,7 @@ class RescheduleDayCommand(Command):
 class RescheduleDayHandler(
     BaseCommandHandler[RescheduleDayCommand, value_objects.DayContext]
 ):
-    """Reschedules a day by cleaning up existing tasks and audit logs, then creating fresh tasks."""
+    """Reschedules a day by cleaning up existing tasks, then creating fresh tasks."""
 
     schedule_day_handler: ScheduleDayHandler
     day_ro_repo: DayRepositoryReadOnlyProtocol
@@ -41,9 +41,8 @@ class RescheduleDayHandler(
 
         This operation:
         1. Deletes all existing tasks for the date
-        2. Deletes all audit logs for the date
-        3. Gets or creates the Day entity
-        4. Schedules the day with fresh tasks from routines
+        2. Gets or creates the Day entity
+        3. Schedules the day with fresh tasks from routines
 
         Args:
             command: The command containing the date and optional template ID
@@ -86,15 +85,7 @@ class RescheduleDayHandler(
                     await uow.delete(task)
                 logger.info(f"Force deleted {len(remaining_tasks)} remaining tasks")
 
-            # Step 3: Delete all audit logs for this date
-            # Note: Audit logs are normally immutable, but reschedule is a special case
-            # where we want a clean slate
-            logger.info(f"Deleting audit logs for {command.date}")
-            await uow.bulk_delete_audit_logs(
-                value_objects.AuditLogQuery(date=command.date)
-            )
-
-            # Step 4: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
+            # Step 3: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
             day_context = await self.schedule_day_handler.schedule_day_in_uow(
                 uow,
                 ScheduleDayCommand(date=command.date, template_id=command.template_id),

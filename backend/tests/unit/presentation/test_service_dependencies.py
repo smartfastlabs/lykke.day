@@ -54,8 +54,8 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
     """Test that get_unit_of_work_factory creates factory with pubsub_gateway.
 
     This is a regression test for a critical bug where the UnitOfWorkFactory
-    was created without a PubSubGateway, causing audit logs to not be broadcast
-    when tasks were completed via the API.
+    was created without a PubSubGateway, causing stream updates to not be
+    broadcast when tasks were completed via the API.
 
     The function now takes a Request and creates the pubsub_gateway from app state.
     This test also verifies proper cleanup of the RedisPubSubGateway.
@@ -87,8 +87,8 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
 def test_unit_of_work_factory_requires_pubsub_gateway():
     """Test that SqlAlchemyUnitOfWorkFactory requires a pubsub_gateway parameter.
 
-    This ensures that pubsub_gateway is always provided, preventing audit logs
-    from not being broadcast.
+    This ensures that pubsub_gateway is always provided, preventing stream
+    updates from being dropped.
     """
     # Create factory with a stub pubsub_gateway
     stub_gateway = StubPubSubGateway()

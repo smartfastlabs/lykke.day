@@ -203,18 +203,6 @@ class FactoidQuery(BaseQuery):
     criticality: str | None = None
 
 
-@dataclass(kw_only=True)
-class AuditLogQuery(BaseQuery):
-    """Query class for AuditLog entities."""
-
-    activity_type: str | None = None
-    entity_id: UUID | None = None
-    entity_type: str | None = None
-    occurred_after: datetime | None = None
-    occurred_before: datetime | None = None
-    date: dt_date | None = None
-
-
 T = TypeVar("T", bound=BaseQuery)
 
 

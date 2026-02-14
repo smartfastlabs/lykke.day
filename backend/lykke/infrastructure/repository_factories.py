@@ -8,9 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from lykke.domain.entities import UserEntity
 from lykke.infrastructure.repositories import (
-    AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
     BrainDumpRepository,
@@ -34,8 +32,8 @@ from lykke.infrastructure.repositories import (
 )
 
 if TYPE_CHECKING:
+    from lykke.domain.entities import UserEntity
     from lykke.application.repositories import (
-        AuditLogRepositoryReadOnlyProtocol,
         AuthTokenRepositoryReadOnlyProtocol,
         BotPersonalityRepositoryReadOnlyProtocol,
         BrainDumpRepositoryReadOnlyProtocol,
@@ -148,11 +146,6 @@ class SqlAlchemyReadOnlyRepositories:
             FactoidRepository(user=self.user),
         )
 
-        # AuditLogRepository is read-only (immutable entities)
-        self.audit_log_ro_repo = cast(
-            "AuditLogRepositoryReadOnlyProtocol",
-            AuditLogRepository(user=self.user),
-        )
         self.push_notification_ro_repo = cast(
             "PushNotificationRepositoryReadOnlyProtocol",
             PushNotificationRepository(user=self.user),

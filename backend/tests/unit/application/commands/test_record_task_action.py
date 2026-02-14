@@ -119,7 +119,7 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     assert any(isinstance(e, DayEntity) for e in added_entities)
     assert any(isinstance(e, TaskEntity) for e in added_entities)
 
-    # Verify audit logs are no longer manually created
+    # Verify no legacy history records are manually created
     # (They are now automatically created by the UOW when processing entities with audited events)
     assert len(uow.created) == 0
 
@@ -349,6 +349,6 @@ async def test_record_task_action_punt_updates_status():
     assert result.actions[0].type == value_objects.ActionType.PUNT
     assert result.completed_at is None  # Punt doesn't set completed_at
 
-    # Verify audit logs are no longer manually created
+    # Verify no legacy history records are manually created
     # (They are now automatically created by the UOW when processing entities with audited events)
     assert len(uow.created) == 0

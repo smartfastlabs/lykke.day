@@ -1,7 +1,7 @@
 """Unit tests for background worker pubsub configuration.
 
 These tests ensure that background workers use proper pubsub gateways
-so that audit logs are broadcast via websocket when calendar sync
+so that stream updates are broadcast via websocket when calendar sync
 or other background tasks modify entities.
 
 REGRESSION TESTS: These would have caught the critical bug where workers
@@ -95,10 +95,10 @@ class TestWorkerPubSubGateway:
 
 
 class TestSyncTaskPubSubBroadcast:
-    """Tests to verify sync tasks properly broadcast audit logs."""
+    """Tests to verify sync tasks properly broadcast stream updates."""
 
     @pytest.mark.asyncio
-    async def test_sync_single_calendar_task_broadcasts_audit_logs(self):
+    async def test_sync_single_calendar_task_broadcasts_updates(self):
         """Test that sync_single_calendar_task uses a gateway that broadcasts.
 
         This is a design test - verifying that the task creates and uses
@@ -131,7 +131,7 @@ class TestSyncTaskPubSubBroadcast:
         # The gateway should NOT be a StubPubSubGateway
         assert not isinstance(uow._pubsub_gateway, StubPubSubGateway), (
             "Worker UnitOfWork is using StubPubSubGateway! "
-            "This will cause audit logs to NOT be broadcast via websocket. "
+            "This will cause stream updates to NOT be broadcast via websocket. "
             "Use RedisPubSubGateway instead."
         )
 

@@ -10,7 +10,7 @@ from lykke.domain.value_objects.update import (
     FactoidUpdateObject,
 )
 
-from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
+from .base import DomainEvent, EntityUpdatedEvent
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -27,11 +27,8 @@ __all__ = [
 
 
 @dataclass(frozen=True, kw_only=True)
-class MessageSentEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a message is sent.
-
-    Uses AuditableDomainEvent: User sent a message to the system.
-    """
+class MessageSentEvent(DomainEvent):
+    """Event raised when a message is sent."""
 
     message_id: UUID
     role: str  # MessageRole enum as string
@@ -45,12 +42,8 @@ class MessageSentEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MessageReceivedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a message is received.
-
-    Uses AuditableDomainEvent: User sent a message to the system (via SMS or other inbound channels).
-    This is a deliberate user action and should appear in the activity timeline.
-    """
+class MessageReceivedEvent(DomainEvent):
+    """Event raised when a message is received."""
 
     message_id: UUID
     role: str  # MessageRole enum as string

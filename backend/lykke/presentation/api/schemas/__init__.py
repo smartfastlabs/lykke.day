@@ -2,8 +2,6 @@
 
 from .action import ActionSchema
 from .alarm import AlarmPresetSchema, AlarmSchema
-from .audit_log import AuditLogSchema
-from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
 from .brain_dump import BrainDumpCreateSchema, BrainDumpSchema, BrainDumpUpdateSchema
@@ -162,8 +160,6 @@ __all__ = [
     "AdhocTaskCreateSchema",
     "AlarmPresetSchema",
     "AlarmSchema",
-    "AuditLogSchema",
-    "AuditableSchema",
     "BasePersonalitySchema",
     "BotPersonalitySchema",
     "BrainDumpCreateSchema",

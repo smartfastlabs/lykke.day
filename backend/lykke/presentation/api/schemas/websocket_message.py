@@ -89,7 +89,7 @@ class WebSocketSubscriptionSchema(BaseSchema):
 
 
 class EntityChangeSchema(BaseSchema):
-    """Represents a single entity change from audit logs (only for entities associated with current day)."""
+    """Represents a single entity change event for current-day entities."""
 
     change_type: Literal["created", "updated", "deleted"]
     entity_type: str  # "task" or "calendar_entry"
@@ -114,7 +114,7 @@ class WebSocketSyncResponseSchema(BaseSchema):
     partial_context: DayContextPartialSchema | None = None
     partial_key: DayContextPartKey | None = None
     sync_complete: bool | None = None
-    last_audit_log_timestamp: str | None  # ISO format datetime - always included
+    last_change_timestamp: str | None  # ISO format datetime - always included
     last_change_stream_id: str | None = None
     latest_domain_event_id: str | None = None
 

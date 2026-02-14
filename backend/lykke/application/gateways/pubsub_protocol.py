@@ -97,6 +97,12 @@ class PubSubGatewayProtocol(Protocol):
         """Get the latest entry from a user-specific Redis stream."""
         ...
 
+    async def get_oldest_user_stream_entry(
+        self, user_id: UUID, stream_type: str
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Get the oldest entry from a user-specific Redis stream."""
+        ...
+
 
 class PubSubSubscription(Protocol):
     """Protocol for a pub/sub subscription.

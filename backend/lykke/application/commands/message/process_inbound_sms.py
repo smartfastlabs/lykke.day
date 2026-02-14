@@ -170,7 +170,7 @@ class ProcessInboundSmsHandler(
             if not body:
                 return
 
-            # Persist the outgoing message first (auditable), then send SMS.
+            # Persist the outgoing message first, then send SMS.
             async with self.new_uow() as uow:
                 outgoing = MessageEntity(
                     user_id=self.user.id,

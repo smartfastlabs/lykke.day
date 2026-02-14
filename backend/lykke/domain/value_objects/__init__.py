@@ -30,7 +30,6 @@ from .llm_run import (
 from .notification_decision import NotificationDecision
 from .push import NotificationAction, NotificationPayload
 from .query import (
-    AuditLogQuery,
     AuthTokenQuery,
     BaseQuery,
     BotPersonalityQuery,
@@ -115,7 +114,6 @@ __all__ = [
     "AlarmPreset",
     "AlarmStatus",
     "AlarmType",
-    "AuditLogQuery",
     "AuthTokenQuery",
     "BaseQuery",
     "BaseRequestObject",

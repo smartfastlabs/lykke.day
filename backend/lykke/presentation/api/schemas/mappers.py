@@ -7,8 +7,6 @@ from lykke.core.utils.dates import get_current_datetime_in_timezone, resolve_tim
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import (
-    AuditableEntity,
-    AuditLogEntity,
     BotPersonalityEntity,
     BrainDumpEntity,
     CalendarEntity,
@@ -35,8 +33,6 @@ from lykke.domain.services.timing_status import TimingStatusService
 from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
-    AuditableSchema,
-    AuditLogSchema,
     BotPersonalitySchema,
     BrainDumpSchema,
     CalendarEntrySchema,
@@ -576,28 +572,6 @@ def map_message_to_schema(message: MessageEntity) -> MessageSchema:
         triggered_by=message.triggered_by,
         created_at=message.created_at,
     )
-
-
-def map_audit_log_to_schema(audit_log: AuditLogEntity) -> AuditLogSchema:
-    """Convert AuditLog entity to AuditLog schema."""
-    return AuditLogSchema(
-        id=audit_log.id,
-        user_id=audit_log.user_id,
-        activity_type=audit_log.activity_type,
-        occurred_at=audit_log.occurred_at,
-        entity_id=audit_log.entity_id,
-        entity_type=audit_log.entity_type,
-        meta=audit_log.meta,
-    )
-
-
-def map_auditable_to_schema(_auditable: AuditableEntity) -> AuditableSchema:
-    """Convert Auditable marker interface to Auditable schema.
-
-    Note: AuditableEntity is a marker interface with no fields,
-    so this returns an empty schema instance.
-    """
-    return AuditableSchema()
 
 
 def map_bot_personality_to_schema(

@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-
-from lykke.domain.entities.audit_log import AuditLogEntity
+from typing import TYPE_CHECKING
 from lykke.domain.value_objects.day import AlarmStatus, AlarmType
 from lykke.domain.value_objects.update import DayUpdateObject
 
-from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
+from .base import DomainEvent, EntityUpdatedEvent
 
 if TYPE_CHECKING:
     from datetime import date as dt_date, time
@@ -57,7 +55,7 @@ class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class _AlarmDayEventBase(DomainEvent, AuditableDomainEvent):
+class _AlarmDayEventBase(DomainEvent):
     """Base class for alarm events tied to a day."""
 
     day_id: UUID
@@ -103,34 +101,6 @@ class AlarmTriggeredEvent(_AlarmDayEventBase):
     alarm_url: str
     alarm_status: AlarmStatus = AlarmStatus.TRIGGERED
 
-    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
-        """Create audit log with day context for alarm trigger."""
-        entity_data: dict[str, Any] = {
-            "id": str(self.day_id),
-            "date": self.date.isoformat(),
-        }
-
-        meta: dict[str, Any] = {
-            "day_id": str(self.day_id),
-            "date": self.date.isoformat(),
-            "alarm_id": str(self.alarm_id),
-            "alarm_name": self.alarm_name,
-            "alarm_time": self.alarm_time.isoformat(),
-            "alarm_type": self.alarm_type.value,
-            "alarm_url": self.alarm_url,
-            "alarm_status": self.alarm_status.value,
-            "entity_data": entity_data,
-        }
-
-        return AuditLogEntity(
-            user_id=user_id,
-            activity_type=self.__class__.__name__,
-            entity_id=self.day_id,
-            entity_type="day",
-            date=self.date,
-            meta=meta,
-        )
-
 
 @dataclass(frozen=True, kw_only=True)
 class AlarmStatusChangedEvent(_AlarmDayEventBase):
@@ -144,43 +114,10 @@ class AlarmStatusChangedEvent(_AlarmDayEventBase):
     old_status: AlarmStatus
     new_status: AlarmStatus
 
-    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
-        """Create audit log with day context for alarm status change."""
-        entity_data: dict[str, Any] = {
-            "id": str(self.day_id),
-            "date": self.date.isoformat(),
-        }
-
-        meta: dict[str, Any] = {
-            "day_id": str(self.day_id),
-            "date": self.date.isoformat(),
-            "alarm_id": str(self.alarm_id),
-            "alarm_name": self.alarm_name,
-            "alarm_time": self.alarm_time.isoformat(),
-            "alarm_type": self.alarm_type.value,
-            "alarm_url": self.alarm_url,
-            "old_status": self.old_status.value,
-            "new_status": self.new_status.value,
-            "entity_data": entity_data,
-        }
-
-        return AuditLogEntity(
-            user_id=user_id,
-            activity_type=self.__class__.__name__,
-            entity_id=self.day_id,
-            entity_type="day",
-            date=self.date,
-            meta=meta,
-        )
-
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpAddedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump is added.
-
-    Uses AuditableDomainEvent: User explicitly added a brain dump,
-    this is a user-facing action they'd want to see in their activity timeline.
-    """
+class BrainDumpAddedEvent(DomainEvent):
+    """Event raised when a brain dump is added."""
 
     day_id: UUID
     date: dt_date
@@ -189,12 +126,8 @@ class BrainDumpAddedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpStatusChangedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump status changes.
-
-    Uses AuditableDomainEvent: User changed status of brain dump
-    (e.g., marked as done), this is a user-facing action worth tracking.
-    """
+class BrainDumpStatusChangedEvent(DomainEvent):
+    """Event raised when a brain dump status changes."""
 
     day_id: UUID
     date: dt_date
@@ -227,12 +160,8 @@ class BrainDumpLLMRunRecordedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpRemovedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump is removed.
-
-    Uses AuditableDomainEvent: User explicitly removed a brain dump,
-    this is a user-facing action they'd want to see in their history.
-    """
+class BrainDumpRemovedEvent(DomainEvent):
+    """Event raised when a brain dump is removed."""
 
     day_id: UUID
     date: dt_date

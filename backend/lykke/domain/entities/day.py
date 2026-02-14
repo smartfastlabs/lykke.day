@@ -8,7 +8,6 @@ from uuid import UUID, uuid4
 
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.day_template import DayTemplateEntity  # noqa: TC001
 from lykke.domain.events.day_events import (
     AlarmAddedEvent,
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableEntity):
+class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
     user_id: UUID
     date: dt_date
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
@@ -247,7 +246,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 )
             )
 
-            # Emit specific event for PUNT status changes (for audit logging)
+            # Emit specific event for PUNT status changes.
             if task.status == value_objects.TaskStatus.PUNT:
                 self._add_event(
                     TaskPuntedEvent(

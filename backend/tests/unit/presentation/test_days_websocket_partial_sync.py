@@ -116,7 +116,7 @@ async def test_partial_sync_sends_part_payloads_in_order() -> None:
     assert first["partial_key"] == "day"
     assert first["sync_complete"] is False
     assert first["last_change_stream_id"] == "123-0"
-    assert first["last_audit_log_timestamp"] == "2026-01-15T12:00:00Z"
+    assert first["last_change_timestamp"] == "2026-01-15T12:00:00Z"
     assert first["latest_domain_event_id"] == "999-0"
     assert "day" in (first["partial_context"] or {})
 
@@ -124,6 +124,6 @@ async def test_partial_sync_sends_part_payloads_in_order() -> None:
     assert second["partial_key"] == "tasks"
     assert second["sync_complete"] is True
     assert second["last_change_stream_id"] == "123-0"
-    assert second["last_audit_log_timestamp"] == "2026-01-15T12:00:00Z"
+    assert second["last_change_timestamp"] == "2026-01-15T12:00:00Z"
     assert second["latest_domain_event_id"] == "999-0"
     assert len((second["partial_context"] or {}).get("tasks", [])) == 1

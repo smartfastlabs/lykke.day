@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Protocol, Self, TypeVar
 from uuid import UUID
 
 from lykke.application.repositories import (
-    AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
     BrainDumpRepositoryReadOnlyProtocol,
@@ -166,10 +165,6 @@ class UnitOfWorkProtocol(Protocol):
         """Bulk delete routines matching query filters."""
         ...
 
-    async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
-        """Bulk delete audit logs matching query filters."""
-        ...
-
     async def set_trigger_tactics(
         self, trigger_id: UUID, tactic_ids: list[UUID]
     ) -> None:
@@ -205,7 +200,6 @@ class ReadOnlyRepositories(Protocol):
     """
 
     # Read-only repository properties
-    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol

@@ -287,7 +287,7 @@ describe("StreamingDataProvider", () => {
       ws.simulateMessage({
         type: "sync_response",
         day_context: mockDayContext,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+        last_change_timestamp: "2026-01-15T12:00:00Z",
       });
 
       await waitFor(() => {
@@ -313,7 +313,7 @@ describe("StreamingDataProvider", () => {
         type: "sync_response",
         day_context: mockDayContext,
         latest_domain_event_id: "100-0",
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+        last_change_timestamp: "2026-01-15T12:00:00Z",
       });
 
       await waitFor(() => {
@@ -349,7 +349,7 @@ describe("StreamingDataProvider", () => {
           day: mockDayContext.day,
         },
         sync_complete: false,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+        last_change_timestamp: "2026-01-15T12:00:00Z",
       });
 
       await waitFor(() => {
@@ -364,7 +364,7 @@ describe("StreamingDataProvider", () => {
           tasks: mockDayContext.tasks,
         },
         sync_complete: true,
-        last_audit_log_timestamp: "2026-01-15T12:00:00Z",
+        last_change_timestamp: "2026-01-15T12:00:00Z",
       });
 
       await waitFor(() => {

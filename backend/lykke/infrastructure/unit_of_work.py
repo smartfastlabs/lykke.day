@@ -20,12 +20,11 @@ from lykke.application.worker_schedule import (
     reset_current_workers_to_schedule,
     set_current_workers_to_schedule,
 )
-from lykke.core.exceptions import BadRequestError, NotFoundError
+from lykke.core.exceptions import BadRequestError
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.core.utils.strings import entity_type_from_class_name
 from lykke.domain.entities import (
-    AuditLogEntity,
     AuthTokenEntity,
     BotPersonalityEntity,
     BrainDumpEntity,
@@ -48,7 +47,6 @@ from lykke.domain.entities import (
     UseCaseConfigEntity,
     UserEntity,
 )
-from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.domain.events.base import (
     DomainEvent,
@@ -63,7 +61,6 @@ from lykke.infrastructure.database.transaction import (
     set_transaction_connection,
 )
 from lykke.infrastructure.repositories import (
-    AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
     BrainDumpRepository,
@@ -138,7 +135,6 @@ class SqlAlchemyUnitOfWork:
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> rw_repo_attr
     _ENTITY_REPO_MAP: ClassVar[dict[type, str]] = {
-        AuditLogEntity: "_audit_log_rw_repo",
         BotPersonalityEntity: "_bot_personality_rw_repo",
         BrainDumpEntity: "_brain_dump_rw_repo",
         DayEntity: "_day_rw_repo",
@@ -369,10 +365,6 @@ class SqlAlchemyUnitOfWork:
         )
         self._factoid_rw_repo = factoid_repo
 
-        # AuditLogRepository is effectively append-only, but we still need write access
-        # internally to persist auto-generated audit logs.
-        self._audit_log_rw_repo = AuditLogRepository(user=self.user)
-
         push_notification_repo = cast(
             "PushNotificationRepositoryReadWriteProtocol",
             PushNotificationRepository(user=self.user),
@@ -567,17 +559,6 @@ class SqlAlchemyUnitOfWork:
 
         await self._routine_rw_repo.bulk_delete(query)
 
-    async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
-        """Bulk delete audit logs matching the query.
-
-        Note: This is a special operation that bypasses the normal immutability
-        of audit logs. Use with caution.
-        """
-        if self._audit_log_rw_repo is None:
-            raise RuntimeError("Audit log repository not initialized")
-
-        await self._audit_log_rw_repo.bulk_delete(query)
-
     async def set_trigger_tactics(
         self, trigger_id: UUID, tactic_ids: list[UUID]
     ) -> None:
@@ -615,20 +596,13 @@ class SqlAlchemyUnitOfWork:
         - If it has EntityCreatedEvent: insert it
         - If it has EntityUpdatedEvent or other events: update it
 
-        Also automatically creates AuditLog entities for events that implement
-        the AuditableDomainEvent protocol.
-
         Note: Events are not collected here - they remain on entities
         to be collected after processing.
         """
-        # Process entities and collect audit logs to create
-        audit_logs_to_create: list[AuditLogEntity] = []
-
         user_timezone = await self._get_user_timezone()
 
         for entity in self._added_entities:
             repo = self._get_repository_for_entity(entity)
-            entity_snapshot = _build_entity_snapshot(entity)
 
             # Check events without collecting them (use has_events to peek)
             # We need to check what events exist to determine the operation
@@ -646,71 +620,6 @@ class SqlAlchemyUnitOfWork:
             update_event = next(
                 (e for e in events if isinstance(e, EntityUpdatedEvent)), None
             )
-
-            # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
-            if not isinstance(entity, AuditLogEntity):
-                # Get occurred_at from the first event (all events should have similar timestamps)
-                occurred_at = datetime.now(UTC)
-                if events:
-                    # Try to get timestamp from event if available
-                    event_timestamp = getattr(events[0], "occurred_at", None)
-                    if event_timestamp is not None:
-                        occurred_at = event_timestamp
-
-                if isinstance(entity, CalendarEntryEntity):
-                    entity.user_timezone = user_timezone
-
-                # Extract user-facing date from entity
-                entity_date = _extract_entity_date(
-                    entity, occurred_at, user_timezone=user_timezone
-                )
-
-                for event in events:
-                    # Check if event implements AuditableDomainEvent protocol
-                    if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
-                        audit_log = event.to_audit_log(self.user.id)
-                        # Override date with entity date to ensure consistency
-                        audit_log.date = entity_date
-                        audit_log.meta = _attach_entity_snapshot(
-                            audit_log.meta, entity_snapshot
-                        )
-                        audit_logs_to_create.append(audit_log)
-                    # For AuditableEntity, also create audit logs for EntityCreated/Updated/Deleted events
-                    elif isinstance(entity, AuditableEntity):
-                        if isinstance(
-                            event,
-                            (
-                                EntityCreatedEvent,
-                                EntityUpdatedEvent,
-                                EntityDeletedEvent,
-                            ),
-                        ):
-                            # Infer entity_type from entity class name (e.g., "TaskEntity" -> "task")
-                            entity_type = entity_type_from_class_name(
-                                type(entity).__name__
-                            )
-                            # For EntityUpdatedEvent, include update_object in meta
-                            meta: dict[str, Any] = {}
-                            if isinstance(event, EntityUpdatedEvent):
-                                # Convert update_object to JSON-safe dict using utility function
-                                # This handles nested dataclasses, UUIDs, lists, etc. recursively
-                                update_dict = dataclass_to_json_dict(
-                                    event.update_object
-                                )
-                                if isinstance(update_dict, dict):
-                                    meta = update_dict
-                                else:
-                                    meta = {}
-
-                            audit_log = AuditLogEntity(
-                                user_id=self.user.id,
-                                activity_type=type(event).__name__,
-                                entity_id=entity.id,
-                                entity_type=entity_type,
-                                date=entity_date,
-                                meta=_attach_entity_snapshot(meta, entity_snapshot),
-                            )
-                            audit_logs_to_create.append(audit_log)
 
             # Put events back so they can be collected later for dispatching
             for event in events:
@@ -760,15 +669,6 @@ class SqlAlchemyUnitOfWork:
             else:
                 # Update the entity (existing entity with changes)
                 await repo.put(entity)
-
-        # Process auto-created audit logs immediately
-        # We need to process them in a separate pass to avoid modifying _added_entities during iteration
-        if audit_logs_to_create:
-            audit_log_repo = self._get_repository_for_entity(audit_logs_to_create[0])
-            for audit_log in audit_logs_to_create:
-                audit_log.create()
-                # Persist immediately
-                await audit_log_repo.put(audit_log)
 
     async def _get_user_timezone(self) -> str | None:
         """Fetch and cache the user's timezone setting."""
@@ -1012,41 +912,6 @@ def _build_update_patch(update_object: Any) -> list[dict[str, Any]]:
             }
         )
     return patch
-
-
-def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:
-    """Create a JSON-safe snapshot of an entity for audit logs."""
-    serialized = dataclass_to_json_dict(entity)
-    if not isinstance(serialized, dict):
-        return {}
-
-    snapshot = {
-        key: value for key, value in serialized.items() if not key.startswith("_")
-    }
-
-    entity_date = getattr(entity, "date", None)
-    if isinstance(entity_date, dt_date):
-        snapshot["date"] = entity_date.isoformat()
-
-    return snapshot
-
-
-def _attach_entity_snapshot(
-    meta: dict[str, Any] | None, entity_snapshot: dict[str, Any]
-) -> dict[str, Any]:
-    """Attach entity snapshot data to audit log meta.
-
-    Only attaches if entity_data is not already present in meta.
-    This allows custom to_audit_log() implementations to provide their own entity_data.
-    """
-    if not entity_snapshot:
-        return meta or {}
-
-    merged = dict(meta) if meta else {}
-    # Only attach if entity_data is not already set
-    if "entity_data" not in merged:
-        merged["entity_data"] = entity_snapshot
-    return merged
 
 
 class SqlAlchemyUnitOfWorkFactory:

@@ -88,6 +88,12 @@ class StubPubSubGateway:
         """Return no latest entry."""
         return None
 
+    async def get_oldest_user_stream_entry(
+        self, user_id: UUID, stream_type: str
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Return no oldest entry."""
+        return None
+
     async def close(self) -> None:
         """Do nothing."""
         pass
