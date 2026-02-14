@@ -7,8 +7,6 @@ alwaysApply: false
 
 Domain events represent something important that happened in the domain. They are immutable and contain all information needed to understand what happened.
 
-**📚 For complete guide on events and audit logs, see:** `.cursor/rules/events-and-audit-logs.mdc`
-
 ---
 
 ## Base Classes
@@ -25,45 +23,11 @@ from lykke.domain.events.base import DomainEvent
 @dataclass(frozen=True, kw_only=True)
 class TaskCompletedEvent(DomainEvent):
     """Event raised when a task is completed."""
-    
+
+    user_id: UUID
     task_id: UUID
-    old_status: str
-    new_status: str
+    completed_at: datetime
 ```
-
-### AuditableDomainEvent Mixin
-
-For user-facing actions that should create persistent audit logs:
-
-```python
-from lykke.domain.events.base import DomainEvent, AuditableDomainEvent
-
-
-@dataclass(frozen=True, kw_only=True)
-class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a task is completed.
-    
-    Uses AuditableDomainEvent: User completed a task - major milestone
-    that users want to see in their activity timeline.
-    """
-    
-    task_id: UUID
-    old_status: str
-    new_status: str
-```
-
-**When to use `AuditableDomainEvent`:**
-- User would want to see this in activity timeline
-- Action represents deliberate user choice or milestone
-- You need persistent history of this action
-
-**When NOT to use:**
-- Internal state tracking
-- System-triggered updates
-- Low-level CRUD (use `AuditableEntity` marker instead)
-- Configuration changes
-
-**See comprehensive decision tree in:** `.cursor/rules/events-and-audit-logs.mdc`
 
 ---
 
@@ -73,7 +37,7 @@ class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
 2. **Contains context** - Include all data needed by handlers
 3. **Use specific event types** - Don't use generic events with type fields
 4. **Timestamp auto-set** - `occurred_at` is automatically set to current time
-5. **Include entity info** - Include `entity_id`, `entity_type`, `entity_date` when applicable
+5. **Include user and entity info** - `user_id` is required; include `entity_id`, `entity_type`, `entity_date` when applicable
 
 ---
 
@@ -94,20 +58,19 @@ Events should include identifying information for handlers:
 
 ```python
 @dataclass(frozen=True, kw_only=True)
-class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
+class TaskCompletedEvent(DomainEvent):
     """Event raised when a task is completed."""
-    
+
+    user_id: UUID
     # Entity identification
     task_id: UUID
-    
+
     # Context for handlers
-    old_status: str
-    new_status: str
-    
-    # Optional: denormalized data for audit log display
+    completed_at: datetime
+    task_scheduled_date: date | None = None
     task_name: str | None = None
     task_type: str | None = None
-    
+
     # Entity metadata (optional but useful for filtering)
     @property
     def entity_id(self) -> UUID:
@@ -134,9 +97,9 @@ Domain event tests go in:
 def test_task_completed_event_is_immutable():
     """Test that TaskCompletedEvent is immutable."""
     event = TaskCompletedEvent(
+        user_id=uuid4(),
         task_id=uuid4(),
-        old_status="not_started",
-        new_status="complete",
+        completed_at=datetime.now(UTC),
     )
     
     # Should raise FrozenInstanceError
@@ -146,9 +109,9 @@ def test_task_completed_event_is_immutable():
 def test_task_completed_event_has_timestamp():
     """Test that events have occurred_at timestamp."""
     event = TaskCompletedEvent(
+        user_id=uuid4(),
         task_id=uuid4(),
-        old_status="not_started",
-        new_status="complete",
+        completed_at=datetime.now(UTC),
     )
     
     assert event.occurred_at is not None
@@ -174,7 +137,7 @@ class TaskStatusChangedEvent(DomainEvent):
 
 ```python
 @dataclass(frozen=True, kw_only=True)
-class DayScheduledEvent(DomainEvent, AuditableDomainEvent):
+class DayScheduledEvent(DomainEvent):
     """Event raised when a day is scheduled."""
     
     day_id: UUID

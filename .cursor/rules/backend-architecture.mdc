@@ -340,39 +340,35 @@ All domain events extend `DomainEvent`:
 - **Execute BEFORE commit** (can modify data atomically)
 - Published to Redis **AFTER commit** (all events)
 
-### 2. AuditableDomainEvent (Persistent)
+### 2. Domain Event Redis Channels/Streams (Post-Commit)
 
-User-facing events that inherit `AuditableDomainEvent` mixin:
-- Create `AuditLogEntity` records in database
-- Broadcast to WebSocket clients
-- Appear in user activity timeline
+After successful commit, UoW publishes serialized events:
+- PubSub channel: `domain-events:{user_id}`
+- Stream: `latest-domain-event` (maxlen 1)
 
-**Use when:** User would want to see this action in their history
+### 3. Entity Change Stream (Incremental Sync)
 
-### 3. AuditLogEntity (Audit Trail)
-
-Database records of user activities:
-- Stored permanently in `audit_logs` table
-- Include entity snapshots in `meta.entity_data`
-- Published to Redis `domain-events:{user_id}` channel
-- Filtered and forwarded to WebSocket clients
+UoW also appends entity changes to per-user Redis stream:
+- Stream: `entity-changes`
+- Includes `change_type`, `entity_type`, `entity_id`, `entity_date`, `entity_patch`
+- Used by websocket incremental sync APIs
 
 ### Event Flow
 
 ```
 Entity emits event
   → UoW processes entities
-  → If AuditableDomainEvent: Create AuditLogEntity
   → Dispatch handlers (BEFORE commit)
   → Commit transaction
-  → Publish ALL events to Redis (AFTER commit)
-  → WebSocket filters and forwards to clients
+  → Publish ALL domain events to Redis (AFTER commit)
+  → Append entity-changes stream records (AFTER commit)
+  → WebSocket clients sync by stream/event cursors
 ```
 
 **Key Rules:**
 - Handlers run BEFORE commit → can modify data atomically
 - Redis publishing AFTER commit → external systems see only committed data
-- WebSocket filters → only AuditableDomainEvents forwarded to clients
+- No audit-log-table dependency in the event pipeline
 
 ---
 
@@ -389,14 +385,22 @@ Entity emits event
 - Commands use `UnitOfWorkFactory` to create transaction-scoped units of work
 - Queries use `ReadOnlyRepositoryFactory` to create read-only repositories
 - Unit of Work tracks entities via `add()` and commits/rollbacks transactions
-- Domain events are collected and dispatched after commit
+- Domain events are dispatched before commit, then broadcast after commit
 
 ### Repository Pattern
 
 - Protocols defined in `application/repositories/`
 - Implementations in `infrastructure/repositories/`
 - Read-only and read-write protocols separated
-- Repositories are scoped to a user_id
+- User-scoped repositories are constructed with `user: UserEntity`
+- Base user scoping is enforced by `UserScopedBaseRepository` / `BaseRepository`
+
+### Identity Access Pattern
+
+- Do not use a generic unscoped user repository in app flows
+- Use `CurrentUserAccessProtocol` for authenticated self updates
+- Use `UnauthenticatedIdentityAccessProtocol` for login/signup and cross-user identity lookups
+- Keep cross-user identity access isolated to `infrastructure/unauthenticated/identity_access.py`
 
 ### Dependency Injection
 

@@ -15,10 +15,11 @@ Event handlers extend `DomainEventHandler`:
 
 ```python
 from typing import ClassVar
-from uuid import UUID
 
 from lykke.application.events.handlers.base import DomainEventHandler
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.application.handler_factory_protocols import ReadOnlyRepositoryFactoryProtocol
+from lykke.application.unit_of_work import UnitOfWorkFactory
+from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.task_events import TaskCompletedEvent
 
@@ -30,11 +31,16 @@ class TaskStatusLogger(DomainEventHandler):
     
     def __init__(
         self,
-        ro_repos: ReadOnlyRepositories,
-        user_id: UUID,
+        *,
+        user: UserEntity,
+        repository_factory: ReadOnlyRepositoryFactoryProtocol,
         uow_factory: UnitOfWorkFactory | None = None,
     ) -> None:
-        super().__init__(ro_repos, user_id, uow_factory)
+        super().__init__(
+            user=user,
+            repository_factory=repository_factory,
+            uow_factory=uow_factory,
+        )
     
     async def handle(self, event: DomainEvent) -> None:
         """Handle the domain event."""
@@ -53,7 +59,7 @@ class TaskStatusLogger(DomainEventHandler):
 5. **No direct calls** - Don't call handlers directly; they're invoked via signal
 6. **Handlers run BEFORE commit** - Can make transactional changes
 7. **Access repositories** - Use inherited `self.*_ro_repo` properties from BaseHandler
-8. **User-scoped** - Handlers are instantiated per-user when events are dispatched
+8. **User-scoped** - Handlers are instantiated per-user (resolved from `event.user_id`)
 
 ---
 
@@ -71,6 +77,7 @@ from lykke.application.events.handlers.base import DomainEventHandler
 DomainEventHandler.register_all_handlers(
     ro_repo_factory=ro_repo_factory,
     uow_factory=uow_factory,
+    user_loader=load_user_by_id,
 )
 ```
 
@@ -93,14 +100,14 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
         if self._uow_factory is None:
             logger.warning("No UoW factory - cannot schedule notification")
             return
-        
+
         # Create UoW to make changes within the same transaction
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self._uow_factory.create(self.user) as uow:
             calendar_entry = await uow.calendar_entry_ro_repo.get(event.entity_id)
-            
+
             # Create notification entity
             notification = PushNotificationEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 title=f"Upcoming: {calendar_entry.summary}",
                 scheduled_for=calendar_entry.starts_at - timedelta(minutes=15),
             )
@@ -129,7 +136,7 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
 **Why:** Each handler instance is created for a specific user
 
 **Implications:**
-- `self.user_id` is always available
+- `self.user` is always available
 - All repository access is scoped to the user
 - User's data is isolated
 
@@ -140,11 +147,11 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
 ```python
 class MyHandler(DomainEventHandler):
     handles = [MyEvent]
-    
+
     async def handle(self, event: DomainEvent) -> None:
         # Access repos directly - set up by BaseHandler
         tasks = await self.task_ro_repo.search(TaskQuery())
-        user = await self.user_ro_repo.get(self.user_id)
+        user_id = self.user.id
 ```
 
 ---
@@ -157,18 +164,18 @@ Test event handlers with events:
 
 ```python
 @pytest.mark.asyncio
-async def test_task_completed_handler(mock_ro_repos, test_user_id):
+async def test_task_completed_handler(mock_ro_repo_factory, test_user):
     """Test task completed event handler."""
     handler = TaskStatusLogger(
-        ro_repos=mock_ro_repos,
-        user_id=test_user_id,
+        user=test_user,
+        repository_factory=mock_ro_repo_factory,
     )
-    
+
     event = TaskCompletedEvent(
         task_id=uuid4(),
-        user_id=test_user_id,
+        user_id=test_user.id,
     )
-    
+
     # Handler should process the event without error
     await handler.handle(event)
 ```
@@ -177,24 +184,24 @@ async def test_task_completed_handler(mock_ro_repos, test_user_id):
 
 ```python
 @pytest.mark.asyncio
-async def test_handler_with_uow(mock_ro_repos, mock_uow_factory, mock_uow, test_user_id):
+async def test_handler_with_uow(mock_ro_repo_factory, mock_uow_factory, mock_uow, test_user):
     """Test handler that creates entities."""
     handler = CalendarEntryPushNotificationHandler(
-        ro_repos=mock_ro_repos,
-        user_id=test_user_id,
+        user=test_user,
+        repository_factory=mock_ro_repo_factory,
         uow_factory=mock_uow_factory,
     )
-    
+
     # Mock UoW
-    allow(mock_uow_factory).create(test_user_id).and_return(mock_uow)
+    allow(mock_uow_factory).create(test_user).and_return(mock_uow)
     allow(mock_uow).__aenter__().and_return(mock_uow)
     allow(mock_uow).__aexit__(...).and_return(None)
-    
+
     # Mock repository calls
     allow(mock_uow.calendar_entry_ro_repo).get(...).and_return(calendar_entry)
     expect(mock_uow).create(...)  # Expect notification to be created
-    
-    event = CalendarEntryCreatedEvent(entity_id=uuid4(), user_id=test_user_id)
+
+    event = CalendarEntryCreatedEvent(entity_id=uuid4(), user_id=test_user.id)
     await handler.handle(event)
 ```
 
@@ -223,14 +230,14 @@ class MyEventLogger(DomainEventHandler):
 ```python
 class NotificationTriggerHandler(DomainEventHandler):
     handles = [ImportantEvent]
-    
+
     async def handle(self, event: DomainEvent) -> None:
         if not isinstance(event, ImportantEvent) or self._uow_factory is None:
             return
-        
-        async with self._uow_factory.create(self.user_id) as uow:
+
+        async with self._uow_factory.create(self.user) as uow:
             notification = NotificationEntity(
-                user_id=self.user_id,
+                user_id=self.user.id,
                 message=f"Something important happened: {event.entity_id}",
             )
             await uow.create(notification)
@@ -241,17 +248,17 @@ class NotificationTriggerHandler(DomainEventHandler):
 ```python
 class SmartNotificationHandler(DomainEventHandler):
     handles = [TaskCompletedEvent]
-    
+
     async def handle(self, event: DomainEvent) -> None:
         if not isinstance(event, TaskCompletedEvent):
             return
-        
+
         # Query to get context
-        user = await self.user_ro_repo.get(self.user_id)
+        user = self.user
         task = await self.task_ro_repo.get(event.task_id)
-        
+
         # Decide if we should do something
         if user.settings.notifications_enabled and task.is_important:
             # Queue notification (actual sending happens elsewhere)
-            logger.info(f"Would notify user {self.user_id} about task completion")
+            logger.info(f"Would notify user {self.user.id} about task completion")
 ```

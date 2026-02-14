@@ -99,7 +99,7 @@ domain/
 
 **Key Components:**
 
-- `base.py` - DomainEvent, AuditableDomainEvent, EntityCreatedEvent, EntityUpdatedEvent, EntityDeletedEvent
+- `base.py` - DomainEvent, EntityCreatedEvent, EntityUpdatedEvent, EntityDeletedEvent
 - Event classes (TaskCompletedEvent, DayScheduledEvent, etc.)
 
 **What It Does:**
@@ -107,7 +107,7 @@ domain/
 - Represents important domain occurrences
 - Carries context about what happened
 - Immutable and timestamped
-- Collected and dispatched after transaction commit
+- Collected during UoW processing and dispatched by application handlers before commit
 
 **For Details:** See `.cursor/rules/domain-events.mdc`
 
@@ -172,7 +172,7 @@ When adding a new feature in the domain layer:
 - Events extend `DomainEvent`
 - Standard events: `EntityCreatedEvent`, `EntityUpdatedEvent`, `EntityDeletedEvent`
 - Custom events extend `DomainEvent` for domain-specific events
-- Use `AuditableDomainEvent` mixin for user-facing actions
+- Event payloads should include `user_id` and relevant entity context
 
 ---
 

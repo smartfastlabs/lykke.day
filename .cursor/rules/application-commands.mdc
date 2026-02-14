@@ -9,20 +9,35 @@ Commands handle write operations (mutations) that change system state. They use 
 
 ---
 
+## Mandatory: Typed Read-Only Repository Declarations (mypy)
+
+If a command handler uses a read-only repository via `self.*_ro_repo`, it must declare that dependency as a class attribute with the exact protocol type.
+
+This is **required** for:
+- `BaseHandler` runtime dependency wiring
+- mypy type checking
+
+```python
+class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, DayContext]):
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+```
+
+No typed declaration means the dependency is not guaranteed to be wired and is not mypy-safe.
+
+---
+
 ## Command Structure
 
 Commands follow a specific pattern with a `Command` dataclass and `CommandHandler` class:
 
 ```python
 from dataclasses import dataclass
-from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
+from lykke.application.handler_factory_protocols import ReadOnlyRepositoryFactoryProtocol
+from lykke.application.unit_of_work import UnitOfWorkFactory
+from lykke.domain.entities import UserEntity
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -37,15 +52,9 @@ class ScheduleDayCommand(Command):
 
 class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.DayContext]):
     """Schedules a day with tasks from routines."""
-    
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
-    
+
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+
     async def handle(self, command: ScheduleDayCommand) -> value_objects.DayContext:
         """Schedule a day with tasks from routines."""
         async with self.new_uow() as uow:
@@ -55,7 +64,7 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
             # Create new entity
             day = DayEntity.create_for_date(
                 command.date,
-                user_id=self.user_id,
+                user_id=self.user.id,
                 template=template,
             )
             
@@ -78,11 +87,12 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
 2. **Define Command dataclass** - Use frozen dataclass extending `Command`
 3. **Implement handle()** - Implement async `handle(command: CommandT) -> ResultT`
 4. **Use Unit of Work** - Use `self.new_uow()` to create transaction-scoped UoW
-5. **Read via `uow.*_ro_repo` properties** - Use read-only repositories from UoW
-6. **Use `uow.create()` for new entities** - Marks entity as created and adds to UoW
-7. **Use `uow.add()` for updates** - Track modified entities for persistence
-8. **Use `uow.delete()` for deletions** - Marks entity for deletion
-9. **Return domain objects** - Return entities or value objects, not infrastructure types
+5. **Declare typed ro repos** - For any `self.*_ro_repo` access, declare protocol-typed class attributes first
+6. **Read via `uow.*_ro_repo` properties** - Use read-only repositories from UoW for transactional reads
+7. **Use `uow.create()` for new entities** - Marks entity as created and adds to UoW
+8. **Use `uow.add()` for updates** - Track modified entities for persistence
+9. **Use `uow.delete()` for deletions** - Marks entity for deletion
+10. **Return domain objects** - Return entities or value objects, not infrastructure types
 
 ---
 
@@ -146,7 +156,7 @@ uow.add(updated_day)
 
 ```python
 # Wrong
-repo = TaskRepository(user_id=self.user_id)
+repo = TaskRepository(user=self.user)
 task = await repo.get(task_id)
 
 # Right
@@ -182,18 +192,68 @@ async with self.new_uow() as uow:
 
 ### 4. Use BaseCommandHandler Dependencies
 
-**Issue:** Use inherited properties from BaseHandler for repository access.
+**Issue:** `BaseCommandHandler` has `self.user`, `self.new_uow()`, and annotation-wired dependencies.
 
 ```python
 class MyHandler(BaseCommandHandler[MyCommand, MyResult]):
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+
     async def handle(self, command: MyCommand) -> MyResult:
-        # Access read-only repos directly (from BaseHandler)
-        user = await self.user_ro_repo.get(self.user_id)
-        
+        # self.user is already the authenticated user entity
+        user = self.user
+
+        # Annotation-backed read-only repo access
+        task = await self.task_ro_repo.get(command.task_id)
+
         # Or within a UoW context for transactional reads
         async with self.new_uow() as uow:
             task = await uow.task_ro_repo.get(command.task_id)
 ```
+
+### 5. Missing Type Annotation = Missing Dependency
+
+**Issue:** Accessing `self.*_ro_repo` without protocol annotation is invalid.
+
+```python
+# Wrong - dependency not declared
+class BadHandler(BaseCommandHandler[Cmd, Result]):
+    async def handle(self, command: Cmd) -> Result:
+        return await self.day_ro_repo.get(command.day_id)
+
+# Right - explicit protocol annotation
+class GoodHandler(BaseCommandHandler[Cmd, Result]):
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+
+    async def handle(self, command: Cmd) -> Result:
+        return await self.day_ro_repo.get(command.day_id)
+```
+
+### 6. Do Not Add Pass-Through `__init__`
+
+**Issue:** If `__init__` only forwards to `super().__init__`, remove it.
+
+```python
+# Wrong - pass-through constructor
+class NoisyCommandHandler(BaseCommandHandler[Cmd, Result]):
+    def __init__(
+        self,
+        *,
+        user: UserEntity,
+        uow_factory: UnitOfWorkFactory,
+        repository_factory: ReadOnlyRepositoryFactoryProtocol,
+    ) -> None:
+        super().__init__(
+            user=user,
+            uow_factory=uow_factory,
+            repository_factory=repository_factory,
+        )
+
+# Right - no constructor unless extra dependencies/setup are needed
+class CleanCommandHandler(BaseCommandHandler[Cmd, Result]):
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+```
+
+Keep `__init__` only when handler-specific dependencies are added (beyond base DI wiring).
 
 ---
 
@@ -207,27 +267,25 @@ Test command handlers with mocked Unit of Work:
 from dobles import allow, expect
 
 @pytest.mark.asyncio
-async def test_schedule_day(mock_ro_repos, mock_uow_factory, mock_uow, test_user_id):
+async def test_schedule_day(mock_ro_repo_factory, mock_uow_factory, mock_uow, test_user):
     """Test schedule_day command."""
     handler = ScheduleDayHandler(
-        ro_repos=mock_ro_repos,
+        user=test_user,
         uow_factory=mock_uow_factory,
-        user_id=test_user_id,
+        repository_factory=mock_ro_repo_factory,
     )
-    
-    # Mock UoW creation
-    allow(mock_uow_factory).create(test_user_id).and_return(mock_uow)
-    
+
+    allow(mock_uow_factory).create(test_user).and_return(mock_uow)
     # Mock UoW context manager
     allow(mock_uow).__aenter__().and_return(mock_uow)
     allow(mock_uow).__aexit__(...).and_return(None)
-    
+
     # Mock repository calls
     allow(mock_uow.day_template_ro_repo).get(...).and_return(template)
-    
+
     command = ScheduleDayCommand(date=date(2025, 1, 1))
     result = await handler.handle(command)
-    
+
     # Verify results
     assert result.day.date == date(2025, 1, 1)
 ```
@@ -260,14 +318,8 @@ class MyCommand(Command):
 
 
 class MyCommandHandler(BaseCommandHandler[MyCommand, EntityType]):
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
-    ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
-    
+    entity_ro_repo: MyEntityRepositoryReadOnlyProtocol
+
     async def handle(self, command: MyCommand) -> EntityType:
         async with self.new_uow() as uow:
             # Read entity
@@ -288,12 +340,17 @@ class MyCommandHandler(BaseCommandHandler[MyCommand, EntityType]):
 class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, DayContext]):
     def __init__(
         self,
-        ro_repos: ReadOnlyRepositories,
+        *,
+        user: UserEntity,
         uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
+        repository_factory: ReadOnlyRepositoryFactoryProtocol,
         preview_day_handler: PreviewDayHandler,  # Injected handler
     ) -> None:
-        super().__init__(ro_repos, uow_factory, user_id)
+        super().__init__(
+            user=user,
+            uow_factory=uow_factory,
+            repository_factory=repository_factory,
+        )
         self.preview_day_handler = preview_day_handler
     
     async def handle(self, command: ScheduleDayCommand) -> DayContext:

@@ -22,8 +22,6 @@ core/
     ├── serialization.py # Serialization utilities
     ├── strings.py    # String utilities
     ├── templates.py  # Template rendering utilities
-    ├── audit_log_filtering.py # Audit log filtering utilities
-    ├── audit_log_serialization.py # Audit log serialization
     ├── day_context_serialization.py # Day context serialization
     ├── domain_event_serialization.py # Domain event serialization
     ├── llm_prompt_generation.py # LLM prompt generation

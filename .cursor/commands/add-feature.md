@@ -1,89 +1,142 @@
-# Add Feature Workflow
+# Add Feature Workflow (Current Backend Architecture)
 
-## How This Works
+Use this command when adding or changing backend functionality in this repo.
+This project uses Clean Architecture + CQRS:
+- Commands handle writes (`lykke/application/commands/`)
+- Queries handle reads (`lykke/application/queries/`)
+- Routers stay thin (`lykke/presentation/api/routers/`)
+- Persistence and external I/O live in infrastructure (`lykke/infrastructure/`)
 
-This is an INTERACTIVE workflow. You MUST stop at each checkpoint and wait for explicit approval before proceeding. Do NOT continue to the next phase until the user says "approved", "looks good", "continue", or similar.
+## Operating Rules
 
-## Phase 1: Feature Understanding
+1. Diagnose requirements and likely root cause first; do not jump to symptom-level patches.
+2. If the change is large or cross-cutting, propose the plan and impact first, then wait for approval before broad edits.
+3. Keep strict layer boundaries (domain/application do not depend on presentation).
+4. Use async end-to-end for I/O paths (routers, handlers, repositories, gateways, unit of work).
 
-Ask clarifying questions about:
+---
 
-- What problem does this solve?
-- Who uses it?
-- What's the happy path?
-- What are edge cases?
+## Phase 1: Clarify Scope and Risk
 
-Output a brief feature summary for confirmation.
+Before coding, confirm:
+- Problem statement and user-visible behavior
+- Read path(s) and write path(s) affected
+- Whether this is a small local change or a multi-layer refactor
 
-🛑 **CHECKPOINT: Wait for user to confirm understanding is correct.**
+If large refactor or many files/layers are needed:
+- Provide a concise plan (files, sequence, risks, test strategy)
+- 🛑 **CHECKPOINT: Wait for approval before broad implementation**
 
-## Phase 2: Data Model Design
+---
 
-Propose:
+## Phase 2: Domain and Application Design
 
-- New/modified entities (with fields and types)
-- New/modified value objects
-- Database schema changes (if any)
-- Relationships between entities
+### Domain (`lykke/domain/`)
+- Add/update entities in `entities/` if business state/rules change
+- Add/update value objects in `value_objects/` for typed inputs/filters
+- Add domain events in `events/` for meaningful business occurrences
 
-Format as a simple diagram or structured list. Do NOT write any code yet.
+### Application (`lykke/application/`)
+- Add a **command** handler for writes
+- Add a **query** handler for reads
+- Add repository/gateway protocols only when needed
 
-🛑 **CHECKPOINT: Wait for user approval of data model.**
+Command/query patterns:
+- Base classes: `application/commands/base.py`, `application/queries/base.py`
+- Handler construction and DI: `presentation/handler_factory.py`
+- Unit of work/repo protocols: `application/unit_of_work.py`
 
-## Phase 3: Service Layer Design
+Do not create generic service-layer methods as the primary orchestration pattern; prefer command/query handlers.
 
-Propose:
+---
 
-- Service methods needed (name, inputs, outputs)
-- Business logic summary for each
-- Error cases to handle
+## Phase 3: Infrastructure Wiring
 
-Format as method signatures with docstrings. Do NOT implement yet.
+For persistence or external integrations:
+- Implement repository protocol(s) in `lykke/infrastructure/repositories/`
+- Add/adjust SQLAlchemy tables in `lykke/infrastructure/database/tables/` if schema changes
+- Create Alembic migration in `backend/alembic/versions/` for DB changes
+- Implement gateway protocols in `lykke/infrastructure/gateways/` when needed
 
-🛑 **CHECKPOINT: Wait for user approval of service design.**
+Repository mapping requirements:
+- Keep `entity_to_row()` and `row_to_entity()` mappings correct
+- Run mapper validation checks (see verification phase)
 
-## Phase 4: Repository Layer Design
+If adding a new repository to read-only repos:
+- Update `ReadOnlyRepositories` in `application/unit_of_work.py`
+- Update `UnitOfWorkProtocol` if command/UoW access is needed
+- Update infrastructure UoW/repository factories
+- Update protocol doubles in `tests/support/dobles.py`
 
-Propose:
+---
 
-- Repository methods needed
-- Query patterns
-- Any new database operations
+## Phase 4: API Endpoints and Schemas
 
-🛑 **CHECKPOINT: Wait for user approval.**
+For HTTP/WebSocket API changes:
+- Add/update route in `lykke/presentation/api/routers/`
+- Add/update request/response schema in `lykke/presentation/api/schemas/`
+- Map entities to response schemas via `presentation/api/schemas/mappers.py`
+- Use DI factories from `presentation/api/routers/dependencies/factories.py`
 
-## Phase 5: API Design (if applicable)
+Endpoint pattern:
+- Inject `CommandHandlerFactory` / `QueryHandlerFactory` via `Depends(...)`
+- `factory.create(YourHandler)` per request
+- Convert schema payloads into domain value objects/command inputs
+- Return mapped schema objects (never raw entities)
 
-Propose:
+Auth/user context:
+- HTTP uses `get_current_user`
+- WebSocket uses `get_current_user_from_token`
 
-- Endpoints (method, path, request/response shapes)
-- Authentication requirements
+---
 
-🛑 **CHECKPOINT: Wait for user approval.**
+## Phase 5: Async, Events, and Side Effects
 
-## Phase 6: Frontend Design (if applicable)
+### Async Requirements
+- Route handlers are `async def`
+- Command/query handlers are `async def handle(...)`
+- Repository and gateway I/O is async
+- Use async context managers for UoW paths
 
-Propose:
+### Event Flow Requirements
+- Domain events are dispatched before commit in UoW flow
+- After successful commit, events/changes are broadcast to Redis streams/channels
+- Use event and entity-change stream model for sync behavior
 
-- Components needed (new or modified)
-- State management approach
-- UI flow
+Do not reintroduce removed audit-log architecture primitives (`AuditLogEntity`, `audit_logs`, `AuditLogRepository*`, `AuditableDomainEvent`, audit-log queries).
 
-🛑 **CHECKPOINT: Wait for user approval.**
+---
 
-## Phase 7: Implementation
+## Phase 6: Verification and Tests
 
-Only NOW write the actual code, following the approved designs.
-Implement in order:
+Add/adjust tests at the correct level:
+- Unit tests: `backend/tests/unit/`
+- Integration tests: `backend/tests/integration/`
+- E2E/router tests: `backend/tests/e2e/routers/`
 
-1. Domain entities/value objects
-2. Repository interfaces
-3. Repository implementations
-4. Services
-5. API routes
-6. Frontend types (run generate_ts_types.py)
-7. Frontend components
+Testing conventions:
+- Mark async tests with `@pytest.mark.asyncio`
+- Use `dobles` for protocol doubles
 
-## Phase 8: Testing
+Run checks from `backend/`:
+- `make test`
+- `make typecheck`
+- `make check-mappers`
+- `make check` when finishing broader changes
 
-Add tests for all new functionality.
+If failures appear, identify and fix root causes (not superficial patches).
+
+---
+
+## Implementation Checklist
+
+- [ ] Scope confirmed; root cause understood
+- [ ] Plan approved first if change is large
+- [ ] Domain entities/value objects/events updated as needed
+- [ ] Command handler(s) for writes added/updated
+- [ ] Query handler(s) for reads added/updated
+- [ ] Repositories/gateways and infrastructure wiring updated
+- [ ] Endpoints + schemas + mapper functions updated
+- [ ] Async flow preserved across all I/O boundaries
+- [ ] Event flow remains compatible with current Redis-based model
+- [ ] Tests added/updated and all checks pass

@@ -5,89 +5,98 @@ alwaysApply: false
 
 # Application Queries Rules
 
-Queries handle read operations that don't change system state. They use read-only repositories.
+Queries handle read operations that do not change system state. They use read-only repositories created from `ReadOnlyRepositoryFactory` and wired through `BaseHandler`.
+
+---
+
+## Mandatory: Typed Repository Declarations (mypy)
+
+For every read-only repository a query handler uses, declare a class attribute with the exact repository protocol type.
+
+This is **required** for both:
+- runtime wiring by `BaseHandler`, and
+- static safety with mypy.
+
+If you call `self.task_ro_repo` without declaring:
+`task_ro_repo: TaskRepositoryReadOnlyProtocol`,
+the dependency may not be wired and mypy will not protect you.
+
+```python
+class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, DayContext]):
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+```
 
 ---
 
 ## Query Structure
 
-Queries follow a pattern with a `Query` dataclass and handler class extending `BaseHandler`:
+Queries follow a pattern with a `Query` dataclass and handler class extending `BaseQueryHandler`:
 
 ```python
 from dataclasses import dataclass
 from datetime import date
-from uuid import UUID
 
-from lykke.application.base_handler import BaseHandler
-from lykke.application.unit_of_work import ReadOnlyRepositories
+from lykke.application.handler_factory_protocols import ReadOnlyRepositoryFactoryProtocol
+from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.domain.entities import UserEntity
 from lykke.domain import value_objects
 
 
 @dataclass(frozen=True)
-class GetDayContextQuery:
+class GetDayContextQuery(Query):
     """Query to get the complete context for a day."""
-    
+
     date: date
 
 
-class GetDayContextHandler(BaseHandler):
+class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, value_objects.DayContext]):
     """Gets the complete context for a day."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        super().__init__(ro_repos, user_id)
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
 
-    async def handle(self, query: GetDayContextQuery) -> value_objects.DayContext:
-        """Load complete day context for the given date."""
-        # Use inherited ro_repo properties from BaseHandler
+    async def handle(
+        self, query: GetDayContextQuery
+    ) -> value_objects.DayContext:
         tasks = await self.task_ro_repo.search(
             value_objects.TaskQuery(date=query.date)
         )
-        calendar_entries = await self.calendar_entry_ro_repo.search(
-            value_objects.CalendarEntryQuery(date=query.date)
-        )
-        day = await self.day_ro_repo.get(
-            DayEntity.id_from_date_and_user(query.date, self.user_id)
-        )
-
-        return value_objects.DayContext(
-            day=day,
-            tasks=tasks,
-            calendar_entries=calendar_entries,
-        )
+        # self.user is always available on BaseHandler
+        day_id = DayEntity.id_from_date_and_user(query.date, self.user.id)
+        day = await self.day_ro_repo.get(day_id)
+        return value_objects.DayContext(day=day, tasks=tasks)
 ```
 
 ---
 
 ## Key Rules for Queries
 
-1. **Extend BaseHandler** - Use `BaseHandler` base class
-2. **Define Query dataclass** - Use frozen dataclass for query parameters
+1. **Extend BaseQueryHandler** - Use `BaseQueryHandler[QueryT, ResultT]` base class
+2. **Define Query dataclass** - Use frozen dataclass (usually extending `Query`) for query parameters
 3. **Implement handle()** - Implement async `handle(query: QueryType) -> ResultType`
-4. **Use ReadOnlyRepositories** - Never use Unit of Work in queries
-5. **No mutations** - Queries must not modify state
-6. **No `uow.add()`** - Queries don't track entities for persistence
-7. **Return domain objects** - Return entities or value objects
-8. **Use query objects** - Use value objects like `TaskQuery` for filtering
-9. **Side-effect free** - Queries should not trigger side effects
+4. **Declare typed repos first** - Every `self.*_ro_repo` usage must have a mypy protocol annotation on the handler class
+5. **Use ReadOnlyRepositories** - Queries should use `self.*_ro_repo` dependencies; no writes
+6. **No mutations** - Queries must not modify state
+7. **No `uow.add()`** - Queries don't track entities for persistence
+8. **Return domain objects** - Return entities or value objects
+9. **Use query objects** - Use value objects like `TaskQuery` for filtering
+10. **Side-effect free** - Queries should not trigger side effects
 
 ---
 
 ## Read-Only Repositories
 
-Queries use read-only repositories inherited from `BaseHandler`:
+Queries use read-only repositories wired by `BaseHandler` from `ReadOnlyRepositories` protocol annotations:
 
 ```python
-class GetDayContextHandler(BaseHandler):
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        super().__init__(ro_repos, user_id)  # Sets up all ro_repo properties
+class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, DayContext]):
+    # Type annotation tells BaseHandler what to wire
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def handle(self, query: GetDayContextQuery) -> DayContext:
-        # Access ro_repo properties directly - they're set by BaseHandler
-        tasks = await self.task_ro_repo.search(
-            value_objects.TaskQuery(date=query.date)
-        )
-        day = await self.day_ro_repo.get(day_id)
-        routines = await self.routine_ro_repo.all()
+        tasks = await self.task_ro_repo.search(TaskQuery(date=query.date))
         return DayContext(day=day, tasks=tasks)
 ```
 
@@ -97,9 +106,7 @@ class GetDayContextHandler(BaseHandler):
 - `self.day_template_ro_repo`
 - `self.routine_ro_repo`
 - `self.calendar_entry_ro_repo`
-- `self.user_ro_repo`
-- `self.audit_log_ro_repo`
-- And all other repositories defined in `ReadOnlyRepositories`
+- And all other repositories defined in `application/unit_of_work.py:ReadOnlyRepositories`
 
 ---
 
@@ -107,11 +114,11 @@ class GetDayContextHandler(BaseHandler):
 
 ### 1. Queries Must Use Read-Only Repositories
 
-**Issue:** Queries must use `BaseHandler` with `ReadOnlyRepositories`, not Unit of Work.
+**Issue:** Queries should use read-only repositories from `BaseQueryHandler`, not a Unit of Work.
 
 ```python
 # Wrong - using UoW for reads
-async with self._uow_factory.create(self.user_id) as uow:
+async with self._uow_factory.create(self.user) as uow:
     tasks = await uow.task_ro_repo.search(query)
 
 # Right - using ro_repo properties
@@ -129,7 +136,47 @@ days = await self.day_ro_repo.search(query2)
 # These may see different database states if called between commits
 ```
 
-### 3. Use Repository Search Methods
+### 3. Missing Type Annotation = Missing Dependency
+
+**Issue:** BaseHandler dependency wiring depends on typed class annotations.
+
+```python
+# Wrong - no declaration, not mypy-safe
+class BadHandler(BaseQueryHandler[Q, R]):
+    async def handle(self, query: Q) -> R:
+        return await self.task_ro_repo.get(query.task_id)
+
+# Right - explicit protocol type
+class GoodHandler(BaseQueryHandler[Q, R]):
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+
+    async def handle(self, query: Q) -> R:
+        return await self.task_ro_repo.get(query.task_id)
+```
+
+### 4. Do Not Add Pass-Through `__init__`
+
+**Issue:** A constructor that only forwards args to `super().__init__()` adds noise and should be removed.
+
+```python
+# Wrong - pass-through only
+class NoisyHandler(BaseQueryHandler[Q, R]):
+    def __init__(
+        self,
+        *,
+        user: UserEntity,
+        repository_factory: ReadOnlyRepositoryFactoryProtocol,
+    ) -> None:
+        super().__init__(user=user, repository_factory=repository_factory)
+
+# Right - no __init__ unless you have extra setup
+class CleanHandler(BaseQueryHandler[Q, R]):
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+```
+
+Keep `__init__` only when you add handler-specific dependencies or setup logic.
+
+### 5. Use Repository Search Methods
 
 **Issue:** Repositories provide multiple search methods for different use cases.
 
@@ -164,11 +211,15 @@ Test query handlers with mocked read-only repositories:
 
 ```python
 @pytest.mark.asyncio
-async def test_get_day_context(mock_ro_repos, test_user_id):
+async def test_get_day_context(mock_ro_repo_factory, test_user):
     """Test get_day_context query."""
-    handler = GetDayContextHandler(ro_repos=mock_ro_repos, user_id=test_user_id)
+    handler = GetDayContextHandler(
+        user=test_user,
+        repository_factory=mock_ro_repo_factory,
+    )
 
-    # Mock repository calls
+    # Handler creates repos via factory.create(user)
+    allow(mock_ro_repo_factory).create(test_user).and_return(mock_ro_repos)
     allow(mock_ro_repos.task_ro_repo).search(...).and_return([task1, task2])
     allow(mock_ro_repos.day_ro_repo).get(...).and_return(day)
 
@@ -202,29 +253,30 @@ Query handler tests go in:
 
 ```python
 @dataclass(frozen=True)
-class MyQuery:
+class MyQuery(Query):
     filter_value: str
     limit: int | None = None
 
 
-class MyQueryHandler(BaseHandler):
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        super().__init__(ro_repos, user_id)
+class MyQueryHandler(BaseQueryHandler[MyQuery, list[Entity]]):
+    entity_ro_repo: MyEntityRepositoryReadOnlyProtocol
 
     async def handle(self, query: MyQuery) -> list[Entity]:
-        # Read entities using inherited ro_repo properties
         entities = await self.entity_ro_repo.search(
             EntityQuery(filter_value=query.filter_value, limit=query.limit)
         )
 
-        # Transform/filter (no mutations)
         return sorted(entities, key=lambda e: e.created_at)
 ```
 
 ### Query with Aggregation
 
 ```python
-class GetDayContextHandler(BaseHandler):
+class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, DayContext]):
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+
     async def handle(self, query: GetDayContextQuery) -> DayContext:
         # Fetch multiple related entities
         day, tasks, calendar_entries = await asyncio.gather(
@@ -243,7 +295,10 @@ class GetDayContextHandler(BaseHandler):
 ### Query with Computed Results
 
 ```python
-class PreviewDayHandler(BaseHandler):
+class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, DayContext]):
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+
     async def handle(self, query: PreviewDayQuery) -> DayContext:
         # Fetch template and routines
         template = await self.day_template_ro_repo.get(query.template_id)

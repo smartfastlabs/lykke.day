@@ -94,6 +94,7 @@ async def update_day(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DaySchema:
     """Update a day."""
+    day = await get_day_by_id(day_id)  # router concern: resolve path id
     update_object = DayUpdateObject(
         status=update_data.status,
         high_level_plan=update_data.high_level_plan,
@@ -233,8 +234,11 @@ def get_update_day_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> UpdateDayHandler:
     """Get an UpdateDayHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    return UpdateDayHandler(ro_repos, uow_factory, user.id)
+    return UpdateDayHandler(
+        user=user,
+        uow_factory=uow_factory,
+        repository_factory=ro_repo_factory,
+    )
 ```
 
 ### Key Rules for Dependencies
@@ -263,7 +267,7 @@ async def days_context_websocket(
     await websocket.accept()
     
     try:
-        user_id = day_context_handler.user_id
+        user_id = day_context_handler.user.id
         
         # Subscribe to user's domain-events channel
         async with pubsub_gateway.subscribe_to_user_channel(

@@ -31,6 +31,8 @@ infrastructure/
 │   ├── transaction.py # Transaction management
 │   └── utils.py       # Database utilities
 ├── unit_of_work.py    # SqlAlchemyUnitOfWork implementation
+├── user_scoped/        # Current-user scoped identity access
+├── unauthenticated/    # Cross-user identity access for auth flows
 ├── auth/              # Authentication infrastructure
 │   ├── config.py      # Auth configuration
 │   └── schemas.py     # Auth schemas
@@ -59,7 +61,7 @@ infrastructure/
 
 ## Repositories
 
-Repositories implement the repository protocols defined in the application layer. They handle database persistence using SQLAlchemy Core.
+Repositories implement the repository protocols defined in the application layer. They handle persistence via SQLAlchemy (ORM table models exposed as Core tables).
 
 ### Base Repository Classes
 
@@ -71,12 +73,11 @@ Repositories extend base classes:
 Most repositories use `UserScopedBaseRepository`:
 
 ```python
-from uuid import UUID
-
 from lykke.domain.entities import TaskEntity
 from lykke.domain.value_objects import TaskQuery
 from lykke.infrastructure.database.tables import tasks_tbl
 from lykke.infrastructure.repositories.base import UserScopedBaseRepository
+from lykke.domain.entities import UserEntity
 
 
 class TaskRepository(UserScopedBaseRepository[TaskEntity, TaskQuery]):
@@ -85,15 +86,15 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, TaskQuery]):
     QueryClass = TaskQuery  # Query object type
     excluded_row_fields = {"date"}  # DB-only fields to exclude
 
-    def __init__(self, user_id: UUID) -> None:
-        super().__init__(user_id=user_id)
+    def __init__(self, user: UserEntity) -> None:
+        super().__init__(user=user)
 ```
 
 ### Key Rules for Repositories
 
 1. **Extend base classes** - Use `UserScopedBaseRepository` or `BaseRepository`
 2. **Set class variables** - Set `Object`, `table`, `QueryClass`
-3. **User scoping** - Pass `user_id` to base `__init__()` for user-scoped repos
+3. **User scoping** - User-scoped repositories accept `user: UserEntity` and are always scoped
 4. **Implement conversion methods** - Implement `entity_to_row()` and optionally `row_to_entity()`
 5. **Override `build_query()`** - Override to add custom query logic
 6. **Handle JSONB fields** - Serialize/deserialize JSONB fields using `dataclass_to_json_dict()`
@@ -247,8 +248,8 @@ class SqlAlchemyUnitOfWork:
     day_ro_repo: DayRepositoryReadOnlyProtocol
     # ... other repos
 
-    def __init__(self, user_id: UUID) -> None:
-        self.user_id = user_id
+    def __init__(self, user: UserEntity) -> None:
+        self.user = user
         self._connection: AsyncConnection | None = None
         self._added_entities: list[BaseEntityObject] = []
 
@@ -298,35 +299,26 @@ class SqlAlchemyUnitOfWork:
 
 ## Database Tables
 
-Database tables are defined using SQLAlchemy Core in `infrastructure/database/tables/`.
+Database tables are defined as SQLAlchemy ORM models in `infrastructure/database/tables/`, and each module exports a `*_tbl = Model.__table__` alias for repository query building.
 
 ### Table Definition
 
 ```python
-from sqlalchemy import Table, Column, String, Date, UUID, JSONB
+class Task(Base):
+    __tablename__ = "tasks"
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    scheduled_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    # ... other columns ...
 
-from lykke.infrastructure.database import metadata
-
-tasks_tbl = Table(
-    "tasks",
-    metadata,
-    Column("id", UUID, primary_key=True),
-    Column("user_id", UUID, nullable=False, index=True),
-    Column("scheduled_date", Date, nullable=False, index=True),
-    Column("name", String, nullable=False),
-    Column("status", String, nullable=False),
-    Column("category", String, nullable=False),
-    Column("frequency", String, nullable=False),
-    Column("task_definition", JSONB, nullable=False),
-    Column("schedule", JSONB, nullable=True),
-    Column("tags", JSONB, nullable=True),
-)
+tasks_tbl = Task.__table__
 ```
 
 ### Key Rules for Tables
 
-1. **Use SQLAlchemy Core** - Use `Table` objects, not ORM models
-2. **Use metadata** - All tables must use shared metadata from `infrastructure.database`
+1. **Use SQLAlchemy table modules** - Prefer existing `*_tbl` exports from table modules
+2. **Use ORM model + table alias pattern** - Model defines schema, repositories query against `*_tbl`
 3. **Index foreign keys** - Index foreign keys and commonly queried fields
 4. **Use JSONB for complex types** - Store nested objects as JSONB
 5. **Use UUID for IDs** - Use UUID type for primary keys

@@ -43,21 +43,22 @@ class TaskRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[TaskEntity]):
 Base protocols define standard operations:
 
 **ReadOnlyRepositoryProtocol:**
-- `get(key: UUID) -> T` - Get entity by ID (raises NotFoundError if not found)
-- `all() -> list[T]` - Get all entities
-- `search(query: QueryType) -> list[T]` - Search entities with query object
-- `search_one(query: QueryType) -> T` - Get single entity (raises NotFoundError if not found)
-- `search_one_or_none(query: QueryType) -> T | None` - Get single entity or None
-- `paged_search(query: QueryType) -> PagedQueryResponse[T]` - Search with pagination metadata
+- `async get(key: UUID) -> T` - Get entity by ID (raises NotFoundError if not found)
+- `async all() -> list[T]` - Get all entities
+- `async search(query: QueryType) -> list[T]` - Search entities with query object
+- `async search_one(query: QueryType) -> T` - Get single entity (raises NotFoundError if not found)
+- `async search_one_or_none(query: QueryType) -> T | None` - Get single entity or None
+- `async paged_search(query: QueryType) -> PagedQueryResponse[T]` - Search with pagination metadata
 
 **ReadWriteRepositoryProtocol:**
 - All read operations from `ReadOnlyRepositoryProtocol`
-- `put(obj: T) -> T` - Save or update entity
-- `delete(key: UUID | T) -> None` - Delete entity
-- `insert_many(*objs: T) -> list[T]` - Insert multiple entities
-- `delete_many(query: QueryType) -> None` - Delete entities matching query
-- `bulk_delete(query: QueryType) -> None` - Delete all entities matching query
-- `apply_updates(key: UUID, **updates: Any) -> T` - Apply partial updates
+- `async put(obj: T) -> T` - Save or update entity
+- `async insert(obj: T) -> T` - Insert new entity only
+- `async delete(key: UUID | T) -> None` - Delete entity
+- `async insert_many(*objs: T) -> list[T]` - Insert multiple entities
+- `async delete_many(query: QueryType) -> None` - Delete entities matching query
+- `async bulk_delete(query: QueryType) -> None` - Delete all entities matching query
+- `async apply_updates(key: UUID, **updates: Any) -> T` - Apply partial updates
 
 ---
 

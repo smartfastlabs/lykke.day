@@ -14,8 +14,8 @@
 # Proxy API requests to your backend (update the URL when you deploy your backend)
 [[redirects]]
   from = "/api/*"
-  to = "http://localhost:8080/:splat"
-  # to = "https://api.lykke.day/:splat"
+  # to = "http://localhost:8080/:splat"
+  to = "https://api.lykke.day/:splat"
   status = 200
   force = true
 

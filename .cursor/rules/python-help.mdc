@@ -75,15 +75,16 @@ from lykke.application.repositories import TaskRepositoryReadOnlyProtocol
 
 1. **Add it to `UnitOfWorkProtocol`** in `application/unit_of_work.py`
 2. **Add it to `ReadOnlyRepositories` protocol** in `application/unit_of_work.py`
-3. **Add it to `BaseHandler`** in `application/base_handler.py`
-4. **Add it to `SqlAlchemyUnitOfWork`** in `infrastructure/unit_of_work.py`
-5. **Add it to `SqlAlchemyReadOnlyRepositories`** in `infrastructure/unit_of_work.py`
-6. **Update ALL test fixtures** that mock `ReadOnlyRepositories`:
-   - Search for `class.*FakeReadOnlyRepos` and `class.*DummyRORepos` in `tests/`
-   - Add `self.{repo_name}_ro_repo = fake` (or `None`) to ALL of them
-   - Common locations: `tests/unit/application/**/*.py`, `tests/unit/gateways/**/*.py`
+3. **Add it to `SqlAlchemyUnitOfWork`** in `infrastructure/unit_of_work.py` (if command/UoW reads need it)
+4. **Add it to `SqlAlchemyReadOnlyRepositories`** in `infrastructure/repository_factories.py`
+5. **Add repository implementation export/import wiring** in `infrastructure/repositories/__init__.py` and related factories
+6. **Update test doubles/fixtures** that mock `ReadOnlyRepositories` / `UnitOfWorkProtocol`:
+   - Update `tests/support/dobles.py` (`create_read_only_repos_double`, `create_uow_double`)
+   - Update any protocol doubles used in unit tests
+7. **Do NOT edit `BaseHandler` for repo attributes**:
+   - `BaseHandler` auto-wires repos from `ReadOnlyRepositories` annotations
 
-**Failure to do step 6 will cause ALL tests to fail with AttributeError.**
+**Failure to update protocol doubles will cause unit tests to fail with missing attribute errors.**
 
 ## Type Checking
 

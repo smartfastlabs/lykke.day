@@ -110,6 +110,22 @@ application/
 
 ---
 
+### Identity Access (`application/identity/`)
+
+**Purpose:** Explicit identity boundaries for unauthenticated flows and current-user self access.
+
+**Location:** `backend/lykke/application/identity/`
+
+**Key Components:**
+- `access_protocols.py` - `UnauthenticatedIdentityAccessProtocol`, `CurrentUserAccessProtocol`
+
+**What It Does:**
+- Replaces generic unscoped user repositories with explicit identity interfaces
+- Separates cross-user auth flows from current-user updates
+- Makes identity access intent explicit in handlers and dependencies
+
+---
+
 ### Events (`application/events/`)
 
 **Purpose:** Domain event handling and signal registration.
@@ -146,7 +162,7 @@ application/
 - Provides transaction management for commands
 - Coordinates repositories to share the same connection
 - Tracks entities for persistence
-- Collects and dispatches domain events after commit
+- Dispatches domain events before commit and broadcasts them after commit
 
 ---
 
@@ -181,7 +197,7 @@ When adding a new feature in the application layer:
 - Commands use `UnitOfWorkFactory` to create transaction-scoped units of work
 - Queries use `ReadOnlyRepositoryFactory` to create read-only repositories
 - Unit of Work tracks entities via `add()` and commits/rollbacks transactions
-- Domain events are collected and dispatched after commit
+- Domain events are dispatched before commit; post-commit broadcasting is infrastructure concern
 
 ### Protocol Pattern
 - Protocols defined in `application/repositories/` and `application/gateways/`
