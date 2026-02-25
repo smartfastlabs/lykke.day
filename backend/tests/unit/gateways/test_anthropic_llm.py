@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.application.gateways.llm_protocol import LLMTool
-from app.infrastructure.gateways.anthropic_llm import (
+from lykke.application.gateways.llm_protocol import LLMTool
+from lykke.infrastructure.gateways.anthropic_llm import (
     AnthropicLLMGateway,
     _is_model_not_found_error,
 )

@@ -6,19 +6,18 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
-from app.application.gateways.llm_protocol import (
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, SystemMessage
+from loguru import logger
+from lykke.application.gateways.llm_protocol import (
     LLMTool,
     LLMToolCallResult,
     LLMToolRunResult,
 )
-from app.core.utils.serialization import dataclass_to_json_dict
-from app.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
-from loguru import logger
+from lykke.core.config import settings
+from lykke.core.utils.serialization import dataclass_to_json_dict
+from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
 from pydantic import SecretStr
-
-from app.core.config import settings
 
 
 def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> str:
