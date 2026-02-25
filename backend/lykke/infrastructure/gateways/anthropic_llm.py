@@ -6,19 +6,19 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
+from app.application.gateways.llm_protocol import (
+    LLMTool,
+    LLMToolCallResult,
+    LLMToolRunResult,
+)
+from app.core.utils.serialization import dataclass_to_json_dict
+from app.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from pydantic import SecretStr
 
-from lykke.application.gateways.llm_protocol import (
-    LLMTool,
-    LLMToolCallResult,
-    LLMToolRunResult,
-)
-from lykke.core.config import settings
-from lykke.core.utils.serialization import dataclass_to_json_dict
-from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
+from app.core.config import settings
 
 
 def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> str:
@@ -150,6 +150,12 @@ def _coerce_json_safe(value: Any) -> Any:
         return str(value)
 
 
+def _is_model_not_found_error(exc: BaseException) -> bool:
+    """True if the exception indicates Anthropic returned model not found (404)."""
+    msg = str(exc).lower()
+    return "404" in msg or "not_found_error" in msg or "model:" in msg
+
+
 class AnthropicLLMGateway:
     """Anthropic (Claude) implementation of LLM gateway."""
 
@@ -187,14 +193,14 @@ class AnthropicLLMGateway:
         response_excerpt = ""
         response_length = 0
         error_info: dict[str, Any] | None = None
+        effective_model = settings.ANTHROPIC_MODEL
+        used_fallback = False
 
         try:
             if not tools:
                 raise ValueError("At least one tool must be provided")
 
-            tool_specs, models_by_name, callbacks_by_name = self._build_tool_data(
-                tools
-            )
+            tool_specs, models_by_name, callbacks_by_name = self._build_tool_data(tools)
             request_payload = await self.preview_usecase(
                 system_prompt,
                 ask_prompt,
@@ -215,7 +221,31 @@ class AnthropicLLMGateway:
                 ),
             ]
             llm = self._llm.bind_tools(tool_specs)
-            response = await llm.ainvoke(messages)
+            try:
+                response = await llm.ainvoke(messages)
+            except Exception as invoke_err:
+                if _is_model_not_found_error(invoke_err) and (
+                    settings.ANTHROPIC_FALLBACK_MODEL != settings.ANTHROPIC_MODEL
+                ):
+                    used_fallback = True
+                    effective_model = settings.ANTHROPIC_FALLBACK_MODEL
+                    logger.warning(
+                        "Anthropic model not found, retrying with fallback",
+                        configured_model=settings.ANTHROPIC_MODEL,
+                        fallback_model=settings.ANTHROPIC_FALLBACK_MODEL,
+                    )
+                    fallback_llm = ChatAnthropic(
+                        model_name=settings.ANTHROPIC_FALLBACK_MODEL,
+                        api_key=SecretStr(settings.ANTHROPIC_API_KEY),
+                        temperature=0.7,
+                        timeout=None,
+                        stop=None,
+                    )
+                    response = await fallback_llm.bind_tools(tool_specs).ainvoke(
+                        messages
+                    )
+                else:
+                    raise
 
             tool_calls = _extract_tool_calls_from_response(
                 response, list(models_by_name.keys())
@@ -294,6 +324,14 @@ class AnthropicLLMGateway:
             status = "error"
             error_info = {"type": e.__class__.__name__, "message": str(e)}
             logger.error(f"Error running use case with Anthropic: {e}")
+            if _is_model_not_found_error(e):
+                logger.error(
+                    "Anthropic model not found. Set ANTHROPIC_MODEL to a valid model id "
+                    "(e.g. claude-sonnet-4-6). See https://docs.anthropic.com/en/api/models-list",
+                    configured_model=settings.ANTHROPIC_MODEL,
+                    fallback_attempted=used_fallback,
+                    fallback_model=settings.ANTHROPIC_FALLBACK_MODEL,
+                )
             logger.exception(e)
             return None
         finally:
@@ -301,7 +339,8 @@ class AnthropicLLMGateway:
             event_data = {
                 "source": "llm",
                 "provider": "anthropic",
-                "model": settings.ANTHROPIC_MODEL,
+                "model": effective_model,
+                "used_fallback": used_fallback,
                 "status": status,
                 "started_at": started_at.isoformat(),
                 "finished_at": finished_at.isoformat(),
@@ -324,6 +363,7 @@ class AnthropicLLMGateway:
                 "response_length": response_length,
                 "error": error_info,
             }
+
     async def preview_usecase(
         self,
         system_prompt: str,

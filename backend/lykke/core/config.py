@@ -47,7 +47,12 @@ class Settings(BaseSettings):
     REDIS_MAX_CONNECTIONS: int = 50  # Maximum connections in the pool
     SESSION_SECRET: str = ""
     ANTHROPIC_API_KEY: str = ""
-    ANTHROPIC_MODEL: str = "claude-3-5-haiku-20241022"  # Default to Haiku for cost
+    ANTHROPIC_MODEL: str = (
+        "claude-sonnet-4-6"  # Default Sonnet; override via ANTHROPIC_MODEL env
+    )
+    ANTHROPIC_FALLBACK_MODEL: str = (
+        "claude-sonnet-4-6"  # Used when configured model returns 404
+    )
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"  # Default to cheaper model
     SMART_NOTIFICATIONS_ENABLED: bool = True  # Feature flag
