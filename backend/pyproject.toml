@@ -43,7 +43,6 @@ taskiq-redis = "^0.4.0"
 redis = "^4.2.0"
 cryptography = "^46.0.3"
 phonenumbers = "^9.0.0"
-fastapi-dev-proxy = {git = "https://github.com/smartfastlabs/fastapi-dev-proxy.git", rev = "main"}
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.3.0"
