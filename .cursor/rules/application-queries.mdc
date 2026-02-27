@@ -80,9 +80,21 @@ class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, value_objects.Da
 5. **Use ReadOnlyRepositories** - Queries should use `self.*_ro_repo` dependencies; no writes
 6. **No mutations** - Queries must not modify state
 7. **No `uow.add()`** - Queries don't track entities for persistence
-8. **Return domain objects** - Return entities or value objects
+8. **Return a single typed result** - Return a domain entity, a value object, or a **result dataclass**. Do not return raw tuples or untyped dicts; for multiple values use a frozen dataclass (e.g. `GetIncrementalChangesResult(changes=..., last_timestamp=...)`).
 9. **Use query objects** - Use value objects like `TaskQuery` for filtering
 10. **Side-effect free** - Queries should not trigger side effects
+
+---
+
+## Result Type (handle return value)
+
+**Query handlers must return a single typed value.** Use one of:
+
+- A **domain entity** (e.g. `TaskEntity`, `DayEntity`)
+- A **value object** from domain (e.g. `DayContext`, `TaskQuery`)
+- A **result dataclass** when the result has multiple fields (e.g. `GetIncrementalChangesResult(changes=[], last_timestamp=None)`)
+
+Define result dataclasses in the same module as the handler, frozen and with clear field names. Do **not** return raw `tuple`, `list`, or `dict` as the handler return type.
 
 ---
 

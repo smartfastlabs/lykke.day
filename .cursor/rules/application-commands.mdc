@@ -92,7 +92,9 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
 7. **Use `uow.create()` for new entities** - Marks entity as created and adds to UoW
 8. **Use `uow.add()` for updates** - Track modified entities for persistence
 9. **Use `uow.delete()` for deletions** - Marks entity for deletion
-10. **Return domain objects** - Return entities or value objects, not infrastructure types
+10. **Return a single typed result** - Return a domain entity, a value object, or a **result dataclass**. Do not return raw tuples or untyped dicts; for multiple values use a frozen dataclass. Never return infrastructure types.
+
+**Result type:** Command handlers must return a single typed value (entity, value object, or a frozen result dataclass). Do not return raw `tuple`, `list`, or `dict` as the handler return type.
 
 ---
 

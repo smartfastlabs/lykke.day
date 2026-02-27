@@ -38,8 +38,10 @@ from .day_context_parts import (
 )
 from .get_day_context import GetDayContextHandler, GetDayContextQuery
 from .get_incremental_changes import (
+    EntityLoadResult,
     GetIncrementalChangesHandler,
     GetIncrementalChangesQuery,
+    GetIncrementalChangesResult,
 )
 from .get_llm_prompt_context import GetLLMPromptContextHandler, GetLLMPromptContextQuery
 from .list_base_personalities import (
@@ -78,8 +80,10 @@ __all__ = [
     "GetDayRoutinesQuery",
     "GetDayTasksHandler",
     "GetDayTasksQuery",
+    "EntityLoadResult",
     "GetIncrementalChangesHandler",
     "GetIncrementalChangesQuery",
+    "GetIncrementalChangesResult",
     "GetLLMPromptContextHandler",
     "GetLLMPromptContextQuery",
     "GetUseCaseConfigHandler",

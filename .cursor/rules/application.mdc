@@ -42,6 +42,8 @@ application/
 
 **Exception:** You can import infrastructure types in `TYPE_CHECKING` blocks for type hints only, but never at runtime.
 
+**Special exemption (worker task wiring):** Command handlers that schedule post-commit background work may import `lykke.presentation.workers.tasks` solely to resolve taskiq worker references (e.g. `get_worker(worker_tasks.process_brain_dump_item_task)`). This is the only allowed presentation import; all other presentation modules remain forbidden.
+
 ---
 
 ## Subdirectories

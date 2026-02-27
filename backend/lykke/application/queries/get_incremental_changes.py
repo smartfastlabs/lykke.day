@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
-from typing import Any
+from typing import Union
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
@@ -15,13 +15,24 @@ from lykke.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
 )
 from lykke.domain import value_objects
-from lykke.presentation.api.schemas.mappers import (
-    map_calendar_entry_to_schema,
-    map_day_to_schema,
-    map_routine_to_schema,
-    map_task_to_schema,
+from lykke.domain.entities import (
+    CalendarEntryEntity,
+    DayEntity,
+    RoutineEntity,
+    TaskEntity,
 )
-from lykke.presentation.api.schemas.websocket_message import EntityChangeSchema
+
+
+@dataclass(frozen=True)
+class EntityLoadResult:
+    """Application-level result for loading a single entity for incremental sync.
+
+    Presentation layer uses this to build EntityChangeSchema (mappers stay in presentation).
+    """
+
+    entity_type: str
+    entity: Union[TaskEntity, CalendarEntryEntity, RoutineEntity, DayEntity]
+    tasks: list[TaskEntity] | None = None  # Only set for entity_type == "routine"
 
 
 @dataclass(frozen=True)
@@ -32,10 +43,16 @@ class GetIncrementalChangesQuery(Query):
     date: dt_date
 
 
+@dataclass(frozen=True)
+class GetIncrementalChangesResult:
+    """Result of GetIncrementalChangesQuery. Use a dataclass for handler return types."""
+
+    changes: list[dict[str, object]]
+    last_timestamp: datetime | None
+
+
 class GetIncrementalChangesHandler(
-    BaseQueryHandler[
-        GetIncrementalChangesQuery, tuple[list[EntityChangeSchema], datetime | None]
-    ]
+    BaseQueryHandler[GetIncrementalChangesQuery, GetIncrementalChangesResult]
 ):
     """Provides entity data loading for incremental change payloads."""
 
@@ -48,54 +65,43 @@ class GetIncrementalChangesHandler(
 
     async def handle(
         self, query: GetIncrementalChangesQuery
-    ) -> tuple[list[EntityChangeSchema], datetime | None]:
+    ) -> GetIncrementalChangesResult:
         """Handle get incremental changes query."""
         return await self.get_incremental_changes(query.since, query.date)
 
     async def get_incremental_changes(
         self, since_timestamp: datetime, target_date: dt_date
-    ) -> tuple[list[EntityChangeSchema], datetime | None]:
+    ) -> GetIncrementalChangesResult:
         """Legacy compatibility method retained for interface stability."""
         _ = since_timestamp, target_date
-        return [], None
+        return GetIncrementalChangesResult(changes=[], last_timestamp=None)
 
-    async def _load_entity_data(
+    async def load_entity_for_sync(
         self,
         entity_type: str,
         entity_id: UUID,
         *,
-        _activity_type: str,
-        user_timezone: str | None,
-    ) -> dict[str, Any] | None:
-        """Load the full entity data from the repository and convert to dict.
+        user_timezone: str | None = None,
+    ) -> EntityLoadResult | None:
+        """Load entity (and related data for routine) for incremental sync.
 
-        Args:
-            entity_type: The type of entity (task, calendar_entry, etc.)
-            entity_id: The ID of the entity
-
-        Returns:
-            Dictionary representation of the entity, or None if not found
+        Returns application-level EntityLoadResult. Presentation layer converts
+        to wire format via mappers and EntityChangeSchema.
         """
         try:
             if entity_type == "task":
                 task = await self.task_ro_repo.get(entity_id)
                 if not task:
                     return None
-                # Convert task entity to dict using schema mapper
-                task_schema = map_task_to_schema(task, user_timezone=user_timezone)
-                return task_schema.model_dump(mode="json")
+                return EntityLoadResult(entity_type=entity_type, entity=task)
 
-            elif entity_type == "calendarentry":
+            if entity_type == "calendarentry":
                 entry = await self.calendar_entry_ro_repo.get(entity_id)
                 if not entry:
                     return None
-                # Convert calendar entry to dict using schema mapper
-                entry_schema = map_calendar_entry_to_schema(
-                    entry, user_timezone=user_timezone
-                )
-                return entry_schema.model_dump(mode="json")
+                return EntityLoadResult(entity_type=entity_type, entity=entry)
 
-            elif entity_type == "routine":
+            if entity_type == "routine":
                 routine = await self.routine_ro_repo.get(entity_id)
                 if not routine:
                     return None
@@ -105,19 +111,15 @@ class GetIncrementalChangesHandler(
                         routine_definition_ids=[routine.routine_definition_id],
                     )
                 )
-                routine_schema = map_routine_to_schema(
-                    routine,
-                    tasks=tasks,
-                    user_timezone=user_timezone,
+                return EntityLoadResult(
+                    entity_type=entity_type, entity=routine, tasks=tasks
                 )
-                return routine_schema.model_dump(mode="json")
 
-            elif entity_type == "day":
+            if entity_type == "day":
                 day = await self.day_ro_repo.get(entity_id)
                 if not day:
                     return None
-                day_schema = map_day_to_schema(day)
-                return day_schema.model_dump(mode="json")
+                return EntityLoadResult(entity_type=entity_type, entity=day)
 
             return None
         except Exception:

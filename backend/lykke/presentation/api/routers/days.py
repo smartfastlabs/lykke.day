@@ -4,7 +4,7 @@ import asyncio
 import contextlib
 import json
 from datetime import UTC, date, datetime as dt_datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
@@ -20,6 +20,7 @@ from lykke.application.commands import (
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
+    EntityLoadResult,
     GetDayBrainDumpsHandler,
     GetDayBrainDumpsQuery,
     GetDayCalendarEntriesHandler,
@@ -1088,6 +1089,32 @@ async def _read_change_stream_since(
     return changes, last_stream_id, last_timestamp
 
 
+def _entity_load_result_to_data(
+    result: EntityLoadResult, user_timezone: str | None
+) -> dict[str, Any]:
+    """Convert application EntityLoadResult to wire-format dict via presentation mappers."""
+    if result.entity_type == "task":
+        return map_task_to_schema(
+            cast(TaskEntity, result.entity), user_timezone=user_timezone
+        ).model_dump(mode="json")
+    if result.entity_type == "calendarentry":
+        return map_calendar_entry_to_schema(
+            cast(CalendarEntryEntity, result.entity),
+            user_timezone=user_timezone,
+        ).model_dump(mode="json")
+    if result.entity_type == "routine":
+        return map_routine_to_schema(
+            cast(RoutineEntity, result.entity),
+            tasks=result.tasks or [],
+            user_timezone=user_timezone,
+        ).model_dump(mode="json")
+    if result.entity_type == "day":
+        return map_day_to_schema(cast(DayEntity, result.entity)).model_dump(
+            mode="json"
+        )
+    return {}
+
+
 async def _build_change_from_stream_payload(
     *,
     payload: dict[str, Any],
@@ -1113,17 +1140,13 @@ async def _build_change_from_stream_payload(
     entity_data: dict[str, Any] | None = None
     if change_type in ("created", "updated") and entity_patch is None:
         try:
-            activity_type = (
-                "EntityCreatedEvent"
-                if change_type == "created"
-                else "EntityUpdatedEvent"
-            )
-            entity_data = await get_incremental_changes_handler._load_entity_data(
+            result = await get_incremental_changes_handler.load_entity_for_sync(
                 entity_type,
                 entity_uuid,
-                _activity_type=activity_type,
                 user_timezone=user_timezone,
             )
+            if result is not None:
+                entity_data = _entity_load_result_to_data(result, user_timezone)
         except Exception as e:
             logger.error(
                 f"Failed to load entity data for {entity_type} {entity_uuid}: {e}"
