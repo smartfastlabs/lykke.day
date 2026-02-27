@@ -18,11 +18,11 @@ presentation/
 │   │   ├── tasks.py       # Task routes
 │   │   ├── days.py        # Day routes
 │   │   ├── day_templates.py # DayTemplate routes
-│   │   ├── dependencies/  # Dependency injection functions
-│   │   │   ├── commands/  # Command handler DI functions
-│   │   │   ├── factories.py # Factory DI functions
+│   │   ├── dependencies/  # Dependency injection
+│   │   │   ├── commands/  # Command handler DI (when not using factory)
+│   │   │   ├── factories.py # query_handler_factory, command_handler_factory
 │   │   │   ├── services/  # Service DI functions
-│   │   │   └── user.py    # User DI function
+│   │   │   └── user.py    # get_current_user, get_current_user_from_token
 │   │   └── ...
 │   └── schemas/           # Pydantic request/response models
 │       ├── base.py        # BaseSchema, BaseEntitySchema
@@ -30,9 +30,10 @@ presentation/
 │       ├── day.py         # DaySchema, DayUpdateSchema
 │       ├── mappers.py     # Functions to convert entities to schemas
 │       └── ...
+├── handler_factory.py     # QueryHandlerFactory, CommandHandlerFactory
 ├── middlewares/           # HTTP middlewares
-└── workers/               # Background task workers
-    └── tasks.py           # Celery/background tasks
+└── workers/               # Background task workers (Taskiq)
+    └── tasks/             # Task definitions and registration
 ```
 
 ---
@@ -55,9 +56,9 @@ presentation/
 
 ## Routers
 
-Routers are FastAPI route handlers that define API endpoints. They should be **thin** and delegate to application layer handlers.
+Routers are FastAPI route handlers that define API endpoints. They should be **thin** and delegate to application layer handlers. **Prefer the Handler Factory Pattern** (inject `QueryHandlerFactory` or `CommandHandlerFactory` and call `factory.create(HandlerClass)`) for most routes; see the section below.
 
-### Router Structure
+### Router structure (handler dependency)
 
 ```python
 from typing import Annotated
@@ -65,22 +66,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from lykke.application.commands import (
-    ScheduleDayCommand,
-    ScheduleDayHandler,
-    UpdateDayCommand,
-    UpdateDayHandler,
-)
-from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
+from lykke.application.commands import UpdateDayCommand, UpdateDayHandler
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import DayUpdateObject
-from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
-from lykke.presentation.api.schemas.mappers import (
-    map_day_context_to_schema,
-    map_day_to_schema,
-)
+from lykke.presentation.api.schemas import DaySchema, DayUpdateSchema
+from lykke.presentation.api.schemas.mappers import map_day_to_schema
 
-from .dependencies.services import get_update_day_handler
+from .dependencies.factories import create_command_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -90,17 +82,18 @@ router = APIRouter()
 async def update_day(
     day_id: UUID,
     update_data: DayUpdateSchema,
-    update_day_handler: Annotated[UpdateDayHandler, Depends(get_update_day_handler)],
     user: Annotated[UserEntity, Depends(get_current_user)],
+    handler: Annotated[
+        UpdateDayHandler, Depends(create_command_handler(UpdateDayHandler))
+    ],
 ) -> DaySchema:
     """Update a day."""
-    day = await get_day_by_id(day_id)  # router concern: resolve path id
     update_object = DayUpdateObject(
         status=update_data.status,
         high_level_plan=update_data.high_level_plan,
     )
-    updated = await update_day_handler.handle(
-        UpdateDayCommand(date=day.date, update_data=update_object)
+    updated = await handler.handle(
+        UpdateDayCommand(day_id=day_id, update_data=update_object)
     )
     return map_day_to_schema(updated)
 ```
@@ -207,46 +200,94 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
 
 ---
 
-## Dependency Injection
+## Handler Factory Pattern
 
-Dependency injection functions create handler instances with their dependencies.
+Routers obtain command and query handlers via **dependency factories** that return a ready-to-use handler instance. Use `create_query_handler(HandlerClass)` and `create_command_handler(HandlerClass)` so you inject the handler directly; do not add custom DI functions per handler.
 
-### Dependency Functions
+### How It Works
+
+- **`create_query_handler(handler_class)`** – Returns a FastAPI dependency that builds `QueryHandlerFactory(user, ro_repo_factory)` and returns `factory.create(handler_class)`. Use for read-only handlers.
+- **`create_command_handler(handler_class)`** – Returns a dependency that builds `CommandHandlerFactory(user, ro_repo_factory, uow_factory)` and returns `factory.create(handler_class)`. Use for write handlers.
+- **WebSocket routes** – Use `create_query_handler_websocket(HandlerClass)` and `create_command_handler_websocket(HandlerClass)` (they use `get_current_user_from_token` and, for commands, `get_unit_of_work_factory_websocket`).
+- **Unauthenticated auth routes** – Use `create_unauth_auth_handler(HandlerClass)` in `auth_sms.py` for handlers that take identity_access / uow_factory / sms_gateway (registry-based).
+
+### Query Handler
 
 ```python
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 
-from lykke.application.commands.day import UpdateDayHandler
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.domain.entities import UserEntity
+from lykke.application.queries import GetDayTemplateHandler, GetDayTemplateQuery
+from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
 
-from .factories import get_read_only_repository_factory, get_unit_of_work_factory
-from .user import get_current_user
+from .dependencies.factories import create_query_handler
+
+router = APIRouter()
 
 
-def get_update_day_handler(
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+@router.get("/{template_id}", response_model=DayTemplateSchema)
+async def get_day_template(
+    template_id: UUID,
+    handler: Annotated[
+        GetDayTemplateHandler, Depends(create_query_handler(GetDayTemplateHandler))
     ],
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> UpdateDayHandler:
-    """Get an UpdateDayHandler instance."""
-    return UpdateDayHandler(
-        user=user,
-        uow_factory=uow_factory,
-        repository_factory=ro_repo_factory,
-    )
+) -> DayTemplateSchema:
+    result = await handler.handle(GetDayTemplateQuery(template_id=template_id))
+    return map_day_template_to_schema(result)
 ```
+
+### Command Handler
+
+```python
+@router.post("/", response_model=DayTemplateSchema, status_code=201)
+async def create_day_template(
+    data: DayTemplateCreateSchema,
+    handler: Annotated[
+        CreateDayTemplateHandler, Depends(create_command_handler(CreateDayTemplateHandler))
+    ],
+) -> DayTemplateSchema:
+    created = await handler.handle(CreateDayTemplateCommand(**data.model_dump()))
+    return map_day_template_to_schema(created)
+```
+
+### Multiple handlers in one route
+
+When a route needs both a query and a command handler (or several handlers), inject each with a distinct parameter name:
+
+```python
+handler: Annotated[GetCalendarHandler, Depends(create_query_handler(GetCalendarHandler))],
+command_handler: Annotated[SubscribeCalendarHandler, Depends(create_command_handler(SubscribeCalendarHandler))],
+```
+
+### Key Rules for the Factory Pattern
+
+1. **Use the generic factories** – Use `Depends(create_query_handler(MyHandler))` or `Depends(create_command_handler(MyHandler))`; do not add custom `_get_*_handler` functions per handler type.
+2. **Inject the handler instance** – The dependency returns a wired handler; call `await handler.handle(command_or_query)` directly.
+3. **User is inside the factory** – The create_* functions pull `get_current_user` (or `get_current_user_from_token` for WebSockets) and build the handler with that user.
+4. **Custom wiring** – Handlers that need gateways or other handlers are registered in `handler_factory.py` with a provider function; most handlers use the default constructor wiring.
+
+---
+
+## Dependency Injection
+
+Dependency injection provides handler-instance factories (see **Handler Factory Pattern** above). Use the generic factories; do not add custom per-handler DI functions.
+
+### Handler dependency factories
+
+Defined in `presentation/api/routers/dependencies/factories.py`:
+
+- **`create_query_handler(handler_class)`** – Returns a dependency that yields a wired query handler for HTTP routes. Usage: `handler: Annotated[MyHandler, Depends(create_query_handler(MyHandler))]`.
+- **`create_command_handler(handler_class)`** – Returns a dependency that yields a wired command handler for HTTP routes.
+- **`create_query_handler_websocket(handler_class)`** / **`create_command_handler_websocket(handler_class)`** – Same for WebSocket routes (use `get_current_user_from_token` and, for commands, `get_unit_of_work_factory_websocket`).
+
+The same file still defines **`query_handler_factory`** and **`command_handler_factory`** for rare cases where a route needs the factory (e.g. building multiple handlers or unauthenticated flows that resolve user elsewhere). Prefer the `create_*_handler(HandlerClass)` pattern.
 
 ### Key Rules for Dependencies
 
-1. **Use `Annotated` with `Depends()`** - Use type annotations for dependency injection
-2. **Create handler instances** - Return handler instances, not classes
-3. **Inject dependencies** - Use `Depends()` for handler dependencies
-4. **Get user from dependencies** - Get user from `get_current_user` dependency
+1. **Use generic handler factories** – Use `Depends(create_query_handler(MyHandler))` or `Depends(create_command_handler(MyHandler))`; avoid custom `def _get_*_handler(...)` per handler.
+2. **Use `Annotated` with `Depends()`** – Type annotations for dependency injection.
+3. **Get user from dependencies** – User is resolved inside the create_* functions via `get_current_user` or `get_current_user_from_token`.
 
 ---
 
@@ -261,7 +302,10 @@ The presentation layer also handles WebSocket connections for real-time updates.
 async def days_context_websocket(
     websocket: WebSocket,
     pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
-    day_context_handler: Annotated[GetDayContextHandler, Depends(day_context_handler_websocket)],
+    day_context_handler: Annotated[
+        GetDayContextHandler,
+        Depends(create_query_handler_websocket(GetDayContextHandler)),
+    ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync."""
     await websocket.accept()
@@ -329,11 +373,11 @@ routine_ids: list[UUID] = Field(default_factory=list)
 
 ```python
 # Wrong - missing Annotated
-def get_handler(handler: Depends(get_handler_factory)): ...
+def get_handler(handler: Depends(create_command_handler(MyHandler))): ...
 
 # Right - use Annotated
 def get_handler(
-    handler: Annotated[Handler, Depends(get_handler_factory)]
+    handler: Annotated[MyHandler, Depends(create_command_handler(MyHandler))]
 ): ...
 ```
 
@@ -376,15 +420,17 @@ Presentation layer tests go in:
 
 ## Common Patterns
 
-### CRUD Router Pattern
+### CRUD Router Pattern (handler dependency)
 
 ```python
+from .dependencies.factories import create_command_handler, create_query_handler
+
 router = APIRouter()
 
 @router.get("/{uuid}", response_model=EntitySchema)
 async def get_entity(
     uuid: UUID,
-    handler: Annotated[GetHandler, Depends(get_get_handler)],
+    handler: Annotated[GetEntityHandler, Depends(create_query_handler(GetEntityHandler))],
 ) -> EntitySchema:
     entity = await handler.handle(GetEntityQuery(entity_id=uuid))
     return map_entity_to_schema(entity)
@@ -392,8 +438,7 @@ async def get_entity(
 @router.post("/", response_model=EntitySchema, status_code=201)
 async def create_entity(
     data: EntityCreateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[CreateHandler, Depends(get_create_handler)],
+    handler: Annotated[CreateEntityHandler, Depends(create_command_handler(CreateEntityHandler))],
 ) -> EntitySchema:
     created = await handler.handle(CreateEntityCommand(**data.model_dump()))
     return map_entity_to_schema(created)
@@ -402,7 +447,7 @@ async def create_entity(
 async def update_entity(
     uuid: UUID,
     data: EntityUpdateSchema,
-    handler: Annotated[UpdateHandler, Depends(get_update_handler)],
+    handler: Annotated[UpdateEntityHandler, Depends(create_command_handler(UpdateEntityHandler))],
 ) -> EntitySchema:
     update_obj = EntityUpdateObject(**data.model_dump(exclude_unset=True))
     updated = await handler.handle(UpdateEntityCommand(entity_id=uuid, update_data=update_obj))
@@ -411,7 +456,7 @@ async def update_entity(
 @router.delete("/{uuid}", status_code=204)
 async def delete_entity(
     uuid: UUID,
-    handler: Annotated[DeleteHandler, Depends(get_delete_handler)],
+    handler: Annotated[DeleteEntityHandler, Depends(create_command_handler(DeleteEntityHandler))],
 ) -> None:
     await handler.handle(DeleteEntityCommand(entity_id=uuid))
 ```

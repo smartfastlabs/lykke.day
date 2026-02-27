@@ -80,18 +80,17 @@ from lykke.presentation.api.schemas.websocket_message import (
     WebSocketSyncResponseSchema,
     WebSocketTopicEventSchema,
 )
-from lykke.presentation.handler_factory import CommandHandlerFactory
-
-from .dependencies.factories import command_handler_factory
+from .dependencies.factories import (
+    create_command_handler,
+    create_command_handler_websocket,
+    create_query_handler_websocket,
+)
 from .dependencies.services import (
     DayContextPartHandlers,
-    day_context_handler_websocket,
     day_context_part_handlers_websocket,
     get_pubsub_gateway,
     get_pubsub_gateway_for_request,
     get_read_only_repository_factory,
-    get_schedule_day_handler_websocket,
-    incremental_changes_handler_websocket,
 )
 from .dependencies.user import get_current_user
 
@@ -121,12 +120,13 @@ class _ReplayLimitExceededError(RuntimeError):
 
 @router.put("/today/reschedule", response_model=DayContextSchema)
 async def reschedule_today(
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
+    handler: Annotated[
+        RescheduleDayHandler, Depends(create_command_handler(RescheduleDayHandler))
+    ],
 ) -> DayContextSchema:
     """Reschedule today by cleaning up and recreating all tasks."""
     today = get_current_date(user.settings.timezone)
-    handler = command_factory.create(RescheduleDayHandler)
     context = await handler.handle(RescheduleDayCommand(date=today))
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 
@@ -135,14 +135,15 @@ async def reschedule_today(
 async def update_day(
     day_id: UUID,
     update_data: DayUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
+    handler: Annotated[
+        UpdateDayHandler, Depends(create_command_handler(UpdateDayHandler))
+    ],
 ) -> DaySchema:
     """Update a day."""
-    update_day_handler = command_factory.create(UpdateDayHandler)
 
     update_object = DayUpdateObject(
         status=update_data.status,
@@ -159,7 +160,7 @@ async def update_day(
             else None
         ),
     )
-    updated = await update_day_handler.handle(
+    updated = await handler.handle(
         UpdateDayCommand(day_id=day_id, update_data=update_object)
     )
     return map_day_to_schema(updated)
@@ -583,17 +584,19 @@ async def days_context_websocket(
     websocket: WebSocket,
     pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
     day_context_handler: Annotated[
-        GetDayContextHandler, Depends(day_context_handler_websocket)
+        GetDayContextHandler,
+        Depends(create_query_handler_websocket(GetDayContextHandler)),
     ],
     day_context_part_handlers: Annotated[
         DayContextPartHandlers, Depends(day_context_part_handlers_websocket)
     ],
     incremental_changes_handler_ws: Annotated[
         GetIncrementalChangesHandler,
-        Depends(incremental_changes_handler_websocket),
+        Depends(create_query_handler_websocket(GetIncrementalChangesHandler)),
     ],
     schedule_day_handler: Annotated[
-        ScheduleDayHandler, Depends(get_schedule_day_handler_websocket)
+        ScheduleDayHandler,
+        Depends(create_command_handler_websocket(ScheduleDayHandler)),
     ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync.

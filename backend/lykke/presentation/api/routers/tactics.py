@@ -30,12 +30,8 @@ from lykke.presentation.api.schemas import (
     TacticUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_tactic_to_schema
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
 
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -55,15 +51,13 @@ async def list_default_tactics() -> list[TacticCreateSchema]:
 )
 async def import_default_tactics(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    query_handler: Annotated[SearchTacticsHandler, Depends(create_query_handler(SearchTacticsHandler))],
+    command_handler: Annotated[CreateTacticHandler, Depends(create_command_handler(CreateTacticHandler))],
 ) -> list[TacticSchema]:
     """Import default tactics into the user's account."""
-    query_handler = query_factory.create(SearchTacticsHandler)
     existing = await query_handler.handle(SearchTacticsQuery())
     existing_names = {tactic.name for tactic in existing.items}
 
-    create_handler = command_factory.create(CreateTacticHandler)
     created: list[TacticSchema] = []
     for entry in DEFAULT_TACTICS:
         if entry["name"] in existing_names:
@@ -73,7 +67,7 @@ async def import_default_tactics(
             name=entry["name"],
             description=entry["description"],
         )
-        result = await create_handler.handle(CreateTacticCommand(tactic=tactic))
+        result = await command_handler.handle(CreateTacticCommand(tactic=tactic))
         created.append(map_tactic_to_schema(result))
 
     return created
@@ -82,21 +76,19 @@ async def import_default_tactics(
 @router.get("/{uuid}", response_model=TacticSchema)
 async def get_tactic(
     uuid: UUID,
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[GetTacticHandler, Depends(create_query_handler(GetTacticHandler))],
 ) -> TacticSchema:
     """Get a single tactic by ID."""
-    handler = query_factory.create(GetTacticHandler)
     tactic = await handler.handle(GetTacticQuery(tactic_id=uuid))
     return map_tactic_to_schema(tactic)
 
 
 @router.post("/", response_model=PagedResponseSchema[TacticSchema])
 async def search_tactics(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[SearchTacticsHandler, Depends(create_query_handler(SearchTacticsHandler))],
     query: QuerySchema[value_objects.TacticQuery],
 ) -> PagedResponseSchema[TacticSchema]:
     """Search tactics with pagination and optional filters."""
-    handler = query_factory.create(SearchTacticsHandler)
     search_query = build_search_query(query, value_objects.TacticQuery)
     result = await handler.handle(SearchTacticsQuery(search_query=search_query))
     return create_paged_response(result, map_tactic_to_schema)
@@ -110,10 +102,9 @@ async def search_tactics(
 async def create_tactic(
     tactic_data: TacticCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[CreateTacticHandler, Depends(create_command_handler(CreateTacticHandler))],
 ) -> TacticSchema:
     """Create a new tactic."""
-    handler = command_factory.create(CreateTacticHandler)
     tactic = TacticEntity(
         user_id=user.id,
         name=tactic_data.name,
@@ -127,10 +118,9 @@ async def create_tactic(
 async def update_tactic(
     uuid: UUID,
     update_data: TacticUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateTacticHandler, Depends(create_command_handler(UpdateTacticHandler))],
 ) -> TacticSchema:
     """Update a tactic."""
-    handler = command_factory.create(UpdateTacticHandler)
     update_object = value_objects.TacticUpdateObject(
         name=update_data.name,
         description=update_data.description,
@@ -144,8 +134,7 @@ async def update_tactic(
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tactic(
     uuid: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[DeleteTacticHandler, Depends(create_command_handler(DeleteTacticHandler))],
 ) -> None:
     """Delete a tactic."""
-    handler = command_factory.create(DeleteTacticHandler)
     await handler.handle(DeleteTacticCommand(tactic_id=uuid))

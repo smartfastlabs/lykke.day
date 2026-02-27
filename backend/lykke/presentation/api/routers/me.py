@@ -66,12 +66,7 @@ from lykke.presentation.api.schemas.mappers import (
     map_task_to_schema,
     map_user_to_schema,
 )
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
-
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.services import get_pubsub_gateway
 from .dependencies.user import get_current_user, get_current_user_from_token
 
@@ -154,10 +149,9 @@ async def domain_events_stream(
 async def update_current_user_profile(
     update_data: UserUpdateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateUserHandler, Depends(create_command_handler(UpdateUserHandler))],
 ) -> UserSchema:
     """Update the current authenticated user."""
-    update_user_handler = command_factory.create(UpdateUserHandler)
     settings_update = None
     if update_data.settings is not None:
         provided_settings = update_data.settings.model_dump(exclude_unset=True)
@@ -171,7 +165,7 @@ async def update_current_user_profile(
         is_verified=update_data.is_verified,
         settings_update=settings_update,
     )
-    updated_user = await update_user_handler.handle(
+    updated_user = await handler.handle(
         UpdateUserCommand(update_data=update_object)
     )
     return map_user_to_schema(updated_user)
@@ -179,10 +173,9 @@ async def update_current_user_profile(
 
 @router.get("/base-personalities", response_model=list[BasePersonalitySchema])
 async def list_base_personalities(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[ListBasePersonalitiesHandler, Depends(create_query_handler(ListBasePersonalitiesHandler))],
 ) -> list[BasePersonalitySchema]:
     """List available base personalities."""
-    handler = query_factory.create(ListBasePersonalitiesHandler)
     personalities = await handler.handle(ListBasePersonalitiesQuery())
     return [
         BasePersonalitySchema.model_validate(personality)
@@ -197,40 +190,37 @@ async def list_base_personalities(
 
 async def _get_or_schedule_tomorrow_context(
     *,
-    query_factory: QueryHandlerFactory,
-    command_factory: CommandHandlerFactory,
+    get_context_handler: GetDayContextHandler,
+    schedule_handler: ScheduleDayHandler,
     user_timezone: str | None,
 ) -> value_objects.DayContext:
     tomorrow = get_tomorrows_date(user_timezone)
-    get_context_handler = query_factory.create(GetDayContextHandler)
     try:
         return await get_context_handler.handle(GetDayContextQuery(date=tomorrow))
     except NotFoundError:
-        schedule_handler = command_factory.create(ScheduleDayHandler)
         return await schedule_handler.handle(ScheduleDayCommand(date=tomorrow))
 
 
 async def _get_tomorrow_context(
     *,
-    query_factory: QueryHandlerFactory,
+    get_context_handler: GetDayContextHandler,
     user_timezone: str | None,
 ) -> value_objects.DayContext:
     """Get tomorrow's context, requiring it to already exist."""
     tomorrow = get_tomorrows_date(user_timezone)
-    handler = query_factory.create(GetDayContextHandler)
-    return await handler.handle(GetDayContextQuery(date=tomorrow))
+    return await get_context_handler.handle(GetDayContextQuery(date=tomorrow))
 
 
 @router.post("/tomorrow/ensure-scheduled", response_model=DaySchema)
 async def ensure_tomorrow_scheduled(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    get_context_handler: Annotated[GetDayContextHandler, Depends(create_query_handler(GetDayContextHandler))],
+    schedule_handler: Annotated[ScheduleDayHandler, Depends(create_command_handler(ScheduleDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DaySchema:
     """Ensure tomorrow exists and is scheduled. Returns the Day."""
     context = await _get_or_schedule_tomorrow_context(
-        query_factory=query_factory,
-        command_factory=command_factory,
+        get_context_handler=get_context_handler,
+        schedule_handler=schedule_handler,
         user_timezone=user.settings.timezone,
     )
     return map_day_to_schema(context.day)
@@ -238,24 +228,23 @@ async def ensure_tomorrow_scheduled(
 
 @router.put("/tomorrow/reschedule", response_model=DaySchema)
 async def reschedule_tomorrow(
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[RescheduleDayHandler, Depends(create_command_handler(RescheduleDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DaySchema:
     """Reschedule tomorrow by cleaning up and recreating all non-adhoc tasks."""
     tomorrow = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(RescheduleDayHandler)
     context = await handler.handle(RescheduleDayCommand(date=tomorrow))
     return map_day_to_schema(context.day)
 
 
 @router.get("/tomorrow/day", response_model=DaySchema)
 async def get_tomorrow_day(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_context_handler: Annotated[GetDayContextHandler, Depends(create_query_handler(GetDayContextHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DaySchema:
     """Get tomorrow's Day (requires it to be scheduled)."""
     context = await _get_tomorrow_context(
-        query_factory=query_factory,
+        get_context_handler=get_context_handler,
         user_timezone=user.settings.timezone,
     )
     return map_day_to_schema(context.day)
@@ -263,12 +252,12 @@ async def get_tomorrow_day(
 
 @router.get("/tomorrow/calendar-entries", response_model=list[CalendarEntrySchema])
 async def get_tomorrow_calendar_entries(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_context_handler: Annotated[GetDayContextHandler, Depends(create_query_handler(GetDayContextHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[CalendarEntrySchema]:
     """Get tomorrow's calendar entries (requires it to be scheduled)."""
     context = await _get_tomorrow_context(
-        query_factory=query_factory,
+        get_context_handler=get_context_handler,
         user_timezone=user.settings.timezone,
     )
     return [
@@ -279,12 +268,12 @@ async def get_tomorrow_calendar_entries(
 
 @router.get("/tomorrow/tasks", response_model=list[TaskSchema])
 async def get_tomorrow_tasks(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_context_handler: Annotated[GetDayContextHandler, Depends(create_query_handler(GetDayContextHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
     """Get tomorrow's tasks (requires it to be scheduled)."""
     context = await _get_tomorrow_context(
-        query_factory=query_factory,
+        get_context_handler=get_context_handler,
         user_timezone=user.settings.timezone,
     )
     current_time = get_current_datetime_in_timezone(user.settings.timezone)
@@ -298,12 +287,12 @@ async def get_tomorrow_tasks(
 
 @router.get("/tomorrow/routines", response_model=list[RoutineSchema])
 async def get_tomorrow_routines(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_context_handler: Annotated[GetDayContextHandler, Depends(create_query_handler(GetDayContextHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[RoutineSchema]:
     """Get tomorrow's routines (requires it to be scheduled)."""
     context = await _get_tomorrow_context(
-        query_factory=query_factory,
+        get_context_handler=get_context_handler,
         user_timezone=user.settings.timezone,
     )
     current_time = get_current_datetime_in_timezone(user.settings.timezone)
@@ -326,7 +315,7 @@ async def get_tomorrow_routines(
 @router.post("/today/alarms", response_model=AlarmSchema)
 async def add_alarm_to_today(
     time: dt_time,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[AddAlarmToDayHandler, Depends(create_command_handler(AddAlarmToDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     name: str | None = None,
     alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
@@ -334,7 +323,6 @@ async def add_alarm_to_today(
 ) -> AlarmSchema:
     """Add an alarm to today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(AddAlarmToDayHandler)
     alarm = await handler.handle(
         AddAlarmToDayCommand(
             date=date,
@@ -355,7 +343,7 @@ async def add_alarm_to_today(
 @router.post("/tomorrow/alarms", response_model=AlarmSchema)
 async def add_alarm_to_tomorrow(
     time: dt_time,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[AddAlarmToDayHandler, Depends(create_command_handler(AddAlarmToDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     name: str | None = None,
     alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
@@ -363,7 +351,6 @@ async def add_alarm_to_tomorrow(
 ) -> AlarmSchema:
     """Add an alarm to tomorrow."""
     date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(AddAlarmToDayHandler)
     alarm = await handler.handle(
         AddAlarmToDayCommand(
             date=date,
@@ -380,14 +367,13 @@ async def add_alarm_to_tomorrow(
 async def remove_alarm_from_tomorrow(
     name: str,
     time: dt_time,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[RemoveAlarmFromDayHandler, Depends(create_command_handler(RemoveAlarmFromDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     alarm_type: value_objects.AlarmType | None = None,
     url: str | None = None,
 ) -> AlarmSchema:
     """Remove an alarm from tomorrow."""
     date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(RemoveAlarmFromDayHandler)
     alarm = await handler.handle(
         RemoveAlarmFromDayCommand(
             date=date,
@@ -404,13 +390,12 @@ async def remove_alarm_from_tomorrow(
 async def update_alarm_status_for_tomorrow(
     alarm_id: UUID,
     status: value_objects.AlarmStatus,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateAlarmStatusHandler, Depends(create_command_handler(UpdateAlarmStatusHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     snoozed_until: dt_datetime | None = None,
 ) -> AlarmSchema:
     """Update an alarm's status for tomorrow."""
     date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(UpdateAlarmStatusHandler)
     alarm = await handler.handle(
         UpdateAlarmStatusCommand(
             date=date,
@@ -426,14 +411,13 @@ async def update_alarm_status_for_tomorrow(
 async def remove_alarm_from_today(
     name: str,
     time: dt_time,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[RemoveAlarmFromDayHandler, Depends(create_command_handler(RemoveAlarmFromDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     alarm_type: value_objects.AlarmType | None = None,
     url: str | None = None,
 ) -> AlarmSchema:
     """Remove an alarm from today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(RemoveAlarmFromDayHandler)
     alarm = await handler.handle(
         RemoveAlarmFromDayCommand(
             date=date,
@@ -450,13 +434,12 @@ async def remove_alarm_from_today(
 async def update_alarm_status_for_today(
     alarm_id: UUID,
     status: value_objects.AlarmStatus,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateAlarmStatusHandler, Depends(create_command_handler(UpdateAlarmStatusHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
     snoozed_until: dt_datetime | None = None,
 ) -> AlarmSchema:
     """Update an alarm's status for today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(UpdateAlarmStatusHandler)
     alarm = await handler.handle(
         UpdateAlarmStatusCommand(
             date=date,
@@ -476,12 +459,11 @@ async def update_alarm_status_for_today(
 @router.post("/today/brain-dump", response_model=BrainDumpSchema)
 async def add_brain_dump_to_today(
     text: str,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[CreateBrainDumpHandler, Depends(create_command_handler(CreateBrainDumpHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> BrainDumpSchema:
     """Add a brain dump to today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(CreateBrainDumpHandler)
     item = await handler.handle(CreateBrainDumpCommand(date=date, text=text))
     return map_brain_dump_to_schema(item)
 
@@ -490,12 +472,11 @@ async def add_brain_dump_to_today(
 async def update_brain_dump_status(
     item_id: UUID,
     status: value_objects.BrainDumpStatus,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateBrainDumpStatusHandler, Depends(create_command_handler(UpdateBrainDumpStatusHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> BrainDumpSchema:
     """Update a brain dump's status for today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(UpdateBrainDumpStatusHandler)
     item = await handler.handle(
         UpdateBrainDumpStatusCommand(date=date, item_id=item_id, status=status)
     )
@@ -505,12 +486,11 @@ async def update_brain_dump_status(
 @router.delete("/today/brain-dump/{item_id}", response_model=BrainDumpSchema)
 async def remove_brain_dump_from_today(
     item_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[DeleteBrainDumpHandler, Depends(create_command_handler(DeleteBrainDumpHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> BrainDumpSchema:
     """Remove a brain dump from today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(DeleteBrainDumpHandler)
     item = await handler.handle(DeleteBrainDumpCommand(date=date, item_id=item_id))
     return map_brain_dump_to_schema(item)
 
@@ -523,12 +503,11 @@ async def remove_brain_dump_from_today(
 @router.post("/today/routines", response_model=list[TaskSchema])
 async def add_routine_to_today(
     routine_definition_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[AddRoutineDefinitionToDayHandler, Depends(create_command_handler(AddRoutineDefinitionToDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
     """Add a routine's tasks to today (creates today's routine if needed)."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(AddRoutineDefinitionToDayHandler)
     tasks = await handler.handle(
         AddRoutineDefinitionToDayCommand(
             date=date,
@@ -541,12 +520,11 @@ async def add_routine_to_today(
 @router.post("/tomorrow/routines", response_model=list[TaskSchema])
 async def add_routine_to_tomorrow(
     routine_definition_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[AddRoutineDefinitionToDayHandler, Depends(create_command_handler(AddRoutineDefinitionToDayHandler))],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
     """Add a routine's tasks to tomorrow (creates tomorrow's routine if needed)."""
     date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(AddRoutineDefinitionToDayHandler)
     tasks = await handler.handle(
         AddRoutineDefinitionToDayCommand(
             date=date,

@@ -37,12 +37,8 @@ from lykke.presentation.api.schemas import (
     RoutineDefinitionUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_definition_to_schema
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
 
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.user import get_current_user
 from .routine_definition_mappers import (
     create_schema_to_entity,
@@ -58,11 +54,10 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=RoutineDefinitionSchema)
 async def get_routine_definition(
     uuid: UUID,
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[GetRoutineDefinitionHandler, Depends(create_query_handler(GetRoutineDefinitionHandler))],
 ) -> RoutineDefinitionSchema:
     """Get a single routine definition by ID."""
-    get_routine_definition_handler = query_factory.create(GetRoutineDefinitionHandler)
-    routine_definition = await get_routine_definition_handler.handle(
+    routine_definition = await handler.handle(
         GetRoutineDefinitionQuery(routine_definition_id=uuid)
     )
     return map_routine_definition_to_schema(routine_definition)
@@ -70,15 +65,12 @@ async def get_routine_definition(
 
 @router.post("/", response_model=PagedResponseSchema[RoutineDefinitionSchema])
 async def search_routine_definitions(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[SearchRoutineDefinitionsHandler, Depends(create_query_handler(SearchRoutineDefinitionsHandler))],
     query: QuerySchema[value_objects.RoutineDefinitionQuery],
 ) -> PagedResponseSchema[RoutineDefinitionSchema]:
     """Search routine definitions with pagination and optional filters."""
-    list_routine_definitions_handler = query_factory.create(
-        SearchRoutineDefinitionsHandler
-    )
     search_query = build_search_query(query, value_objects.RoutineDefinitionQuery)
-    result = await list_routine_definitions_handler.handle(
+    result = await handler.handle(
         SearchRoutineDefinitionsQuery(search_query=search_query)
     )
     return create_paged_response(result, map_routine_definition_to_schema)
@@ -92,14 +84,11 @@ async def search_routine_definitions(
 async def create_routine_definition(
     routine_definition_data: RoutineDefinitionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[CreateRoutineDefinitionHandler, Depends(create_command_handler(CreateRoutineDefinitionHandler))],
 ) -> RoutineDefinitionSchema:
     """Create a new routine definition."""
-    create_routine_definition_handler = command_factory.create(
-        CreateRoutineDefinitionHandler
-    )
     routine_definition = create_schema_to_entity(routine_definition_data, user.id)
-    created = await create_routine_definition_handler.handle(
+    created = await handler.handle(
         CreateRoutineDefinitionCommand(routine_definition=routine_definition)
     )
     return map_routine_definition_to_schema(created)
@@ -109,14 +98,11 @@ async def create_routine_definition(
 async def update_routine_definition(
     uuid: UUID,
     update_data: RoutineDefinitionUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateRoutineDefinitionHandler, Depends(create_command_handler(UpdateRoutineDefinitionHandler))],
 ) -> RoutineDefinitionSchema:
     """Update an existing routine definition."""
-    update_routine_definition_handler = command_factory.create(
-        UpdateRoutineDefinitionHandler
-    )
     update_object = update_schema_to_update_object(update_data)
-    updated = await update_routine_definition_handler.handle(
+    updated = await handler.handle(
         UpdateRoutineDefinitionCommand(
             routine_definition_id=uuid,
             update_data=update_object,
@@ -128,13 +114,10 @@ async def update_routine_definition(
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_routine_definition(
     uuid: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[DeleteRoutineDefinitionHandler, Depends(create_command_handler(DeleteRoutineDefinitionHandler))],
 ) -> None:
     """Delete a routine definition."""
-    delete_routine_definition_handler = command_factory.create(
-        DeleteRoutineDefinitionHandler
-    )
-    await delete_routine_definition_handler.handle(
+    await handler.handle(
         DeleteRoutineDefinitionCommand(routine_definition_id=uuid)
     )
 
@@ -147,13 +130,10 @@ async def delete_routine_definition(
 async def add_routine_definition_task(
     uuid: UUID,
     routine_task: RoutineDefinitionTaskCreateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[AddRoutineDefinitionTaskHandler, Depends(create_command_handler(AddRoutineDefinitionTaskHandler))],
 ) -> RoutineDefinitionSchema:
     """Attach a task definition to a routine definition."""
-    add_routine_definition_task_handler = command_factory.create(
-        AddRoutineDefinitionTaskHandler
-    )
-    updated = await add_routine_definition_task_handler.handle(
+    updated = await handler.handle(
         AddRoutineDefinitionTaskCommand(
             routine_definition_id=uuid,
             routine_definition_task=task_create_schema_to_vo(routine_task),
@@ -170,13 +150,10 @@ async def update_routine_definition_task(
     uuid: UUID,
     routine_definition_task_id: UUID,
     routine_task_update: RoutineDefinitionTaskUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[UpdateRoutineDefinitionTaskHandler, Depends(create_command_handler(UpdateRoutineDefinitionTaskHandler))],
 ) -> RoutineDefinitionSchema:
     """Update an attached routine definition task (name/schedule)."""
-    update_routine_definition_task_handler = command_factory.create(
-        UpdateRoutineDefinitionTaskHandler
-    )
-    updated = await update_routine_definition_task_handler.handle(
+    updated = await handler.handle(
         UpdateRoutineDefinitionTaskCommand(
             routine_definition_id=uuid,
             routine_definition_task_id=routine_definition_task_id,
@@ -195,13 +172,10 @@ async def update_routine_definition_task(
 async def remove_routine_definition_task(
     uuid: UUID,
     routine_definition_task_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[RemoveRoutineDefinitionTaskHandler, Depends(create_command_handler(RemoveRoutineDefinitionTaskHandler))],
 ) -> RoutineDefinitionSchema:
     """Detach a routine definition task from a routine definition by RoutineDefinitionTask.id."""
-    remove_routine_definition_task_handler = command_factory.create(
-        RemoveRoutineDefinitionTaskHandler
-    )
-    updated = await remove_routine_definition_task_handler.handle(
+    updated = await handler.handle(
         RemoveRoutineDefinitionTaskCommand(
             routine_definition_id=uuid,
             routine_definition_task_id=routine_definition_task_id,

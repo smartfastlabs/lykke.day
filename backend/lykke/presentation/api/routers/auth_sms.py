@@ -1,6 +1,6 @@
 """SMS-based auth endpoints: request and verify login codes."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 from starlette.responses import Response
@@ -11,8 +11,8 @@ from lykke.application.commands.auth import (
     VerifySmsLoginCodeCommand,
     VerifySmsLoginCodeHandler,
 )
-from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
+from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import UnitOfWorkFactory
 from lykke.core.exceptions import AuthenticationError
 from lykke.infrastructure.auth import auth_backend, get_jwt_strategy
@@ -38,11 +38,10 @@ def get_sms_gateway() -> SMSProviderProtocol:
     return TwilioGateway()
 
 
-def _get_request_handler(
-    identity_access: Annotated[
-        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
-    ],
-    sms_gateway: Annotated[SMSProviderProtocol, Depends(get_sms_gateway)],
+def _provider_request_sms(
+    identity_access: UnauthenticatedIdentityAccessProtocol,
+    _uow_factory: UnitOfWorkFactory,
+    sms_gateway: SMSProviderProtocol,
 ) -> RequestSmsLoginCodeHandler:
     return RequestSmsLoginCodeHandler(
         identity_access=identity_access,
@@ -50,11 +49,10 @@ def _get_request_handler(
     )
 
 
-def _get_verify_handler(
-    identity_access: Annotated[
-        UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
-    ],
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+def _provider_verify_sms(
+    identity_access: UnauthenticatedIdentityAccessProtocol,
+    uow_factory: UnitOfWorkFactory,
+    _sms_gateway: SMSProviderProtocol,
 ) -> VerifySmsLoginCodeHandler:
     return VerifySmsLoginCodeHandler(
         identity_access=identity_access,
@@ -62,10 +60,37 @@ def _get_verify_handler(
     )
 
 
+_UNAUTH_AUTH_HANDLER_PROVIDERS: dict[type, Any] = {
+    RequestSmsLoginCodeHandler: _provider_request_sms,
+    VerifySmsLoginCodeHandler: _provider_verify_sms,
+}
+
+
+def create_unauth_auth_handler(handler_class: type) -> Any:
+    """Dependency factory that returns a ready-to-use unauthenticated auth handler.
+
+    Usage: handler: Annotated[MyHandler, Depends(create_unauth_auth_handler(MyHandler))]
+    """
+
+    def _dependency(
+        identity_access: Annotated[
+            UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
+        ],
+        uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+        sms_gateway: Annotated[SMSProviderProtocol, Depends(get_sms_gateway)],
+    ) -> Any:
+        provider = _UNAUTH_AUTH_HANDLER_PROVIDERS[handler_class]
+        return provider(identity_access, uow_factory, sms_gateway)
+
+    return _dependency
+
+
 @router.post("/request", status_code=200)
 async def request_sms_code(
     data: RequestSmsCodeSchema,
-    handler: Annotated[RequestSmsLoginCodeHandler, Depends(_get_request_handler)],
+    handler: Annotated[
+        RequestSmsLoginCodeHandler, Depends(create_unauth_auth_handler(RequestSmsLoginCodeHandler))
+    ],
 ) -> dict[str, str]:
     """Request an SMS login code. Always returns success (no info leak)."""
     await handler.handle(RequestSmsLoginCodeCommand(phone_number=data.phone_number))
@@ -75,7 +100,9 @@ async def request_sms_code(
 @router.post("/verify", status_code=204)
 async def verify_sms_code(
     data: VerifySmsCodeSchema,
-    handler: Annotated[VerifySmsLoginCodeHandler, Depends(_get_verify_handler)],
+    handler: Annotated[
+        VerifySmsLoginCodeHandler, Depends(create_unauth_auth_handler(VerifySmsLoginCodeHandler))
+    ],
     identity_access: Annotated[
         UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
     ],

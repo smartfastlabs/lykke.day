@@ -11,7 +11,6 @@ from typing import Annotated
 
 from fastapi import Depends, Request, WebSocket
 
-from lykke.application.commands import ScheduleDayHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayBrainDumpsHandler,
@@ -35,13 +34,9 @@ from lykke.infrastructure.repository_factories import (
 )
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.user import (
-    get_current_user,
     get_current_user_from_token,
 )
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
+from lykke.presentation.handler_factory import QueryHandlerFactory
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
 from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
@@ -150,18 +145,6 @@ async def get_unit_of_work_factory_websocket(
         await pubsub_gateway.close()
 
 
-# For WebSocket routes - use get_current_user_from_token
-async def day_context_handler_websocket(
-    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> GetDayContextHandler:
-    """Get a GetDayContextHandler instance for WebSocket handlers."""
-    factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
-    return factory.create(GetDayContextHandler)
-
-
 @dataclass(frozen=True)
 class DayContextPartHandlers:
     """Container for DayContext part query handlers."""
@@ -194,30 +177,3 @@ async def day_context_part_handlers_websocket(
     )
 
 
-async def incremental_changes_handler_websocket(
-    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> GetIncrementalChangesHandler:
-    """Get a GetIncrementalChangesHandler instance for WebSocket handlers."""
-    factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
-    return factory.create(GetIncrementalChangesHandler)
-
-
-async def get_schedule_day_handler_websocket(
-    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-    uow_factory: Annotated[
-        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
-    ],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> ScheduleDayHandler:
-    """Get a ScheduleDayHandler instance for WebSocket handlers."""
-    factory = CommandHandlerFactory(
-        user=user,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(ScheduleDayHandler)

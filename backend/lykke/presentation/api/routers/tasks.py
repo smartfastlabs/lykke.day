@@ -19,9 +19,8 @@ from lykke.domain import value_objects
 from lykke.presentation.api.schemas import AdhocTaskCreateSchema, TaskSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
 from lykke.presentation.api.schemas.task import TaskRescheduleSchema
-from lykke.presentation.handler_factory import CommandHandlerFactory
 
-from .dependencies.factories import command_handler_factory
+from .dependencies.factories import create_command_handler
 
 router = APIRouter()
 
@@ -30,10 +29,11 @@ router = APIRouter()
 async def add_task_action(
     _id: uuid.UUID,
     action: value_objects.Action,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        RecordTaskActionHandler, Depends(create_command_handler(RecordTaskActionHandler))
+    ],
 ) -> TaskSchema:
     """Record an action on a task."""
-    handler = command_factory.create(RecordTaskActionHandler)
     task = await handler.handle(RecordTaskActionCommand(task_id=_id, action=action))
     return map_task_to_schema(task)
 
@@ -42,10 +42,11 @@ async def add_task_action(
 async def reschedule_task(
     _id: uuid.UUID,
     payload: TaskRescheduleSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        RescheduleTaskHandler, Depends(create_command_handler(RescheduleTaskHandler))
+    ],
 ) -> TaskSchema:
     """Reschedule a task to a new date."""
-    handler = command_factory.create(RescheduleTaskHandler)
     task = await handler.handle(
         RescheduleTaskCommand(task_id=_id, scheduled_date=payload.scheduled_date)
     )
@@ -55,20 +56,22 @@ async def reschedule_task(
 @router.delete("/{_id}", status_code=204)
 async def delete_task(
     _id: uuid.UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        DeleteTaskHandler, Depends(create_command_handler(DeleteTaskHandler))
+    ],
 ) -> None:
     """Delete a task."""
-    handler = command_factory.create(DeleteTaskHandler)
     await handler.handle(DeleteTaskCommand(task_id=_id))
 
 
 @router.post("/adhoc", response_model=TaskSchema, status_code=201)
 async def create_adhoc_task(
     task_data: AdhocTaskCreateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        CreateAdhocTaskHandler, Depends(create_command_handler(CreateAdhocTaskHandler))
+    ],
 ) -> TaskSchema:
     """Create an adhoc or reminder task."""
-    handler = command_factory.create(CreateAdhocTaskHandler)
     time_window = (
         value_objects.TimeWindow(**task_data.time_window.model_dump())
         if task_data.time_window

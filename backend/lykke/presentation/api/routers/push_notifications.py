@@ -18,9 +18,8 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_push_notification_to_schema
-from lykke.presentation.handler_factory import QueryHandlerFactory
 
-from .dependencies.factories import query_handler_factory
+from .dependencies.factories import create_query_handler
 from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
@@ -28,11 +27,13 @@ router = APIRouter()
 
 @router.post("/", response_model=PagedResponseSchema[PushNotificationSchema])
 async def search_push_notifications(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
     query: QuerySchema[value_objects.PushNotificationQuery],
+    handler: Annotated[
+        SearchPushNotificationsHandler,
+        Depends(create_query_handler(SearchPushNotificationsHandler)),
+    ],
 ) -> PagedResponseSchema[PushNotificationSchema]:
     """Search push notifications with pagination and optional filters."""
-    handler = query_factory.create(SearchPushNotificationsHandler)
     search_query = build_search_query(query, value_objects.PushNotificationQuery)
     result = await handler.handle(SearchPushNotificationsQuery(search_query=search_query))
     return create_paged_response(result, map_push_notification_to_schema)
@@ -41,10 +42,12 @@ async def search_push_notifications(
 @router.get("/{notification_id}", response_model=PushNotificationSchema)
 async def get_push_notification(
     notification_id: UUID,
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[
+        GetPushNotificationHandler,
+        Depends(create_query_handler(GetPushNotificationHandler)),
+    ],
 ) -> PushNotificationSchema:
     """Get a specific push notification by ID."""
-    handler = query_factory.create(GetPushNotificationHandler)
     notification = await handler.handle(
         GetPushNotificationQuery(push_notification_id=notification_id)
     )

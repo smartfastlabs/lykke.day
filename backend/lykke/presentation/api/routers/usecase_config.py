@@ -18,14 +18,12 @@ from lykke.application.queries.usecase_config import (
     GetUseCaseConfigQuery,
 )
 from lykke.core.utils.serialization import dataclass_to_json_dict
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import NotificationUseCaseConfigSchema
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
 
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
+from .dependencies.services import get_read_only_repository_factory
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -38,10 +36,12 @@ router = APIRouter()
 async def get_usecase_config(
     usecase: str,
     _user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    query_handler: Annotated[GetUseCaseConfigHandler, Depends(create_query_handler(GetUseCaseConfigHandler))],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> NotificationUseCaseConfigSchema:
     """Get usecase config by usecase key."""
-    query_handler = query_factory.create(GetUseCaseConfigHandler)
     config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     if config:
         user_amendments = config.config.get("user_amendments", [])
@@ -51,10 +51,11 @@ async def get_usecase_config(
         if not isinstance(send_acknowledgment, bool):
             send_acknowledgment = None
 
+        ro_repos = ro_repo_factory.create(_user)
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
             user=_user,
-            usecase_config_ro_repo=query_factory.ro_repos.usecase_config_ro_repo,
+            usecase_config_ro_repo=ro_repos.usecase_config_ro_repo,
         )
 
         return NotificationUseCaseConfigSchema(
@@ -76,19 +77,20 @@ async def update_usecase_config(
     usecase: str,
     config_data: NotificationUseCaseConfigSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    command_handler: Annotated[CreateUseCaseConfigHandler, Depends(create_command_handler(CreateUseCaseConfigHandler))],
+    query_handler: Annotated[GetUseCaseConfigHandler, Depends(create_query_handler(GetUseCaseConfigHandler))],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> NotificationUseCaseConfigSchema:
     """Create or update usecase config."""
-    create_handler = command_factory.create(CreateUseCaseConfigHandler)
-    query_handler = query_factory.create(GetUseCaseConfigHandler)
     existing_config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     config_dict = dict(existing_config.config) if existing_config else {}
     config_dict["user_amendments"] = config_data.user_amendments or []
     if config_data.send_acknowledgment is not None:
         config_dict["send_acknowledgment"] = config_data.send_acknowledgment
 
-    await create_handler.handle(
+    await command_handler.handle(
         CreateUseCaseConfigCommand(
             user=user,
             usecase=usecase,
@@ -106,10 +108,11 @@ async def update_usecase_config(
         if not isinstance(send_acknowledgment, bool):
             send_acknowledgment = None
 
+        ro_repos = ro_repo_factory.create(user)
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
             user=user,
-            usecase_config_ro_repo=query_factory.ro_repos.usecase_config_ro_repo,
+            usecase_config_ro_repo=ro_repos.usecase_config_ro_repo,
         )
 
         return NotificationUseCaseConfigSchema(
@@ -128,10 +131,9 @@ async def update_usecase_config(
 async def get_llm_snapshot_preview(
     usecase: str,
     _user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    query_handler: Annotated[PreviewLLMSnapshotHandler, Depends(create_query_handler(PreviewLLMSnapshotHandler))],
 ) -> dict[str, Any] | None:
     """Build a synthetic LLM snapshot preview for a usecase."""
-    query_handler = query_factory.create(PreviewLLMSnapshotHandler)
     snapshot = await query_handler.handle(PreviewLLMSnapshotQuery(usecase=usecase))
     if snapshot is None:
         return None
@@ -141,10 +143,9 @@ async def get_llm_snapshot_preview(
 @router.delete("/usecase-configs/{usecase_config_id}", status_code=200)
 async def delete_usecase_config(
     usecase_config_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[DeleteUseCaseConfigHandler, Depends(create_command_handler(DeleteUseCaseConfigHandler))],
 ) -> None:
     """Delete a usecase config."""
-    delete_handler = command_factory.create(DeleteUseCaseConfigHandler)
-    await delete_handler.handle(
+    await handler.handle(
         DeleteUseCaseConfigCommand(usecase_config_id=usecase_config_id)
     )

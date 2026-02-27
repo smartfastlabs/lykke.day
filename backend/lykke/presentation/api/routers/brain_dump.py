@@ -31,12 +31,8 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_brain_dump_to_schema
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
 
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -46,21 +42,19 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=BrainDumpSchema)
 async def get_brain_dump(
     uuid: UUID,
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[GetBrainDumpHandler, Depends(create_query_handler(GetBrainDumpHandler))],
 ) -> BrainDumpSchema:
     """Get a single brain dump by ID."""
-    handler = query_factory.create(GetBrainDumpHandler)
     item = await handler.handle(GetBrainDumpQuery(item_id=uuid))
     return map_brain_dump_to_schema(item)
 
 
 @router.post("/", response_model=PagedResponseSchema[BrainDumpSchema])
 async def search_brain_dumps(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[SearchBrainDumpsHandler, Depends(create_query_handler(SearchBrainDumpsHandler))],
     query: QuerySchema[value_objects.BrainDumpQuery],
 ) -> PagedResponseSchema[BrainDumpSchema]:
     """Search brain dumps with pagination and optional filters."""
-    handler = query_factory.create(SearchBrainDumpsHandler)
     search_query = build_search_query(query, value_objects.BrainDumpQuery)
     result = await handler.handle(SearchBrainDumpsQuery(search_query=search_query))
     return create_paged_response(result, map_brain_dump_to_schema)
@@ -74,10 +68,9 @@ async def search_brain_dumps(
 async def create_brain_dump(
     item_data: BrainDumpCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[CreateBrainDumpHandler, Depends(create_command_handler(CreateBrainDumpHandler))],
 ) -> BrainDumpSchema:
     """Create a new brain dump."""
-    handler = command_factory.create(CreateBrainDumpHandler)
     item = await handler.handle(
         CreateBrainDumpCommand(date=item_data.date, text=item_data.text)
     )
@@ -88,15 +81,14 @@ async def create_brain_dump(
 async def update_brain_dump(
     uuid: UUID,
     update_data: BrainDumpUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_handler: Annotated[GetBrainDumpHandler, Depends(create_query_handler(GetBrainDumpHandler))],
+    status_handler: Annotated[UpdateBrainDumpStatusHandler, Depends(create_command_handler(UpdateBrainDumpStatusHandler))],
+    type_handler: Annotated[UpdateBrainDumpTypeHandler, Depends(create_command_handler(UpdateBrainDumpTypeHandler))],
 ) -> BrainDumpSchema:
     """Update a brain dump's status or type."""
-    get_handler = query_factory.create(GetBrainDumpHandler)
     item = await get_handler.handle(GetBrainDumpQuery(item_id=uuid))
 
     if update_data.status is not None:
-        status_handler = command_factory.create(UpdateBrainDumpStatusHandler)
         await status_handler.handle(
             UpdateBrainDumpStatusCommand(
                 date=item.date, item_id=uuid, status=update_data.status
@@ -104,7 +96,6 @@ async def update_brain_dump(
         )
 
     if update_data.type is not None:
-        type_handler = command_factory.create(UpdateBrainDumpTypeHandler)
         await type_handler.handle(
             UpdateBrainDumpTypeCommand(
                 date=item.date, item_id=uuid, item_type=update_data.type
@@ -118,11 +109,9 @@ async def update_brain_dump(
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_brain_dump(
     uuid: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    get_handler: Annotated[GetBrainDumpHandler, Depends(create_query_handler(GetBrainDumpHandler))],
+    command_handler: Annotated[DeleteBrainDumpHandler, Depends(create_command_handler(DeleteBrainDumpHandler))],
 ) -> None:
     """Delete a brain dump."""
-    get_handler = query_factory.create(GetBrainDumpHandler)
     item = await get_handler.handle(GetBrainDumpQuery(item_id=uuid))
-    handler = command_factory.create(DeleteBrainDumpHandler)
-    await handler.handle(DeleteBrainDumpCommand(date=item.date, item_id=uuid))
+    await command_handler.handle(DeleteBrainDumpCommand(date=item.date, item_id=uuid))

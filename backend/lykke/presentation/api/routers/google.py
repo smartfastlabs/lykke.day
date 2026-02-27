@@ -20,17 +20,14 @@ from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
+from lykke.presentation.handler_factory import QueryHandlerFactory
 from lykke.presentation.webhook_relay import webhook_relay_manager
 from lykke.presentation.workers.tasks.calendar import (
     resubscribe_calendar_task,
     sync_single_calendar_task,
 )
 
-from .dependencies.factories import command_handler_factory
+from .dependencies.factories import create_command_handler
 from .dependencies.services import get_read_only_repository_factory
 from .dependencies.user import get_current_user
 
@@ -101,7 +98,7 @@ async def google_login_callback(
     state: str,
     code: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[HandleGoogleLoginCallbackHandler, Depends(create_command_handler(HandleGoogleLoginCallbackHandler))],
 ) -> RedirectResponse:
     if not code:
         raise HTTPException(
@@ -113,7 +110,6 @@ async def google_login_callback(
     auth_token_id_from_state = state_data.get("auth_token_id")
     auth_token_id = UUID(auth_token_id_from_state) if auth_token_id_from_state else None
 
-    handler = command_factory.create(HandleGoogleLoginCallbackHandler)
     result = await handler.handle(
         HandleGoogleLoginCallbackCommand(
             code=code,

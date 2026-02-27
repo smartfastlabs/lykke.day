@@ -29,12 +29,8 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_factoid_to_schema
-from lykke.presentation.handler_factory import (
-    CommandHandlerFactory,
-    QueryHandlerFactory,
-)
 
-from .dependencies.factories import command_handler_factory, query_handler_factory
+from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -44,21 +40,23 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=FactoidSchema)
 async def get_factoid(
     uuid: UUID,
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    handler: Annotated[
+        GetFactoidHandler, Depends(create_query_handler(GetFactoidHandler))
+    ],
 ) -> FactoidSchema:
     """Get a single factoid by ID."""
-    handler = query_factory.create(GetFactoidHandler)
     factoid = await handler.handle(GetFactoidQuery(factoid_id=uuid))
     return map_factoid_to_schema(factoid)
 
 
 @router.post("/", response_model=PagedResponseSchema[FactoidSchema])
 async def search_factoids(
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
     query: QuerySchema[value_objects.FactoidQuery],
+    handler: Annotated[
+        SearchFactoidsHandler, Depends(create_query_handler(SearchFactoidsHandler))
+    ],
 ) -> PagedResponseSchema[FactoidSchema]:
     """Search factoids with pagination and optional filters."""
-    handler = query_factory.create(SearchFactoidsHandler)
     search_query = build_search_query(query, value_objects.FactoidQuery)
     result = await handler.handle(SearchFactoidsQuery(search_query=search_query))
     return create_paged_response(result, map_factoid_to_schema)
@@ -68,10 +66,11 @@ async def search_factoids(
 async def create_factoid(
     factoid_data: FactoidCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        CreateFactoidHandler, Depends(create_command_handler(CreateFactoidHandler))
+    ],
 ) -> FactoidSchema:
     """Create a new factoid."""
-    handler = command_factory.create(CreateFactoidHandler)
     factoid = FactoidEntity(
         user_id=user.id,
         factoid_type=factoid_data.factoid_type,
@@ -88,10 +87,11 @@ async def create_factoid(
 async def update_factoid(
     uuid: UUID,
     update_data: FactoidUpdateSchema,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        UpdateFactoidHandler, Depends(create_command_handler(UpdateFactoidHandler))
+    ],
 ) -> FactoidSchema:
     """Update a factoid."""
-    handler = command_factory.create(UpdateFactoidHandler)
     update_object = value_objects.FactoidUpdateObject(
         content=update_data.content,
         factoid_type=update_data.factoid_type,
@@ -107,8 +107,9 @@ async def update_factoid(
 @router.delete("/{uuid}", status_code=204)
 async def delete_factoid(
     uuid: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    handler: Annotated[
+        DeleteFactoidHandler, Depends(create_command_handler(DeleteFactoidHandler))
+    ],
 ) -> None:
     """Delete a factoid."""
-    handler = command_factory.create(DeleteFactoidHandler)
     await handler.handle(DeleteFactoidCommand(factoid_id=uuid))
