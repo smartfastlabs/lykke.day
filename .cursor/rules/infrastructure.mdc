@@ -14,7 +14,7 @@ The Infrastructure layer implements the protocols defined in the application lay
 ```
 infrastructure/
 ├── repositories/      # Repository implementations
-│   ├── base/          # BaseRepository, UserScopedBaseRepository
+│   ├── base/          # UserScopedBaseRepository
 │   │   ├── repository.py # Base repository implementation
 │   │   └── utils.py   # Repository utilities
 │   ├── task.py        # TaskRepository
@@ -67,12 +67,7 @@ Repositories implement the repository protocols defined in the application layer
 
 ### Base Repository Classes
 
-Repositories extend base classes:
-
-- `BaseRepository[Entity, Query]` - Base repository for entities (optional user scoping)
-- `UserScopedBaseRepository[Entity, Query]` - Base repository requiring user scoping
-
-Most repositories use `UserScopedBaseRepository`:
+Repositories extend `UserScopedBaseRepository[Entity, Query]` (all repositories are user-scoped):
 
 ```python
 from lykke.domain.entities import TaskEntity
@@ -94,7 +89,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, TaskQuery]):
 
 ### Key Rules for Repositories
 
-1. **Extend base classes** - Use `UserScopedBaseRepository` or `BaseRepository`
+1. **Extend base class** - Use `UserScopedBaseRepository[Entity, Query]`
 2. **Set class variables** - Set `Object`, `table`, `QueryClass`
 3. **User scoping** - User-scoped repositories accept `user: UserEntity` and are always scoped
 4. **Implement conversion methods** - Implement `entity_to_row()` and optionally `row_to_entity()`

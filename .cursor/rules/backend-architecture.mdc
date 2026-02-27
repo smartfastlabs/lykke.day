@@ -393,7 +393,7 @@ Entity emits event
 - Implementations in `infrastructure/repositories/`
 - Read-only and read-write protocols separated
 - User-scoped repositories are constructed with `user: UserEntity`
-- Base user scoping is enforced by `UserScopedBaseRepository` / `BaseRepository`
+- Base user scoping is enforced by `UserScopedBaseRepository`
 
 ### Identity Access Pattern
 

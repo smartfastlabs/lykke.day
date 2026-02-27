@@ -1,7 +1,7 @@
-"""Base repository implementations with optional user scoping.
+"""Base repository implementation with user scoping.
 
-This module provides a unified BaseRepository that handles both user-scoped
-and non-user-scoped operations through composition rather than inheritance duplication.
+All repositories are user-scoped: they require a UserEntity and filter all
+operations by that user's id.
 """
 
 from contextlib import asynccontextmanager
@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from lykke.core.exceptions import BadRequestError, NotFoundError, UserScopeRequiredError
+from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.base import BaseEntityObject
@@ -30,15 +30,15 @@ ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=value_objects.BaseQuery)
 
 
-class BaseRepository(Generic[ObjectType, QueryType]):
-    """Unified base repository with all CRUD operations using async SQLAlchemy Core.
+class UserScopedBaseRepository(Generic[ObjectType, QueryType]):
+    """Base repository with all CRUD operations using async SQLAlchemy Core.
+
+    All repositories are user-scoped: they require a UserEntity and filter all
+    operations by that user's id.
 
     Type parameters:
         ObjectType: The entity type this repository manages
         QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
-
-    This repository supports optional user scoping. When user_id is provided,
-    all operations are automatically filtered by user_id.
 
     Class Attributes:
         Object: The entity class this repository manages.
@@ -48,39 +48,28 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             Useful for database-only fields like computed date columns.
 
     Instance Attributes:
-        user_id: Optional user ID for scoping. When set, all queries filter by this user.
+        user: The user entity this repository is scoped to.
+        user_id: The user's id (used for filtering).
     """
 
     Object: type[ObjectType]
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
     QueryClass: type[QueryType]
-    user_id: UUID | None
+    user: UserEntity
+    user_id: UUID
 
     # Fields to exclude when converting database row to entity
     # Override in subclasses for entity-specific exclusions (e.g., {"date"} for computed fields)
     excluded_row_fields: ClassVar[set[str]] = set()
 
-    # Explicit escape hatch for rare cases where a table has user_id but a repository
-    # must be constructed unscoped (default: forbidden).
-    allow_unscoped_user_id_table: ClassVar[bool] = False
-
-    def __init__(self, user_id: UUID | None = None) -> None:
-        """Initialize repository with optional user scoping.
+    def __init__(self, user: UserEntity) -> None:
+        """Initialize repository with required user scoping.
 
         Args:
-            user_id: Optional user ID. When provided, all operations are scoped to this user.
+            user: Required user entity. All queries will be filtered by this user.
         """
-        if (
-            user_id is None
-            and getattr(type(self), "allow_unscoped_user_id_table", False) is False
-            and hasattr(type(self), "table")
-            and hasattr(type(self).table.c, "user_id")
-        ):
-            raise UserScopeRequiredError(
-                f"{type(self).__name__} requires a user scope (table has user_id). "
-                "Construct it with `user=` (UserScopedBaseRepository) or `user_id=`."
-            )
-        self.user_id = user_id
+        self.user = user
+        self.user_id = user.id
 
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> ObjectType:
@@ -119,8 +108,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     @property
     def _is_user_scoped(self) -> bool:
-        """Check if this repository instance is user-scoped."""
-        return self.user_id is not None
+        """Always True; all repositories are user-scoped."""
+        return True
 
     @property
     def _table_has_user_id(self) -> bool:
@@ -512,33 +501,3 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 raise NotFoundError(
                     f"{self.Object.__name__} with id {obj_id} not found"
                 )
-
-
-class UserScopedBaseRepository(
-    BaseRepository[ObjectType, QueryType], Generic[ObjectType, QueryType]
-):
-    """Base repository that requires user scoping.
-
-    This is a thin wrapper around BaseRepository that enforces user_id is required.
-    All the actual logic is in BaseRepository.
-
-    Type parameters:
-        ObjectType: The entity type this repository manages
-        QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
-    """
-
-    user: UserEntity
-    user_id: UUID  # Retained for internal scoping logic
-
-    def __init__(self, user: UserEntity) -> None:
-        """Initialize repository with required user scoping.
-
-        Args:
-            user: Required user entity. All queries will be filtered by this user.
-        """
-        self.user = user
-        super().__init__(user_id=user.id)
-
-    @property
-    def _is_user_scoped(self) -> bool:
-        return True
