@@ -6,9 +6,27 @@
 > **Work in progress / experiment**  
 > This repository is actively changing and may break at any time.
 
-## What This Is
+## What Lykke Is About
 
-`lykke.day` is an ongoing experiment in AI-native software development:
+Lykke is about intentional daily living: planning your day around what matters, following through with consistency, and reflecting without turning life into hustle metrics.
+
+The project exists to support wellbeing-first productivity. The core idea is simple: a day should feel purposeful and sustainable, not overloaded.
+
+## Architecture Overview
+
+The backend follows Clean Architecture with CQRS. The codebase is organized into five layers with strict dependency flow:
+
+- `core` - shared primitives, constants, config, and cross-cutting utilities
+- `domain` - entities, value objects, domain services, and domain events
+- `application` - commands, queries, protocols, and use-case orchestration
+- `infrastructure` - database/repository/gateway implementations and workers
+- `presentation` - FastAPI routes, request/response schemas, and API wiring
+
+Dependency direction is inward: outer layers depend on inner layers, never the reverse.
+
+## Experiment Focus
+
+This repository is also intentionally centered on process:
 
 - LLMs write essentially all production code in this repo.
 - Humans set direction, constraints, and review.
@@ -23,6 +41,26 @@ This means commits may be frequent, structure may shift, and rough edges are exp
 - No compatibility guarantees between commits
 
 If you are reading this, treat the project as a live lab notebook rather than a finished product.
+
+## Cursor Quick Links
+
+### Important Commands
+
+- [Add Feature](.cursor/commands/add-feature.md)
+- [Run Tests](.cursor/commands/run-tests.md)
+- [Run Typecheck](.cursor/commands/run-typecheck.md)
+- [Commit Message](.cursor/commands/commit-message.md)
+
+### Important Rules
+
+- [Backend Architecture](.cursor/rules/backend-architecture.mdc)
+- [Python Help](.cursor/rules/python-help.mdc)
+- [Events and Audit Logs](.cursor/rules/events-and-audit-logs.mdc)
+- [Domain](.cursor/rules/domain.mdc)
+- [Application](.cursor/rules/application.mdc)
+- [Infrastructure](.cursor/rules/infrastructure.mdc)
+- [Presentation](.cursor/rules/presentation.mdc)
+- [Core](.cursor/rules/core.mdc)
 
 ## Local Development
 
