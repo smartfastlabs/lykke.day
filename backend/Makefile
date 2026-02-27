@@ -120,15 +120,6 @@ worker-prod: docker-up
 serve-http: docker-up
 	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload
 
-develop-webhooks:
-	@bash -c ' \
-		if [ -z "$$WEBHOOK_RELAY_URL" ]; then \
-			echo "WEBHOOK_RELAY_URL is required (ws/wss)"; \
-			exit 1; \
-		fi; \
-		poetry run python scripts/webhook_relay_client.py; \
-	'
-
 worker: docker-up
 	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq worker lykke.infrastructure.workers.config:broker
 

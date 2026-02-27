@@ -23,7 +23,6 @@ from . import (
     triggers,
     twilio,
     usecase_config,
-    webhook_relay,
 )
 
 router = APIRouter()
@@ -139,8 +138,4 @@ router.include_router(
     twilio.router,
     prefix="/twilio",
     tags=["twilio", "sms"],
-)
-router.include_router(
-    webhook_relay.router,
-    tags=["webhook-relay"],
 )

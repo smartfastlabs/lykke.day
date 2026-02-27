@@ -21,7 +21,6 @@ from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.infrastructure.unauthenticated import UnauthenticatedIdentityAccess
 from lykke.presentation.handler_factory import QueryHandlerFactory
-from lykke.presentation.webhook_relay import webhook_relay_manager
 from lykke.presentation.workers.tasks.calendar import (
     resubscribe_calendar_task,
     sync_single_calendar_task,
@@ -163,10 +162,6 @@ async def google_webhook(
     Returns:
         Empty 200 response to acknowledge receipt.
     """
-    relay_response = await webhook_relay_manager.proxy_request(request)
-    if relay_response is not None:
-        return relay_response
-
     logger.info(
         f"Received Google webhook for user {user_id}, calendar {calendar_id}, "
         f"state={x_goog_resource_state}"
