@@ -51,9 +51,7 @@ async def test_run_usecase_fallback_succeeds_when_configured_model_not_found() -
     tool = LLMTool(callback=echo_message)
     success_response = MagicMock()
     success_response.content = ""
-    success_response.tool_calls = [
-        MagicMock(name="echo_message", args={"message": "hello"})
-    ]
+    success_response.tool_calls = [{"name": "echo_message", "args": {"message": "hello"}}]
     success_response.additional_kwargs = {}
 
     ainvoke_calls: list[int] = []
@@ -73,7 +71,7 @@ async def test_run_usecase_fallback_succeeds_when_configured_model_not_found() -
 
     with (
         patch(
-            "app.infrastructure.gateways.anthropic_llm.settings",
+            "lykke.infrastructure.gateways.anthropic_llm.settings",
             MagicMock(
                 ANTHROPIC_MODEL=configured,
                 ANTHROPIC_FALLBACK_MODEL=fallback,
@@ -81,7 +79,7 @@ async def test_run_usecase_fallback_succeeds_when_configured_model_not_found() -
             ),
         ),
         patch(
-            "app.infrastructure.gateways.anthropic_llm.ChatAnthropic",
+            "lykke.infrastructure.gateways.anthropic_llm.ChatAnthropic",
             return_value=mock_llm,
         ),
     ):
@@ -117,7 +115,7 @@ async def test_run_usecase_returns_none_when_fallback_also_fails() -> None:
 
     with (
         patch(
-            "app.infrastructure.gateways.anthropic_llm.settings",
+            "lykke.infrastructure.gateways.anthropic_llm.settings",
             MagicMock(
                 ANTHROPIC_MODEL=configured,
                 ANTHROPIC_FALLBACK_MODEL=fallback,
@@ -125,7 +123,7 @@ async def test_run_usecase_returns_none_when_fallback_also_fails() -> None:
             ),
         ),
         patch(
-            "app.infrastructure.gateways.anthropic_llm.ChatAnthropic",
+            "lykke.infrastructure.gateways.anthropic_llm.ChatAnthropic",
             return_value=mock_llm,
         ),
     ):
@@ -155,7 +153,7 @@ async def test_run_usecase_no_retry_when_non_model_error() -> None:
 
     with (
         patch(
-            "app.infrastructure.gateways.anthropic_llm.settings",
+            "lykke.infrastructure.gateways.anthropic_llm.settings",
             MagicMock(
                 ANTHROPIC_MODEL="claude-sonnet-4-6",
                 ANTHROPIC_FALLBACK_MODEL="claude-sonnet-4-6",
@@ -163,7 +161,7 @@ async def test_run_usecase_no_retry_when_non_model_error() -> None:
             ),
         ),
         patch(
-            "app.infrastructure.gateways.anthropic_llm.ChatAnthropic",
+            "lykke.infrastructure.gateways.anthropic_llm.ChatAnthropic",
             return_value=mock_llm,
         ),
     ):
