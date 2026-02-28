@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "lykke"}]
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.14"
 notion-client = "2.3.0"
 gcsa = "2.5.1"
 uvicorn = {extras = ["standard"], version = "^0.40.0"}
@@ -70,12 +70,12 @@ pythonpath = "."
 
 [tool.black]
 line-length = 88
-target-version = ["py311"]
+target-version = ["py314"]
 include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py314"
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -105,7 +105,7 @@ combine-as-imports = true
 
 [tool.mypy]
 exclude="scripts.*"
-python_version = "3.13"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

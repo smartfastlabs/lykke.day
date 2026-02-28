@@ -1,178 +1,103 @@
-.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types migrate-data-to-prod worker scheduler check-mappers fix develop-webhooks
+.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types worker scheduler check-mappers fix worker-prod
+
+COMPOSE_FILE := ../docker-compose.yml
+COMPOSE := docker compose -f $(COMPOSE_FILE)
+API_SERVICE := api
+DOCKER_RUN_API := $(COMPOSE) run --rm --no-deps $(API_SERVICE)
+TEST_DATABASE_URL := postgresql+psycopg://lykke_test:password@postgres:5432/lykke_test
+RESOLVE_PRODUCTION_DB_URL = if [ -n "$$PRODUCTION_MIGRATION_DB_URL" ]; then DATABASE_URL="$$PRODUCTION_MIGRATION_DB_URL"; elif [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); else echo "Error: PRODUCTION_MIGRATION_DB_URL not set and not found in .env.prod"; exit 1; fi;
 
 # Docker management
 docker-up:
-	@cd .. && docker-compose up -d
-	@echo "Waiting for PostgreSQL to be ready..."
-	@sleep 2
-	@cd .. && docker-compose exec -T postgres pg_isready -U lykke || (echo "Waiting a bit more..." && sleep 3)
-	@echo "PostgreSQL is ready!"
-
-# Initialize databases and users (idempotent)
-init-db:
-	@echo "Ensuring databases and users exist..."
-	@cd .. && docker-compose exec -T postgres psql -U lykke -d lykke_dev -c "CREATE USER lykke_test WITH PASSWORD 'password';" 2>&1 | grep -v "already exists" || true
-	@cd .. && docker-compose exec -T postgres psql -U lykke -d lykke_dev -c "CREATE DATABASE lykke_test OWNER lykke_test;" 2>&1 | grep -v "already exists" || true
-	@cd .. && docker-compose exec -T postgres psql -U lykke -d lykke_dev -c "GRANT ALL PRIVILEGES ON DATABASE lykke_test TO lykke_test;" 2>&1 | grep -v -E "(ERROR|already granted)" || true
-	@cd .. && docker-compose exec -T postgres psql -U lykke -d lykke_test -c "GRANT ALL ON SCHEMA public TO lykke_test;" 2>&1 | grep -v -E "(ERROR|already granted)" || true
-	@cd .. && docker-compose exec -T postgres psql -U lykke -d lykke_dev -c "GRANT ALL ON SCHEMA public TO lykke;" 2>&1 | grep -v -E "(ERROR|already granted)" || true
-	@echo "Databases and users initialized!"
-
+	@$(COMPOSE) up -d postgres redis
 
 docker-down:
-	@cd .. && docker-compose down
+	@$(COMPOSE) down
 
 docker-restart: docker-down docker-up
 
-# Build Docker image
 docker-build:
-	docker build -t lykke .
+	@$(COMPOSE) build api worker scheduler
+
+init-db: docker-up
+	@echo "Postgres initialization runs from backend/docker/init-db.sh on first startup."
+	@echo "If the postgres volume already exists, recreate it to rerun init scripts."
+
+# Application targets (Docker-first local development)
+serve:
+	@$(COMPOSE) up --build api worker scheduler
+
+serve-http:
+	@$(COMPOSE) up --build api
+
+worker:
+	@$(COMPOSE) up --build worker
+
+scheduler:
+	@$(COMPOSE) up --build scheduler
 
 # Database migrations
 migrate-dev: docker-up
-	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run alembic upgrade head
+	@$(DOCKER_RUN_API) poetry run alembic upgrade head
 
 migrate-test: docker-up
-	DATABASE_URL=postgresql+psycopg://lykke_test:password@localhost:5432/lykke_test poetry run alembic upgrade head
-
-migrate-prod: docker-build
-	@if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
-		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
-			DB_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); \
-			docker run --rm -it \
-				-v $(CURDIR):/app \
-				-w /app \
-				-e DATABASE_URL=$$DB_URL \
-				lykke \
-				poetry run alembic upgrade head; \
-		else \
-			echo "Error: PRODUCTION_MIGRATION_DB_URL not set and not found in .env.prod"; \
-			exit 1; \
-		fi \
-	else \
-		docker run --rm -it \
-			-v $(CURDIR):/app \
-			-w /app \
-			-e DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL \
-			lykke \
-			poetry run alembic upgrade head; \
-	fi
+	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) $(API_SERVICE) poetry run alembic upgrade head
 
 migrate-create: docker-up
 	@if [ -z "$(MSG)" ]; then \
 		echo "Usage: make migrate-create MSG='your migration message'"; \
 		exit 1; \
 	fi
-	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run alembic revision --autogenerate -m "$(MSG)"
+	@$(DOCKER_RUN_API) poetry run alembic revision --autogenerate -m "$(MSG)"
 
-# Application targets
-serve: docker-up
-	@echo "Starting FastAPI server, scheduler, and worker..."
-	@bash -c ' \
-		export REDIS_URL=redis://localhost:6379; \
-		export DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev; \
-		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
-		SCHEDULER_PID=$$!; \
-		poetry run taskiq worker lykke.infrastructure.workers.config:broker & \
-		WORKER_PID=$$!; \
-		trap "kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null; exit" EXIT INT TERM; \
-		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload; \
-		kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null || true'
+migrate-prod: docker-build
+	@bash -c '$(RESOLVE_PRODUCTION_DB_URL) $(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run alembic upgrade head'
 
 serve-prod: docker-up
 	@echo "Starting FastAPI server against production DB..."
 	@bash -c ' \
-		if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
-			if [ -f .env.prod ] && grep -q "^PRODUCTION_MIGRATION_DB_URL=" .env.prod; then \
-				DATABASE_URL=$$(grep "^PRODUCTION_MIGRATION_DB_URL=" .env.prod | cut -d"=" -f2-); \
-			else \
-				echo "Error: PRODUCTION_MIGRATION_DB_URL not set and .env.prod missing"; \
-				exit 1; \
-			fi; \
-		else \
-			DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL; \
-		fi; \
-		export REDIS_URL=redis://localhost:6379; \
-		export DATABASE_URL=$$DATABASE_URL; \
-		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload'
+		$(RESOLVE_PRODUCTION_DB_URL) \
+		$(COMPOSE) run --rm --service-ports --no-deps -e DATABASE_URL=$$DATABASE_URL -e REDIS_URL=redis://redis:6379 $(API_SERVICE) poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload'
 
 worker-prod: docker-up
 	@echo "Starting Taskiq worker (and scheduler) against production DB..."
 	@bash -c ' \
-		if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
-			if [ -f .env.prod ] && grep -q "^PRODUCTION_MIGRATION_DB_URL=" .env.prod; then \
-				DATABASE_URL=$$(grep "^PRODUCTION_MIGRATION_DB_URL=" .env.prod | cut -d"=" -f2-); \
-			else \
-				echo "Error: PRODUCTION_MIGRATION_DB_URL not set and .env.prod missing"; \
-				exit 1; \
-			fi; \
-		else \
-			DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL; \
-		fi; \
-		export REDIS_URL=redis://localhost:6379; \
-		export DATABASE_URL=$$DATABASE_URL; \
-		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
-		SCHEDULER_PID=$$!; \
-		trap "kill $$SCHEDULER_PID 2>/dev/null; exit" EXIT INT TERM; \
-		poetry run taskiq worker lykke.infrastructure.workers.config:broker; \
-		kill $$SCHEDULER_PID 2>/dev/null || true'
+		$(RESOLVE_PRODUCTION_DB_URL) \
+		$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL -e REDIS_URL=redis://redis:6379 $(API_SERVICE) bash -c "poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & SCHEDULER_PID=\$$!; trap \"kill \$$SCHEDULER_PID 2>/dev/null; exit\" EXIT INT TERM; poetry run taskiq worker lykke.infrastructure.workers.config:broker"'
 
-serve-http: docker-up
-	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload
-
-worker: docker-up
-	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq worker lykke.infrastructure.workers.config:broker
-
-scheduler: docker-up
-	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler
-
-test: 
-	DATABASE_URL=postgresql+psycopg://lykke_test:password@localhost:5432/lykke_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once
-
-typecheck:
-	poetry run mypy lykke
-
-check-mappers:
-	poetry run python scripts/check_mappers.py
-
-fix:
-	poetry run ruff check --fix lykke
-	poetry run black lykke
-
-check:
-	make typecheck
-	make test
+# Quality and tests
+test: docker-up
+	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest tests --vcr-record=once
 
 test-target: docker-up
-	DATABASE_URL=postgresql+psycopg://lykke_test:password@localhost:5432/lykke_test ENV_FILE=.env.test poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
+	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
+
+typecheck:
+	@$(DOCKER_RUN_API) poetry run mypy lykke
+
+check-mappers:
+	@$(DOCKER_RUN_API) poetry run python scripts/check_mappers.py
+
+fix:
+	@$(DOCKER_RUN_API) poetry run ruff check --fix lykke
+	@$(DOCKER_RUN_API) poetry run black lykke
+
+check:
+	@$(MAKE) typecheck
+	@$(MAKE) test
 
 # Type generation
 export-openapi:
-	poetry run python scripts/export_openapi_schema.py
+	@$(DOCKER_RUN_API) poetry run python scripts/export_openapi_schema.py
 
 generate-types: export-openapi
-	poetry run python scripts/generate_ts_types.py
+	@$(DOCKER_RUN_API) poetry run python scripts/generate_ts_types.py
 
 # Data migration
 migrate-data-to-prod: docker-build
 	@if [ -z "$$DEST_DATABASE_URL" ]; then \
-		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
-			DEST_DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); \
-			docker run --rm -it \
-				-v $(CURDIR):/app \
-				-w /app \
-				-e DEST_DATABASE_URL=$$DEST_DATABASE_URL \
-				lykke \
-				poetry run python scripts/migrate_data_to_production.py $(ARGS); \
-		else \
-			echo "Error: DEST_DATABASE_URL not set and PRODUCTION_MIGRATION_DB_URL not found in .env.prod"; \
-			exit 1; \
-		fi \
+		$(RESOLVE_PRODUCTION_DB_URL) \
+		$(COMPOSE) run --rm --no-deps -e DEST_DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 	else \
-		docker run --rm -it \
-			-v $(CURDIR):/app \
-			-w /app \
-			-e DEST_DATABASE_URL=$$DEST_DATABASE_URL \
-			lykke \
-			poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+		$(COMPOSE) run --rm --no-deps -e DEST_DATABASE_URL=$$DEST_DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 	fi
