@@ -61,7 +61,7 @@ services:
 
   worker:
     <<: *backend-service
-    command: poetry run taskiq worker lykke.infrastructure.workers.config:broker
+    command: poetry run taskiq worker lykke.presentation.workers.config:broker
 
   scheduler:
     <<: *backend-service
