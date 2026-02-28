@@ -18,7 +18,6 @@ from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
 from lykke.domain.events.day_events import BrainDumpAddedEvent
-from lykke.presentation.workers import tasks as worker_tasks
 from tests.support.dobles import (
     create_day_repo_double,
     create_day_template_repo_double,
@@ -39,10 +38,23 @@ class _RepositoryFactory:
 
 class _WorkersToSchedule:
     def __init__(self) -> None:
-        self.calls: list[tuple[object, dict[str, object]]] = []
+        self.calls: list[dict[str, object]] = []
 
-    def schedule(self, worker: object, **kwargs: object) -> None:
-        self.calls.append((worker, kwargs))
+    def schedule_process_brain_dump_item(
+        self, *, user_id: object, day_date: object, item_id: object
+    ) -> None:
+        self.calls.append(
+            {
+                "user_id": user_id,
+                "day_date": day_date,
+                "item_id": item_id,
+            }
+        )
+
+    def schedule_process_inbound_sms_message(
+        self, *, user_id: object, message_id: object
+    ) -> None:
+        _ = (user_id, message_id)
 
     async def flush(self) -> None:
         return None
@@ -103,8 +115,7 @@ async def test_create_brain_dump_creates_item():
     events = result.collect_events()
     assert any(isinstance(event, BrainDumpAddedEvent) for event in events)
     assert len(workers_to_schedule.calls) == 1
-    worker, kwargs = workers_to_schedule.calls[0]
-    assert worker is worker_tasks.process_brain_dump_item_task
+    kwargs = workers_to_schedule.calls[0]
     assert kwargs["user_id"] == user_id
     assert kwargs["day_date"] == task_date.isoformat()
     assert kwargs["item_id"] == result.id

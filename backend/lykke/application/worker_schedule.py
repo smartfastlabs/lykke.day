@@ -1,47 +1,44 @@
 """Protocols for post-commit worker scheduling after UOW commit."""
 
-from collections.abc import Callable
 from contextvars import ContextVar, Token
-from typing import Any, Protocol
+from typing import Protocol
+from uuid import UUID
 
 
 class WorkersToScheduleProtocol(Protocol):
     """Protocol for UOW-scoped collection of workers to schedule after commit."""
 
-    def schedule(self, worker: Callable[..., Any], **kwargs: Any) -> None:
-        """Add a worker to be sent to the broker after commit.
+    def schedule_process_brain_dump_item(
+        self, *, user_id: UUID, day_date: str, item_id: UUID
+    ) -> None:
+        """Schedule post-commit processing for a brain dump item."""
+        pass
 
-        Args:
-            worker: The taskiq worker (callable with .kiq method).
-            **kwargs: Arguments to pass to worker.kiq().
-        """
-        ...
+    def schedule_process_inbound_sms_message(
+        self, *, user_id: UUID, message_id: UUID
+    ) -> None:
+        """Schedule post-commit processing for an inbound SMS message."""
+        pass
 
     async def flush(self) -> None:
         """Send all scheduled workers to the broker. Called by UOW after commit."""
-        ...
-
-
-class WorkerRegistryProtocol(Protocol):
-    """Protocol for resolving workers (supports test overrides via get_worker)."""
-
-    def get_worker(self, worker: Callable[..., Any]) -> Any:
-        """Return the worker, or an override if set (for testing).
-
-        Args:
-            worker: The default worker (used for lookup by __name__ and as fallback).
-
-        Returns:
-            The worker to use (override or default).
-        """
-        ...
+        pass
 
 
 class NoOpWorkersToSchedule:
     """No-op implementation when worker scheduling is not configured."""
 
-    def schedule(self, worker: Callable[..., Any], **kwargs: Any) -> None:
+    def schedule_process_brain_dump_item(
+        self, *, user_id: UUID, day_date: str, item_id: UUID
+    ) -> None:
         """No-op."""
+        _ = (user_id, day_date, item_id)
+
+    def schedule_process_inbound_sms_message(
+        self, *, user_id: UUID, message_id: UUID
+    ) -> None:
+        """No-op."""
+        _ = (user_id, message_id)
 
     async def flush(self) -> None:
         """No-op."""

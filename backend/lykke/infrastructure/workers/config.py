@@ -8,7 +8,3 @@ from lykke.core.observability import init_sentry_taskiq
 init_sentry_taskiq()
 
 broker = ListQueueBroker(url=settings.REDIS_URL)
-
-# Import tasks after broker is created to register them
-# This import must happen after broker definition to avoid circular imports
-from lykke.presentation.workers import tasks  # noqa: E402

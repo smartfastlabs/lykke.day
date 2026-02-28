@@ -18,6 +18,7 @@ COPY pyproject.toml poetry.lock ./
 
 RUN poetry install --no-root
 COPY . .
-RUN poetry install
+
+RUN poetry install --only-root --no-interaction
 
 EXPOSE 8080

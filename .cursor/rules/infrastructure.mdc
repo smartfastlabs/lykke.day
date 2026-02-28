@@ -57,8 +57,6 @@ infrastructure/
 
 - `lykke.presentation.*` - Presentation layer
 
-**Special exemption (worker bootstrap):** `infrastructure/workers/config.py` may import `lykke.presentation.workers.tasks` so that taskiq tasks are registered with the broker. This is the only allowed presentation import in infrastructure; all other presentation modules remain forbidden.
-
 ---
 
 ## Repositories
