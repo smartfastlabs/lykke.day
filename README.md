@@ -3,8 +3,16 @@
 ![Tests](https://github.com/smartfastlabs/lykke.day/actions/workflows/ci.yml/badge.svg?branch=main)
 [![codecov](https://codecov.io/github/smartfastlabs/lykke.day/graph/badge.svg?token=LKE5MI43G4)](https://codecov.io/github/smartfastlabs/lykke.day)
 
-> **Work in progress / experiment**  
-> This repository is actively changing and may break at any time.
+> **AI experiment + work in progress**  
+> This repository is actively changing and may break at any time.  
+> It is an experiment in two directions:
+> 1. Developing software **with AI** (LLM-first workflows, human direction/review).
+> 2. Building products **on top of LLMs** that are ethical, practical, and genuinely helpful.
+
+## What “Lykke” Means
+
+“Lykke” is the Danish/Norwegian word for **happiness** (or wellbeing).  
+The name reflects the product goal: helping people structure days that feel meaningful, sustainable, and humane.
 
 ## What Lykke Is About
 
@@ -12,9 +20,20 @@ Lykke is about intentional daily living: planning your day around what matters, 
 
 The project exists to support wellbeing-first productivity. The core idea is simple: a day should feel purposeful and sustainable, not overloaded.
 
-## Architecture Overview
+## Development Ethos
 
-The backend follows Clean Architecture with CQRS. The codebase is organized into five layers with strict dependency flow:
+This repository is intentionally centered on both process and product values.
+
+### LLM Development
+
+- LLMs write essentially all production code in this repo.
+- Humans set direction, constraints, and review.
+- The goal is to learn what workflows, architecture, and guardrails make this approach reliable.
+- The product goal is to explore how to build AI-powered tools that are ethical by design and useful in real life.
+
+This means commits may be frequent, structure may shift, and rough edges are expected.
+
+At the architecture level, the backend follows Clean Architecture with CQRS. The codebase is organized into five layers with strict dependency flow:
 
 - `core` - shared primitives, constants, config, and cross-cutting utilities
 - `domain` - entities, value objects, domain services, and domain events
@@ -23,16 +42,6 @@ The backend follows Clean Architecture with CQRS. The codebase is organized into
 - `presentation` - FastAPI routes, request/response schemas, and API wiring
 
 Dependency direction is inward: outer layers depend on inner layers, never the reverse.
-
-## Experiment Focus
-
-This repository is also intentionally centered on process:
-
-- LLMs write essentially all production code in this repo.
-- Humans set direction, constraints, and review.
-- The goal is to learn what workflows, architecture, and guardrails make this approach reliable.
-
-This means commits may be frequent, structure may shift, and rough edges are expected.
 
 ## Current Status
 
@@ -67,7 +76,7 @@ If you are reading this, treat the project as a live lab notebook rather than a 
 ### Prerequisites
 
 - Docker
-- Python 3.12+ with Poetry
+- Optional: Python 3.14+ with Poetry (only if running backend commands outside Docker)
 - Node.js 18+ with npm
 
 ### Setup

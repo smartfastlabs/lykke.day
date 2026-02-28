@@ -1,3 +1,22 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://lykke:password@postgres:5432/lykke_dev
+  REDIS_URL: redis://redis:6379
+  PYTHONUNBUFFERED: "1"
+
+x-backend-service: &backend-service
+  build:
+    context: ./backend
+  working_dir: /app
+  volumes:
+    - ./backend:/app
+  environment: *backend-env
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
 services:
   postgres:
     image: postgres:16
@@ -34,34 +53,19 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Uncomment to test Docker builds locally
-  # api:
-  #   build:
-  #     context: ./backend
-  #     target: api
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg://lykke:password@postgres:5432/lykke_dev
-  #     REDIS_URL: redis://redis:6379
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  api:
+    <<: *backend-service
+    command: poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload
+    ports:
+      - "8080:8080"
 
-  # worker:
-  #   build:
-  #     context: ./backend
-  #     target: worker
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg://lykke:password@postgres:5432/lykke_dev
-  #     REDIS_URL: redis://redis:6379
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  worker:
+    <<: *backend-service
+    command: poetry run taskiq worker lykke.infrastructure.workers.config:broker
+
+  scheduler:
+    <<: *backend-service
+    command: poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler
 
 volumes:
   postgres_data:
