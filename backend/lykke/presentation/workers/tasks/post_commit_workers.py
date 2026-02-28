@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from lykke.application.worker_schedule import WorkersToScheduleProtocol
 
-from .registry import WorkerRegistry
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from .registry import WorkerRegistry
 
 
 @dataclass(frozen=True)
@@ -59,10 +62,12 @@ class WorkersToSchedule(WorkersToScheduleProtocol):
         from .inbound_sms import process_inbound_sms_message_task
 
         for brain_dump_job in self._pending_brain_dump_items:
+            worker_label = "process_brain_dump_item_task"
             try:
                 resolved_worker = self._worker_registry.get_worker(
                     process_brain_dump_item_task
                 )
+                worker_label = getattr(resolved_worker, "task_name", str(resolved_worker))
                 await resolved_worker.kiq(
                     user_id=brain_dump_job.user_id,
                     day_date=brain_dump_job.day_date,
@@ -70,21 +75,23 @@ class WorkersToSchedule(WorkersToScheduleProtocol):
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    f"Failed to schedule worker {getattr(resolved_worker, 'task_name', resolved_worker)}: {exc}",
+                    f"Failed to schedule worker {worker_label}: {exc}",
                 )
 
         for inbound_sms_job in self._pending_inbound_sms:
+            worker_label = "process_inbound_sms_message_task"
             try:
                 resolved_worker = self._worker_registry.get_worker(
                     process_inbound_sms_message_task
                 )
+                worker_label = getattr(resolved_worker, "task_name", str(resolved_worker))
                 await resolved_worker.kiq(
                     user_id=inbound_sms_job.user_id,
                     message_id=inbound_sms_job.message_id,
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error(
-                    f"Failed to schedule worker {getattr(resolved_worker, 'task_name', resolved_worker)}: {exc}",
+                    f"Failed to schedule worker {worker_label}: {exc}",
                 )
 
         self._pending_brain_dump_items.clear()
