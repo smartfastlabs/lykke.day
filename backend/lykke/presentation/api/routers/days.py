@@ -89,7 +89,6 @@ from .dependencies.services import (
     DayContextPartHandlers,
     day_context_part_handlers_websocket,
     get_pubsub_gateway,
-    get_pubsub_gateway_for_request,
     get_read_only_repository_factory,
 )
 from .dependencies.user import get_current_user

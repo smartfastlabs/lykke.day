@@ -10,7 +10,6 @@ from loguru import logger
 from lykke.core.exceptions import AuthenticationError
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain.entities.sms_login_code import _SYSTEM_USER_ID
 from lykke.infrastructure.auth import current_active_user, get_jwt_strategy, get_user_db
 from lykke.infrastructure.database.tables import User as UserDB
 
@@ -41,19 +40,6 @@ def _db_user_to_entity(user: UserDB) -> UserEntity:
         settings=settings,
         created_at=cast("datetime", user.created_at),
         updated_at=cast("datetime | None", user.updated_at),
-    )
-
-
-def get_system_user() -> UserEntity:
-    """Return a synthetic system user for unauthenticated flows."""
-    return UserEntity(
-        id=_SYSTEM_USER_ID,
-        email="system@lykke.day",
-        hashed_password="!",
-        is_active=True,
-        is_superuser=False,
-        is_verified=True,
-        status=value_objects.UserStatus.ACTIVE,
     )
 
 
