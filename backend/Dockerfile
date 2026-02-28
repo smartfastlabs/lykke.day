@@ -31,7 +31,7 @@ RUN poetry install --no-interaction
 # No CMD specified - command must be provided when running the container
 # Example commands:
 #   API:       poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080
-#   Worker:    poetry run taskiq worker lykke.infrastructure.workers.config:broker
+#   Worker:    poetry run taskiq worker lykke.presentation.workers.config:broker
 #   Scheduler: poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler
 
 EXPOSE 8080

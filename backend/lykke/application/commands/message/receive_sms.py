@@ -62,13 +62,9 @@ class ReceiveSmsMessageHandler(
                 )
                 return message
 
-            from lykke.presentation.workers import tasks as worker_tasks
-
-            worker = worker_tasks.get_worker(
-                worker_tasks.process_inbound_sms_message_task
-            )
-            workers_to_schedule.schedule(
-                worker, user_id=self.user.id, message_id=message.id
+            workers_to_schedule.schedule_process_inbound_sms_message(
+                user_id=self.user.id,
+                message_id=message.id,
             )
 
             return message

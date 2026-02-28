@@ -14,7 +14,6 @@ from lykke.application.worker_schedule import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.presentation.workers import tasks as worker_tasks
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
@@ -33,10 +32,22 @@ class _RepositoryFactory:
 
 class _WorkersToSchedule:
     def __init__(self) -> None:
-        self.calls: list[tuple[object, dict[str, object]]] = []
+        self.calls: list[dict[str, object]] = []
 
-    def schedule(self, worker: object, **kwargs: object) -> None:
-        self.calls.append((worker, kwargs))
+    def schedule_process_brain_dump_item(
+        self, *, user_id: object, day_date: object, item_id: object
+    ) -> None:
+        _ = (user_id, day_date, item_id)
+
+    def schedule_process_inbound_sms_message(
+        self, *, user_id: object, message_id: object
+    ) -> None:
+        self.calls.append(
+            {
+                "user_id": user_id,
+                "message_id": message_id,
+            }
+        )
 
     async def flush(self) -> None:
         return None
@@ -76,7 +87,6 @@ async def test_receive_sms_sets_message_type_to_inbound() -> None:
     assert uow.added[0].type == value_objects.MessageType.SMS_INBOUND
     assert uow.added[0].triggered_by == "sms_inbound"
     assert len(workers_to_schedule.calls) == 1
-    worker, kwargs = workers_to_schedule.calls[0]
-    assert worker is worker_tasks.process_inbound_sms_message_task
+    kwargs = workers_to_schedule.calls[0]
     assert kwargs["user_id"] == user_id
     assert kwargs["message_id"] == result.id

@@ -51,11 +51,7 @@ class CreateBrainDumpHandler(
                 )
                 return created
 
-            from lykke.presentation.workers import tasks as worker_tasks
-
-            worker = worker_tasks.get_worker(worker_tasks.process_brain_dump_item_task)
-            workers_to_schedule.schedule(
-                worker,
+            workers_to_schedule.schedule_process_brain_dump_item(
                 user_id=self.user.id,
                 day_date=command.date.isoformat(),
                 item_id=created.id,
