@@ -41,7 +41,7 @@ blinker = "^1.9.0"
 taskiq = "^0.12.1"
 taskiq-redis = "^0.4.0"
 redis = "^4.2.0"
-cryptography = "^46.0.3"
+cryptography = "^46.0.5"
 phonenumbers = "^9.0.0"
 
 [tool.poetry.group.dev.dependencies]
