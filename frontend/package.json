@@ -75,5 +75,8 @@
     "solid-heroicons": "^3.2.4",
     "solid-js": "^1.9.9",
     "web-push": "^3.6.7"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.3"
   }
 }
