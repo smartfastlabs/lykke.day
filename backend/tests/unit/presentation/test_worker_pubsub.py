@@ -10,7 +10,6 @@ causing calendar sync changes to never be pushed to the frontend.
 """
 
 import asyncio
-from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -74,7 +73,7 @@ class TestWorkerPubSubGateway:
                 message={"test": "data"},
             )
 
-        asyncio.get_event_loop().run_until_complete(test_publish())
+        asyncio.run(test_publish())
         # If we get here, it "worked" (did nothing) - this is the problem!
 
     def test_worker_tasks_do_not_import_stub_gateway(self):

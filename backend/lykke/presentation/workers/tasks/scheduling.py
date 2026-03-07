@@ -1,7 +1,10 @@
 """Day scheduling background worker tasks."""
 
+import asyncio
+import random
 from collections.abc import Callable
 from datetime import date as dt_date
+from datetime import time as dt_time
 from typing import Annotated, Protocol
 from uuid import UUID
 
@@ -11,7 +14,7 @@ from taskiq_dependencies import Depends
 from lykke.application.commands import ScheduleDayCommand
 from lykke.application.identity import UnauthenticatedIdentityAccessProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.core.utils.dates import get_current_date
+from lykke.core.utils.dates import get_current_date, get_current_time
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
@@ -32,31 +35,40 @@ class _ScheduleDayHandler(Protocol):
     async def handle(self, command: ScheduleDayCommand) -> None: ...
 
 
-@broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
+@broker.task(schedule=[{"cron": "*/5 * * * *"}])  # type: ignore[untyped-decorator]
 async def schedule_all_users_day_task(
     identity_access: Annotated[
         UnauthenticatedIdentityAccessProtocol, Depends(get_identity_access)
     ],
     *,
     enqueue_task: _EnqueueTask | None = None,
+    current_time_provider: Callable[[str | None], dt_time] | None = None,
+    delay_seconds_provider: Callable[[], int] | None = None,
 ) -> None:
-    """Load all users and enqueue daily scheduling tasks for each user."""
-    logger.info("Starting daily schedule task for all users")
+    """Enqueue daily scheduling tasks when users reach local 03:05."""
+    logger.info("Starting daily schedule eligibility check for all users")
 
     users = await identity_access.list_all_users()
-    logger.info(f"Found {len(users)} users to schedule")
+    logger.info(f"Found {len(users)} users to evaluate for daily scheduling")
 
     task = enqueue_task or schedule_user_day_task
+    current_time_provider = current_time_provider or get_current_time
+    delay_seconds_provider = delay_seconds_provider or (lambda: random.randint(60, 600))
+    enqueued_count = 0
     for user in users:
-        # Enqueue a sub-task for each user
-        await task.kiq(user_id=user.id)
+        timezone = user.settings.timezone if user.settings else None
+        local_time = current_time_provider(timezone)
+        if local_time.hour == 3 and local_time.minute == 5:
+            await task.kiq(user_id=user.id, delay_seconds=delay_seconds_provider())
+            enqueued_count += 1
 
-    logger.info(f"Enqueued daily scheduling tasks for {len(users)} users")
+    logger.info(f"Enqueued daily scheduling tasks for {enqueued_count} users")
 
 
 @broker.task  # type: ignore[untyped-decorator]
 async def schedule_user_day_task(
     user_id: UUID,
+    delay_seconds: int | None = None,
     *,
     handler: _ScheduleDayHandler | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
@@ -66,6 +78,12 @@ async def schedule_user_day_task(
 ) -> None:
     """Schedule today's day for a specific user."""
     logger.info(f"Starting daily scheduling for user {user_id}")
+
+    if delay_seconds and delay_seconds > 0:
+        logger.debug(
+            f"Applying daily scheduling jitter of {delay_seconds}s for user {user_id}"
+        )
+        await asyncio.sleep(delay_seconds)
 
     pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
     try:
