@@ -43,6 +43,7 @@ taskiq-redis = "^0.4.0"
 redis = "^4.2.0"
 cryptography = "^46.0.5"
 phonenumbers = "^9.0.0"
+python-multipart = "^0.0.22"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.3.0"
