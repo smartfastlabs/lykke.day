@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@solidjs/testing-library";
 
 import MeIndexPage from "./Index";
@@ -26,8 +26,13 @@ const createLocalStorageMock = () => {
 };
 
 describe("/me entry route", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     navigateMock.mockReset();
+    window.history.replaceState({}, "", "/me");
 
     // Ensure a stable localStorage API regardless of test environment.
     Object.defineProperty(window, "localStorage", {
@@ -58,6 +63,36 @@ describe("/me entry route", () => {
 
   it("ignores invalid stored values and falls back", async () => {
     window.localStorage.setItem("lykke:last-me-path", "https://evil.example/");
+
+    render(() => <MeIndexPage />);
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith("/me/today", { replace: true });
+    });
+  });
+
+  it("forwards OAuth callback params to backend callback endpoint", async () => {
+    const replaceMock = vi.fn();
+    vi.stubGlobal("location", {
+      ...window.location,
+      search: "?state=oauth-state&code=oauth-code&iss=https://accounts.google.com",
+      replace: replaceMock,
+    });
+    render(() => <MeIndexPage />);
+
+    await waitFor(() => {
+      expect(navigateMock).not.toHaveBeenCalled();
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/api/google/callback/login?code=oauth-code&state=oauth-state",
+      );
+    });
+  });
+
+  it("ignores stored OAuth callback URLs and falls back", async () => {
+    window.localStorage.setItem(
+      "lykke:last-me-path",
+      "/me?state=oauth-state&code=oauth-code&iss=https://accounts.google.com",
+    );
 
     render(() => <MeIndexPage />);
 

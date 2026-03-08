@@ -124,12 +124,39 @@ function NavigationHandler() {
 
   const LAST_ME_PATH_KEY = "lykke:last-me-path";
 
+  const parseMePath = (
+    path: string
+  ): { pathname: string; searchParams: URLSearchParams } | null => {
+    if (!path.startsWith("/")) return null;
+    const hashIndex = path.indexOf("#");
+    const pathWithoutHash = hashIndex >= 0 ? path.slice(0, hashIndex) : path;
+    const queryIndex = pathWithoutHash.indexOf("?");
+    const pathname =
+      queryIndex >= 0 ? pathWithoutHash.slice(0, queryIndex) : pathWithoutHash;
+    const query = queryIndex >= 0 ? pathWithoutHash.slice(queryIndex + 1) : "";
+    return { pathname, searchParams: new URLSearchParams(query) };
+  };
+
+  const hasGoogleOauthCallbackParams = (path: string): boolean => {
+    const parsedPath = parseMePath(path);
+    if (!parsedPath) return false;
+    return (
+      parsedPath.searchParams.has("code") &&
+      parsedPath.searchParams.has("state") &&
+      parsedPath.searchParams.has("iss")
+    );
+  };
+
   const persistablePath = (): string =>
     `${location.pathname}${location.search}${location.hash}`;
 
   const shouldPersistMePath = (path: string): boolean => {
-    if (!path.startsWith("/me")) return false;
-    if (path === "/me" || path === "/me/") return false;
+    const parsedPath = parseMePath(path);
+    if (!parsedPath) return false;
+    if (!parsedPath.pathname.startsWith("/me")) return false;
+    if (parsedPath.pathname === "/me" || parsedPath.pathname === "/me/")
+      return false;
+    if (hasGoogleOauthCallbackParams(path)) return false;
     return true;
   };
 
@@ -138,8 +165,12 @@ function NavigationHandler() {
     try {
       const value = window.localStorage.getItem(LAST_ME_PATH_KEY);
       if (!value) return null;
-      if (!value.startsWith("/me")) return null;
-      if (value === "/me" || value === "/me/") return null;
+      const parsedPath = parseMePath(value);
+      if (!parsedPath) return null;
+      if (!parsedPath.pathname.startsWith("/me")) return null;
+      if (parsedPath.pathname === "/me" || parsedPath.pathname === "/me/")
+        return null;
+      if (hasGoogleOauthCallbackParams(value)) return null;
       return value;
     } catch {
       return null;
