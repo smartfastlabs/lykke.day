@@ -7,10 +7,6 @@ from typing import Any
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.gateways.llm_gateway_factory_protocol import (
-    LLMGatewayFactoryProtocol,
-)
-from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
@@ -21,13 +17,19 @@ from lykke.application.repositories import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserCheckInEntity
+from pydantic import BaseModel, Field
 
 
 @dataclass(frozen=True)
 class ThisWeeksStatusCommand(Command):
     """Command to run this_weeks_status use case and persist an LLM-generated check-in."""
 
-    pass
+
+class ThisWeeksStatusAssessment(BaseModel):
+    """Validated assessment payload returned by this_weeks_status."""
+
+    text: str | None = None
+    scores: dict[str, float | int] = Field(default_factory=dict)
 
 
 class ThisWeeksStatusHandler(
@@ -41,14 +43,35 @@ class ThisWeeksStatusHandler(
     template_usecase = "this_weeks_status"
 
     async def handle(self, command: ThisWeeksStatusCommand) -> None:
-        """Run LLM and persist check-in if the model calls the tool."""
-        result = await self.run_llm()
+        """Run LLM and persist check-in from validated assessment output."""
+        _ = command
+        result = await self.run_assessment_llm(ThisWeeksStatusAssessment)
         if result is None:
             return
-        logger.debug(
-            f"this_weeks_status completed for user {self.user.id}, "
-            f"tool_results={len(result.tool_results)}"
+        assessment = result.assessment
+        scores_clean: dict[str, Any] = {}
+        for k, v in (assessment.scores or {}).items():
+            if isinstance(k, str) and v is not None:
+                try:
+                    scores_clean[k] = float(v)
+                except (TypeError, ValueError):
+                    continue
+        entity = UserCheckInEntity(
+            user_id=self.user.id,
+            source=value_objects.UserCheckInSource.LLM_USE_CASE,
+            source_name="this_weeks_status",
+            source_metadata={
+                "llm_provider": result.llm_provider.value,
+                "usecase": "this_weeks_status",
+            },
+            checkin_at=result.current_time,
+            text=assessment.text.strip() if assessment.text and assessment.text.strip() else None,
+            scores=scores_clean,
         )
+        entity.create()
+        async with self._uow_factory.create(self.user) as uow:
+            await uow.create(entity)
+        logger.info(f"Persisted this_weeks_status check-in for user {self.user.id}")
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
         """Build prompt with today's context and last 7 days of check-ins."""
@@ -69,45 +92,3 @@ class ThisWeeksStatusHandler(
             extra_template_vars={"recent_check_ins": recent},
         )
 
-    def build_tools(
-        self,
-        *,
-        current_time: datetime,
-        prompt_context: value_objects.LLMPromptContext,
-        llm_provider: value_objects.LLMProvider,
-    ) -> list[LLMTool]:
-        """Single tool: record_weeks_status(text=None, scores=None)."""
-
-        async def record_weeks_status(
-            text: str | None = None,
-            scores: dict[str, float] | None = None,
-        ) -> None:
-            """Record this week's status check-in from the LLM."""
-            scores = scores or {}
-            scores_clean: dict[str, Any] = {}
-            for k, v in (scores or {}).items():
-                if isinstance(k, str) and v is not None:
-                    try:
-                        scores_clean[k] = float(v) if not isinstance(v, (int, float)) else v
-                    except (TypeError, ValueError):
-                        continue
-            entity = UserCheckInEntity(
-                user_id=self.user.id,
-                source=value_objects.UserCheckInSource.LLM_USE_CASE,
-                source_name="this_weeks_status",
-                source_metadata={
-                    "llm_provider": llm_provider.value,
-                    "usecase": "this_weeks_status",
-                },
-                checkin_at=current_time,
-                text=text.strip() if text and text.strip() else None,
-                scores=scores_clean,
-            )
-            entity.create()
-            async with self._uow_factory.create(self.user) as uow:
-                await uow.create(entity)
-            logger.info(
-                f"Persisted this_weeks_status check-in for user {self.user.id}"
-            )
-
-        return [LLMTool(callback=record_weeks_status)]

@@ -10,6 +10,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from lykke.application.gateways.llm_protocol import (
+    LLMAssessmentRunResult,
     LLMTool,
     LLMToolCallResult,
     LLMToolRunResult,
@@ -17,7 +18,7 @@ from lykke.application.gateways.llm_protocol import (
 from lykke.core.config import settings
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 
 def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> str:
@@ -36,42 +37,6 @@ def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> st
             else:
                 parts.append(json.dumps(item))
     return "\n".join(parts)
-
-
-def _extract_tool_call_args(response: Any, tool_name: str) -> dict[str, Any] | None:
-    tool_calls: list[Any] = []
-    if getattr(response, "tool_calls", None):
-        tool_calls = list(response.tool_calls)
-    if not tool_calls:
-        additional_kwargs = getattr(response, "additional_kwargs", {}) or {}
-        raw_calls = additional_kwargs.get("tool_calls") or additional_kwargs.get(
-            "tool_call"
-        )
-        if raw_calls:
-            tool_calls = raw_calls if isinstance(raw_calls, list) else [raw_calls]
-
-    for call in tool_calls:
-        name: str | None = None
-        args: Any = None
-        if isinstance(call, dict):
-            name = call.get("name") or call.get("function", {}).get("name")
-            args = call.get("args") or call.get("arguments")
-            if args is None:
-                args = call.get("function", {}).get("arguments")
-        else:
-            name = getattr(call, "name", None)
-            args = getattr(call, "args", None)
-
-        if name != tool_name:
-            continue
-        if isinstance(args, str):
-            try:
-                args = json.loads(args)
-            except json.JSONDecodeError:
-                return None
-        if isinstance(args, dict):
-            return args
-    return None
 
 
 def _extract_tool_calls_from_response(
@@ -362,6 +327,110 @@ class AnthropicLLMGateway:
                 "response_length": response_length,
                 "error": error_info,
             }
+            _ = event_data
+
+    async def run_assessment_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        assessment_model: type[BaseModel],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMAssessmentRunResult | None:
+        """Run an assessment use case and return validated output."""
+        started_at = datetime.now(UTC)
+        status = "success"
+        error_info: dict[str, Any] | None = None
+        effective_model = settings.ANTHROPIC_MODEL
+        used_fallback = False
+
+        try:
+            request_payload = await self.preview_assessment_usecase(
+                system_prompt,
+                ask_prompt,
+                assessment_model,
+                metadata=metadata,
+            )
+            request_messages = request_payload.get("request_messages", [])
+            messages = [
+                SystemMessage(
+                    content=request_messages[0]["content"]
+                    if len(request_messages) > 0
+                    else system_prompt
+                ),
+                HumanMessage(
+                    content=request_messages[1]["content"]
+                    if len(request_messages) > 1
+                    else ask_prompt
+                ),
+            ]
+            llm = self._llm.with_structured_output(assessment_model)
+            try:
+                response = await llm.ainvoke(messages)
+            except Exception as invoke_err:
+                if _is_model_not_found_error(invoke_err) and (
+                    settings.ANTHROPIC_FALLBACK_MODEL != settings.ANTHROPIC_MODEL
+                ):
+                    used_fallback = True
+                    effective_model = settings.ANTHROPIC_FALLBACK_MODEL
+                    logger.warning(
+                        "Anthropic model not found, retrying with fallback",
+                        configured_model=settings.ANTHROPIC_MODEL,
+                        fallback_model=settings.ANTHROPIC_FALLBACK_MODEL,
+                    )
+                    fallback_llm = ChatAnthropic(
+                        model_name=settings.ANTHROPIC_FALLBACK_MODEL,
+                        api_key=SecretStr(settings.ANTHROPIC_API_KEY),
+                        temperature=0.7,
+                        timeout=None,
+                        stop=None,
+                    )
+                    response = await fallback_llm.with_structured_output(
+                        assessment_model
+                    ).ainvoke(messages)
+                else:
+                    raise
+            if isinstance(response, assessment_model):
+                validated = response
+            else:
+                validated = assessment_model.model_validate(response)
+            return LLMAssessmentRunResult(
+                assessment=validated,
+                request_payload=request_payload,
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            status = "error"
+            error_info = {"type": e.__class__.__name__, "message": str(e)}
+            logger.error(f"Error running assessment use case with Anthropic: {e}")
+            if _is_model_not_found_error(e):
+                logger.error(
+                    "Anthropic model not found. Set ANTHROPIC_MODEL to a valid model id "
+                    "(e.g. claude-sonnet-4-6). See https://docs.anthropic.com/en/api/models-list",
+                    configured_model=settings.ANTHROPIC_MODEL,
+                    fallback_attempted=used_fallback,
+                    fallback_model=settings.ANTHROPIC_FALLBACK_MODEL,
+                )
+            logger.exception(e)
+            return None
+        finally:
+            finished_at = datetime.now(UTC)
+            event_data = {
+                "source": "llm",
+                "provider": "anthropic",
+                "model": effective_model,
+                "used_fallback": used_fallback,
+                "status": status,
+                "started_at": started_at.isoformat(),
+                "finished_at": finished_at.isoformat(),
+                "duration_ms": int((finished_at - started_at).total_seconds() * 1000),
+                "metadata": _coerce_json_safe(metadata or {}),
+                "prompts": {
+                    "system": system_prompt,
+                    "ask": ask_prompt,
+                },
+                "assessment_model": assessment_model.__name__,
+                "error": error_info,
+            }
+            _ = event_data
 
     async def preview_usecase(
         self,
@@ -386,6 +455,31 @@ class AnthropicLLMGateway:
             "request_messages": request_messages,
             "request_tools": [_coerce_json_safe(s) for s in tool_specs],
             "request_tool_choice": request_tool_choice,
+            "request_model_params": request_model_params,
+        }
+
+    async def preview_assessment_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        assessment_model: type[BaseModel],
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Preview the request payload for this assessment use case."""
+        _ = metadata
+        request_messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": ask_prompt},
+        ]
+        request_model_params = {
+            "model": getattr(self._llm, "model_name", settings.ANTHROPIC_MODEL),
+            "temperature": getattr(self._llm, "temperature", 0.7),
+        }
+        return {
+            "request_messages": request_messages,
+            "assessment_schema": _coerce_json_safe(
+                assessment_model.model_json_schema()
+            ),
             "request_model_params": request_model_params,
         }
 

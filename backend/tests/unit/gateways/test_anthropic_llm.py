@@ -8,6 +8,7 @@ from lykke.infrastructure.gateways.anthropic_llm import (
     AnthropicLLMGateway,
     _is_model_not_found_error,
 )
+from pydantic import BaseModel, Field
 
 
 def test_is_model_not_found_error_404() -> None:
@@ -174,3 +175,42 @@ async def test_run_usecase_no_retry_when_non_model_error() -> None:
 
     assert result is None
     assert mock_llm.bind_tools.return_value.ainvoke.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_run_assessment_usecase_returns_validated_payload() -> None:
+    """Assessment use case returns a validated pydantic payload."""
+
+    class AssessmentModel(BaseModel):
+        text: str | None = None
+        scores: dict[str, float] = Field(default_factory=dict)
+
+    mock_llm = MagicMock()
+    mock_llm.with_structured_output.return_value.ainvoke = AsyncMock(
+        return_value={"text": "Weekly summary", "scores": {"mood": 77}}
+    )
+
+    with (
+        patch(
+            "lykke.infrastructure.gateways.anthropic_llm.settings",
+            MagicMock(
+                ANTHROPIC_MODEL="claude-sonnet-4-6",
+                ANTHROPIC_FALLBACK_MODEL="claude-sonnet-4-6",
+                ANTHROPIC_API_KEY="test-key",
+            ),
+        ),
+        patch(
+            "lykke.infrastructure.gateways.anthropic_llm.ChatAnthropic",
+            return_value=mock_llm,
+        ),
+    ):
+        gateway = AnthropicLLMGateway()
+        result = await gateway.run_assessment_usecase(
+            system_prompt="You are a test assistant.",
+            ask_prompt="Return a weekly assessment.",
+            assessment_model=AssessmentModel,
+        )
+
+    assert result is not None
+    assert result.assessment.text == "Weekly summary"
+    assert result.assessment.scores["mood"] == 77

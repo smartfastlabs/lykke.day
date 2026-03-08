@@ -11,9 +11,7 @@ Produce a brief, reflective check-in for the user's day. You may include:
 - Be concise and non-judgmental
 - If the user's day context suggests low engagement or difficult tasks, reflect that gently in the check-in
 - You may leave text or scores empty if there is not enough context to infer them
-- Use the `record_todays_status` tool exactly once to submit the check-in
-
-# Tool: record_todays_status
-- text: Optional free-form string (one or two sentences)
-- scores: Optional object mapping dimension names to numbers 0-100 (e.g. {"mood": 65, "energy": 70})
+- Return a check-in payload with:
+  - text: Optional free-form string (one or two sentences)
+  - scores: Optional object mapping dimension names to numbers 0-100 (e.g. {"mood": 65, "energy": 70})
 {% endblock %}

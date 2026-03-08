@@ -10,9 +10,7 @@ Produce a brief, reflective check-in summarizing how the user's month is going. 
 # Guidelines
 - Use the trailing 30 days of check-ins and day context to inform your summary
 - Be concise and non-judgmental
-- Use the `record_months_status` tool exactly once to submit the check-in
-
-# Tool: record_months_status
-- text: Optional free-form string (one or two sentences summarizing the month)
-- scores: Optional object mapping dimension names to numbers 0-100 (e.g. {"mood": 65, "consistency": 70})
+- Return a check-in payload with:
+  - text: Optional free-form string (one or two sentences summarizing the month)
+  - scores: Optional object mapping dimension names to numbers 0-100 (e.g. {"mood": 65, "consistency": 70})
 {% endblock %}

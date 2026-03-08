@@ -79,6 +79,14 @@ class LLMToolRunResult:
     request_payload: dict[str, Any] | None = None
 
 
+@dataclass(frozen=True)
+class LLMAssessmentRunResult:
+    """Result for an LLM assessment run with validated output."""
+
+    assessment: BaseModel
+    request_payload: dict[str, Any] | None = None
+
+
 class LLMGatewayProtocol(Protocol):
     """Protocol defining the interface for LLM gateway implementations.
 
@@ -124,4 +132,24 @@ class LLMGatewayProtocol(Protocol):
         Returns:
             Request payload that would be sent to the LLM provider
         """
+        raise NotImplementedError
+
+    async def run_assessment_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        assessment_model: type[BaseModel],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMAssessmentRunResult | None:
+        """Run an LLM use case and return validated assessment output."""
+        raise NotImplementedError
+
+    async def preview_assessment_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        assessment_model: type[BaseModel],
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Preview the exact request payload for an assessment use case."""
         raise NotImplementedError
