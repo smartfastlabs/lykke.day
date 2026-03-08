@@ -1,4 +1,4 @@
-.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types worker scheduler check-mappers fix worker-prod
+.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types worker scheduler check-mappers fix worker-prod dozzle
 
 COMPOSE_FILE := ../docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
@@ -54,16 +54,22 @@ migrate-prod: docker-build
 	@bash -c '$(RESOLVE_PRODUCTION_DB_URL) $(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run alembic upgrade head'
 
 serve-prod: docker-up
-	@echo "Starting FastAPI server against production DB..."
+	@echo "Starting API + Taskiq worker + scheduler against production DB..."
 	@bash -c ' \
 		$(RESOLVE_PRODUCTION_DB_URL) \
-		$(COMPOSE) run --rm --service-ports --no-deps -e DATABASE_URL=$$DATABASE_URL -e REDIS_URL=redis://redis:6379 $(API_SERVICE) poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload'
+		export DATABASE_URL=$$DATABASE_URL; \
+		export REDIS_URL=redis://redis:6379; \
+		$(COMPOSE) up --build api worker scheduler dozzle'
+
+dozzle:
+	@$(COMPOSE) up -d dozzle
+	@echo "Dozzle is running at http://localhost:9999"
 
 worker-prod: docker-up
 	@echo "Starting Taskiq worker (and scheduler) against production DB..."
 	@bash -c ' \
 		$(RESOLVE_PRODUCTION_DB_URL) \
-		$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL -e REDIS_URL=redis://redis:6379 $(API_SERVICE) bash -c "poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & SCHEDULER_PID=\$$!; trap \"kill \$$SCHEDULER_PID 2>/dev/null; exit\" EXIT INT TERM; poetry run taskiq worker lykke.infrastructure.workers.config:broker"'
+		$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL -e REDIS_URL=redis://redis:6379 $(API_SERVICE) bash -c "poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & SCHEDULER_PID=\$$!; trap \"kill \$$SCHEDULER_PID 2>/dev/null; exit\" EXIT INT TERM; poetry run taskiq worker lykke.presentation.workers.config:broker lykke.presentation.workers.tasks"'
 
 # Quality and tests
 test: docker-up
