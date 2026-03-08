@@ -7,6 +7,7 @@ from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import PushNotificationError
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import PushSubscriptionEntity
 
@@ -21,8 +22,6 @@ async def send_notification(
     subscription: PushSubscriptionEntity,
     content: str | dict | value_objects.NotificationPayload,
 ) -> None:
-    from lykke.core.utils.serialization import dataclass_to_json_dict
-
     if isinstance(content, value_objects.NotificationPayload):
         content_dict = dataclass_to_json_dict(content)
         # Filter out None values for JSON
@@ -49,13 +48,16 @@ async def send_notification(
             headers=message.headers,
         )
         if response.status == 410:
-            # 410 Gone means subscription is no longer valid (user unsubscribed or expired)
-            # TODO: Delete the invalid subscription from the database
+            # 410 Gone means subscription is no longer valid (user unsubscribed or expired).
+            # Raise to let SendPushNotificationHandler mark the send as failed and clean up
+            # the invalid subscription record.
             logger.warning(
                 "Push subscription is no longer valid (410 Gone), "
                 f"endpoint: {subscription.endpoint[:50]}..."
             )
-            return
+            raise PushNotificationError(
+                f"Failed to send push notification: {response.status} {response.reason}",
+            )
         if not response.ok:
             raise PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",

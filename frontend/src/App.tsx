@@ -62,7 +62,6 @@ import KioskPage from "@/pages/me/kiosk/Index";
 import NavigationLayout from "@/pages/me/navigation/Layout";
 import NavPage from "@/pages/me/navigation/Links";
 import CalendarPage from "@/pages/me/navigation/Calendar";
-import CommandsPage from "@/pages/me/navigation/Commands";
 import SettingsLayout from "@/pages/me/settings/Layout";
 import SettingsIndexPage from "@/pages/me/settings/Index";
 import ProfileSettingsPage from "@/pages/me/settings/Profile";
@@ -418,7 +417,6 @@ export default function App() {
                 <Route path="/nav" component={NavigationLayout}>
                   <Route path="/" component={NavPage} />
                   <Route path="/calendar" component={CalendarPage} />
-                  <Route path="/commands" component={CommandsPage} />
                 </Route>
                 <Route path="/admin" component={AdminGuard}>
                   <Route path="/" component={AdminLayout}>

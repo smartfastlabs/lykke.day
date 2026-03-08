@@ -30,8 +30,19 @@ def create_query_handler(handler_class: type) -> Any:
         ro_repo_factory: Annotated[
             ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
         ],
+        uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     ) -> Any:
-        factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
+        command_factory = CommandHandlerFactory(
+            user=user,
+            ro_repo_factory=ro_repo_factory,
+            uow_factory=uow_factory,
+        )
+        factory = QueryHandlerFactory(
+            user=user,
+            ro_repo_factory=ro_repo_factory,
+            ro_repos=command_factory.ro_repos,
+            gateway_factory=command_factory,
+        )
         return factory.create(handler_class)
 
     return _dependency
@@ -71,8 +82,21 @@ def create_query_handler_websocket(handler_class: type) -> Any:
         ro_repo_factory: Annotated[
             ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
         ],
+        uow_factory: Annotated[
+            UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+        ],
     ) -> Any:
-        factory = QueryHandlerFactory(user=user, ro_repo_factory=ro_repo_factory)
+        command_factory = CommandHandlerFactory(
+            user=user,
+            ro_repo_factory=ro_repo_factory,
+            uow_factory=uow_factory,
+        )
+        factory = QueryHandlerFactory(
+            user=user,
+            ro_repo_factory=ro_repo_factory,
+            ro_repos=command_factory.ro_repos,
+            gateway_factory=command_factory,
+        )
         return factory.create(handler_class)
 
     return _dependency

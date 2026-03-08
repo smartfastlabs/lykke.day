@@ -18,6 +18,8 @@ const PushSubscriptionsPage: Component = () => {
   const [deviceName, setDeviceName] = createSignal("");
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [isSendingTestPush, setIsSendingTestPush] = createSignal(false);
+  const [testPushMessage, setTestPushMessage] = createSignal("");
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;
@@ -104,6 +106,29 @@ const PushSubscriptionsPage: Component = () => {
       icon: faBell,
       onClick: () => setShowSubscribeModal(true),
     },
+    {
+      label: isSendingTestPush() ? "Sending..." : "Send Test Push",
+      icon: faBell,
+      onClick: async () => {
+        setTestPushMessage("");
+        setIsSendingTestPush(true);
+        try {
+          const result = await pushAPI.sendTestPush();
+          const count = result.device_count ?? 0;
+          setTestPushMessage(
+            count > 0
+              ? `Sent test notification to ${count} device${count === 1 ? "" : "s"}.`
+              : "No subscribed devices found for test push.",
+          );
+        } catch (err) {
+          setTestPushMessage(
+            err instanceof Error ? err.message : "Failed to send test push.",
+          );
+        } finally {
+          setIsSendingTestPush(false);
+        }
+      },
+    },
   ];
 
   return (
@@ -113,6 +138,11 @@ const PushSubscriptionsPage: Component = () => {
         actionButtons={actionButtons}
         bottomLink={{ label: "Back to Notification Settings", url: "/me/settings/notifications" }}
       >
+        <Show when={testPushMessage()}>
+          <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {testPushMessage()}
+          </div>
+        </Show>
         <Show
           when={subscriptions()}
           fallback={

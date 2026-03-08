@@ -6,7 +6,6 @@ import {
   faGear,
   faHouse,
   faCalendarDay,
-  faTerminal,
   faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -47,12 +46,6 @@ const NavPage: Component = () => {
           description: "Preview and plan your next day.",
           icon: faCalendarDay,
           url: "/me/tomorrow",
-        },
-        {
-          label: "Commands",
-          description: "Explore available commands and shortcuts.",
-          icon: faTerminal,
-          url: "/me/nav/commands",
         },
         {
           label: "Admin",

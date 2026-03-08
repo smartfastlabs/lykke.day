@@ -526,6 +526,21 @@ export const pushAPI = {
 
   deleteSubscription: (id: string): Promise<void> =>
     fetchData<void>(`/api/push/subscriptions/${id}`, { method: "DELETE" }),
+
+  sendTestPush: (): Promise<{ device_count: number }> =>
+    fetchData<{ device_count: number }>("/api/push/test-push/", {
+      method: "POST",
+    }),
+
+  sendTestPushToSubscription: (
+    id: string,
+  ): Promise<{ subscription_id: string }> =>
+    fetchData<{ subscription_id: string }>(
+      `/api/push/subscriptions/${id}/test-push/`,
+      {
+        method: "POST",
+      },
+    ),
 };
 
 export const dayTemplateAPI = {

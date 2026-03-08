@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import time
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from uuid import UUID
 
 from lykke.application.gateways.llm_gateway_factory_protocol import (
@@ -113,10 +113,24 @@ class PreviewLLMSnapshotHandler(
             system_prompt=system_prompt, context_prompt=context_prompt
         )
 
-        try:
-            llm_gateway = self.llm_gateway_factory.create_gateway(
-                user.settings.llm_provider
+        llm_gateway_factory = cast(
+            LLMGatewayFactoryProtocol | None,
+            getattr(self, "llm_gateway_factory", None),
+        )
+        if (
+            llm_gateway_factory is None
+            and self.gateway_factory is not None
+            and self.gateway_factory.can_create(LLMGatewayFactoryProtocol)
+        ):
+            llm_gateway_factory = cast(
+                LLMGatewayFactoryProtocol,
+                self.gateway_factory.create(LLMGatewayFactoryProtocol),
             )
+        if llm_gateway_factory is None:
+            return None
+
+        try:
+            llm_gateway = llm_gateway_factory.create_gateway(user.settings.llm_provider)
         except DomainError:
             return None
 

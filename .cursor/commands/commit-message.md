@@ -11,7 +11,8 @@ Anlyze these changes, and confirm:
 - There are no repetetive comments. Docstrings and informative comments are good! Comments that say what the code below does are a waste.
 - Confirm that the new changes follow the existing design paradigms and don't violoate: DDD, Hexagonal architecture, DRY, Clean.
 
-If you find any problems please tell me and suggest a solution.
+If you find any problems in the staged changes, tell me and suggest a solution only for issues directly related to those changes.
+Do not suggest fixing unrelated or pre-existing issues.
 
 If there are no issues, then do:
 

@@ -140,7 +140,7 @@ const settingsSections: SettingsSection[] = [
         label: "Push Subscriptions",
         description: "Manage device push permissions.",
         icon: faMobileScreenButton,
-        url: "/me/settings/push-subscriptions",
+        url: "/me/settings/notifications/push",
       },
       {
         label: "LLM",

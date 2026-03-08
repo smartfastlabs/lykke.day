@@ -10,7 +10,9 @@ const PushSubscriptionDetailPage: Component = () => {
   const navigate = useNavigate();
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [isSendingTestPush, setIsSendingTestPush] = createSignal(false);
   const [isDirty, setIsDirty] = createSignal(false);
+  const [testPushMessage, setTestPushMessage] = createSignal("");
 
   const [subscription] = createResource<PushSubscription | undefined, string>(
     () => params.id,
@@ -80,6 +82,25 @@ const PushSubscriptionDetailPage: Component = () => {
     }
   };
 
+  const handleSendTestPush = async () => {
+    const current = subscription();
+    if (!current?.id) return;
+    setTestPushMessage("");
+    setIsSendingTestPush(true);
+    try {
+      await pushAPI.sendTestPushToSubscription(current.id);
+      setTestPushMessage(
+        `Sent test notification to ${current.device_name || "this device"}.`,
+      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to send test push";
+      setTestPushMessage(message);
+    } finally {
+      setIsSendingTestPush(false);
+    }
+  };
+
   return (
     <Show
       when={subscription()}
@@ -115,6 +136,14 @@ const PushSubscriptionDetailPage: Component = () => {
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <button
+                    type="button"
+                    onClick={handleSendTestPush}
+                    disabled={isSendingTestPush() || isLoading()}
+                    class="w-full sm:w-auto rounded-full border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSendingTestPush() ? "Sending..." : "Send test push"}
+                  </button>
+                  <button
                     type="submit"
                     form="push-subscription-form"
                     disabled={isLoading()}
@@ -133,6 +162,12 @@ const PushSubscriptionDetailPage: Component = () => {
                 </div>
               </div>
             </div>
+
+            <Show when={testPushMessage()}>
+              <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {testPushMessage()}
+              </div>
+            </Show>
 
             <PushSubscriptionForm
               formId="push-subscription-form"

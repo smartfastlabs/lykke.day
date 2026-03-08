@@ -170,6 +170,40 @@ async def test_send_push_notification_tracks_all_failures() -> None:
 
 
 @pytest.mark.asyncio
+async def test_send_push_notification_deletes_invalid_subscriptions() -> None:
+    user_id = uuid4()
+    uow = create_uow_double()
+    web_push_gateway = create_web_push_gateway_double()
+    subscription = _build_subscription(user_id)
+
+    async def send_notification(
+        *, subscription: PushSubscriptionEntity, content: object
+    ) -> None:
+        _ = subscription, content
+        raise RuntimeError("Failed to send push notification: 410 Gone")
+
+    web_push_gateway.send_notification = send_notification
+    handler = SendPushNotificationHandler(
+        user=UserEntity(id=user_id, email="test@example.com", hashed_password="!"),
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+        gateway_factory=_GatewayFactory(web_push_gateway),
+    )
+
+    await handler.handle(
+        SendPushNotificationCommand(
+            subscriptions=[subscription],
+            content={"message": "hi"},
+        )
+    )
+
+    assert len(uow.deleted) == 1
+    assert uow.deleted[0].id == subscription.id
+    notification = uow.created[0]
+    assert notification.status == "failed"
+
+
+@pytest.mark.asyncio
 async def test_send_push_notification_includes_click_target_url() -> None:
     """Verify push payload includes url for service worker notificationclick handler."""
     user_id = uuid4()

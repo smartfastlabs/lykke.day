@@ -173,3 +173,35 @@ async def send_test_push(
         )
 
     return {"device_count": len(result.items)}
+
+
+@router.post("/subscriptions/{subscription_id}/test-push/")
+async def send_test_push_to_subscription(
+    subscription_id: str,
+    background_tasks: BackgroundTasks,
+    get_handler: Annotated[
+        GetPushSubscriptionHandler,
+        Depends(create_query_handler(GetPushSubscriptionHandler)),
+    ],
+    send_handler: Annotated[
+        SendPushNotificationHandler,
+        Depends(create_command_handler(SendPushNotificationHandler)),
+    ],
+) -> dict[str, str]:
+    """Send a test push notification to a single subscription."""
+    subscription = await get_handler.handle(
+        GetPushSubscriptionQuery(push_subscription_id=UUID(subscription_id))
+    )
+
+    background_tasks.add_task(
+        send_handler.handle,
+        SendPushNotificationCommand(
+            subscriptions=[subscription],
+            content={
+                "title": "Test Notification",
+                "body": "This is a test push notification from Lykke.day!",
+            },
+        ),
+    )
+
+    return {"subscription_id": str(subscription.id)}

@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Annotated
+from urllib.parse import urlparse
 from uuid import UUID
 
 from fastapi import Depends, Request
@@ -14,10 +15,13 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from lykke.application.events import send_domain_events
 from lykke.core.config import settings
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.events.user_events import UserForgotPasswordEvent
 from lykke.infrastructure.auth.schemas import UserCreate
 from lykke.infrastructure.database.tables import User
 from lykke.infrastructure.database.utils import get_engine
@@ -26,14 +30,37 @@ from lykke.infrastructure.repositories import DayTemplateRepository
 # JWT secret - using the same secret as session was using
 SECRET = settings.SESSION_SECRET
 
+def _is_local_web_domain() -> bool:
+    """Return True when WEB_DOMAIN points to localhost-style development hosts."""
+    parsed = urlparse(settings.WEB_DOMAIN)
+    hostname = (parsed.hostname or "").lower()
+    return hostname in {"localhost", "127.0.0.1", "::1"}
+
+
+is_local_web_domain = _is_local_web_domain()
+
+
+def _cookie_settings(environment: str, *, local_web_domain: bool) -> tuple[str | None, bool]:
+    """Compute cookie domain and secure flag from deployment context."""
+    is_production_non_local = environment == "production" and not local_web_domain
+    cookie_domain = "lykke.day" if is_production_non_local else None
+    cookie_secure = is_production_non_local
+    return cookie_domain, cookie_secure
+
+
 # Cookie transport configuration
-cookie_domain = "lykke.day" if settings.ENVIRONMENT == "production" else None
+# In local testing (even with ENVIRONMENT=production), browsers reject
+# Secure/Domain cookies on localhost over plain HTTP.
+cookie_domain, cookie_secure = _cookie_settings(
+    settings.ENVIRONMENT,
+    local_web_domain=is_local_web_domain,
+)
 
 cookie_transport = CookieTransport(
     cookie_name="lykke_auth",
     cookie_max_age=3600 * 24 * 30,  # 30 days
     cookie_httponly=True,
-    cookie_secure=settings.ENVIRONMENT == "production",
+    cookie_secure=cookie_secure,
     cookie_samesite="lax",
     cookie_domain=cookie_domain,
 )
@@ -107,7 +134,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
 
         # Set custom fields
         user_dict["created_at"] = datetime.now(UTC)
-        from lykke.core.utils.serialization import dataclass_to_json_dict
 
         user_dict["settings"] = dataclass_to_json_dict(value_objects.UserSetting())
 
@@ -144,10 +170,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         request: Request | None = None,
     ) -> None:
         """Emit a domain event when a password reset is requested."""
-        # Local import to avoid circular dependencies at import time
-        from lykke.application.events import send_domain_events
-        from lykke.domain.events.user_events import UserForgotPasswordEvent
-
         request_origin = request.headers.get("origin") if request else None
         user_agent = request.headers.get("user-agent") if request else None
 
