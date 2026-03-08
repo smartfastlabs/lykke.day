@@ -31,17 +31,18 @@ import ActionGridModal from "@/components/shared/ActionGridModal";
 import { Icon } from "@/components/shared/Icon";
 import {
   faBars,
-  faCalendarDay,
-  faCompass,
-  faGear,
-  faHouse,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  createMeMenuActions,
+  ME_MENU_SUBTITLE,
+  ME_MENU_TITLE,
+} from "@/components/shared/meMenuActions";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
 const KioskPage: Component = () => {
   const navigate = useNavigate();
-  const { day, tasks, events, reminders, routines, alarms, isConnected } =
+  const { day, tasks, events, reminders, routines, alarms, isConnected, sync } =
     useStreamingData();
   const [now, setNow] = createSignal(new Date());
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
@@ -334,11 +335,6 @@ const KioskPage: Component = () => {
 
   const closeMenu = () => setIsMenuOpen(false);
   const openMenu = () => setIsMenuOpen(true);
-  const menuNavigate = (url: string) => {
-    closeMenu();
-    navigate(url);
-  };
-
   return (
     <Page variant="app" hideFooter hideFloatingButtons>
       <div class="min-h-[100dvh] h-[100dvh] box-border relative overflow-hidden">
@@ -506,19 +502,14 @@ const KioskPage: Component = () => {
 
       <ActionGridModal
         isOpen={isMenuOpen()}
-        title="Menu"
-        subtitle="Navigate and settings"
+        title={ME_MENU_TITLE}
+        subtitle={ME_MENU_SUBTITLE}
         onClose={closeMenu}
-        actions={[
-          { label: "Home", icon: faHouse, onClick: () => menuNavigate("/me/today") },
-          {
-            label: "Tomorrow",
-            icon: faCalendarDay,
-            onClick: () => menuNavigate("/me/tomorrow"),
-          },
-          { label: "Navigation", icon: faCompass, onClick: () => menuNavigate("/me/nav") },
-          { label: "Settings", icon: faGear, onClick: () => menuNavigate("/me/settings") },
-        ]}
+        actions={createMeMenuActions({
+          close: closeMenu,
+          navigate,
+          onRefresh: sync,
+        })}
       />
     </Page>
   );

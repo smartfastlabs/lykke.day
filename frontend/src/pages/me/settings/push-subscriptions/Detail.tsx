@@ -115,13 +115,13 @@ const PushSubscriptionDetailPage: Component = () => {
           }}
         >
           <div class="space-y-6">
-            <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm">
+            <div class="rounded-xl border border-amber-100/70 bg-white/90 p-4 shadow-sm">
               <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="space-y-1">
-                  <div class="text-xs uppercase tracking-wide text-stone-400">
+                  <div class="text-[11px] uppercase tracking-wide text-stone-400">
                     Push Subscription
                   </div>
-                  <div class="text-lg font-semibold text-stone-800">
+                  <div class="text-base font-semibold text-stone-800">
                     {current().device_name || "Untitled device"}
                   </div>
                   <Show
@@ -139,7 +139,7 @@ const PushSubscriptionDetailPage: Component = () => {
                     type="button"
                     onClick={handleSendTestPush}
                     disabled={isSendingTestPush() || isLoading()}
-                    class="w-full sm:w-auto rounded-full border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="w-full sm:w-auto rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSendingTestPush() ? "Sending..." : "Send test push"}
                   </button>
@@ -147,7 +147,7 @@ const PushSubscriptionDetailPage: Component = () => {
                     type="submit"
                     form="push-subscription-form"
                     disabled={isLoading()}
-                    class="w-full sm:w-auto rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="w-full sm:w-auto rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isLoading() ? "Saving..." : "Save changes"}
                   </button>
@@ -155,7 +155,7 @@ const PushSubscriptionDetailPage: Component = () => {
                     type="button"
                     onClick={handleDelete}
                     disabled={isLoading()}
-                    class="w-full sm:w-auto rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-600 shadow-sm transition hover:border-stone-300 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="w-full sm:w-auto rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:border-stone-300 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Delete subscription
                   </button>

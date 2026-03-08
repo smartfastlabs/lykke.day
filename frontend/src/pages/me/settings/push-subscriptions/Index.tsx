@@ -1,7 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
-import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
+import SettingsPage from "@/components/shared/SettingsPage";
 import { pushAPI } from "@/utils/api";
 import PushSubscriptionList from "@/components/push-subscriptions/List";
 import ModalPage from "@/components/shared/ModalPage";
@@ -100,44 +99,62 @@ const PushSubscriptionsPage: Component = () => {
     }
   };
 
-  const actionButtons: ActionButton[] = [
-    {
-      label: "Subscribe",
-      icon: faBell,
-      onClick: () => setShowSubscribeModal(true),
-    },
-    {
-      label: isSendingTestPush() ? "Sending..." : "Send Test Push",
-      icon: faBell,
-      onClick: async () => {
-        setTestPushMessage("");
-        setIsSendingTestPush(true);
-        try {
-          const result = await pushAPI.sendTestPush();
-          const count = result.device_count ?? 0;
-          setTestPushMessage(
-            count > 0
-              ? `Sent test notification to ${count} device${count === 1 ? "" : "s"}.`
-              : "No subscribed devices found for test push.",
-          );
-        } catch (err) {
-          setTestPushMessage(
-            err instanceof Error ? err.message : "Failed to send test push.",
-          );
-        } finally {
-          setIsSendingTestPush(false);
-        }
-      },
-    },
-  ];
+  const handleSendTestPush = async () => {
+    setTestPushMessage("");
+    setIsSendingTestPush(true);
+    try {
+      const result = await pushAPI.sendTestPush();
+      const count = result.device_count ?? 0;
+      setTestPushMessage(
+        count > 0
+          ? `Sent test notification to ${count} device${count === 1 ? "" : "s"}.`
+          : "No subscribed devices found for test push."
+      );
+    } catch (err) {
+      setTestPushMessage(
+        err instanceof Error ? err.message : "Failed to send test push."
+      );
+    } finally {
+      setIsSendingTestPush(false);
+    }
+  };
 
   return (
     <>
-      <SettingsPage 
-        heading="Push Subscriptions" 
-        actionButtons={actionButtons}
+      <SettingsPage
+        heading="Push Subscriptions"
         bottomLink={{ label: "Back to Notification Settings", url: "/me/settings/notifications" }}
       >
+        <div class="mb-5 rounded-xl border border-amber-100/70 bg-white/90 p-4 shadow-sm">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="space-y-1">
+              <div class="text-[11px] uppercase tracking-wide text-stone-400">
+                Push subscriptions
+              </div>
+              <div class="text-base font-semibold text-stone-800">
+                Manage subscribed devices
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={handleSendTestPush}
+                disabled={isSendingTestPush()}
+                class="w-full sm:w-auto rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSendingTestPush() ? "Sending..." : "Send test push"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSubscribeModal(true)}
+                class="w-full sm:w-auto rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-800"
+              >
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+
         <Show when={testPushMessage()}>
           <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {testPushMessage()}

@@ -1,12 +1,5 @@
 import {
   faBars,
-  faBell,
-  faBullseye,
-  faCompass,
-  faGear,
-  faListCheck,
-  faPenToSquare,
-  faRotate,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   Component,
@@ -23,12 +16,15 @@ import {
   TomorrowDataProvider,
   useTomorrowData,
 } from "@/pages/me/tomorrow/useTomorrowData";
-import { tomorrowAPI } from "@/utils/api";
+import {
+  createMeMenuActions,
+  ME_MENU_SUBTITLE,
+  ME_MENU_TITLE,
+} from "@/components/shared/meMenuActions";
 
 const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
   const navigate = useNavigate();
   const { day, isDayLoading, refetchAll } = useTomorrowData();
-  const [isRescheduling, setIsRescheduling] = createSignal(false);
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
 
   const date = createMemo(() => {
@@ -52,11 +48,6 @@ const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
 
   const closeMenu = () => setIsMenuOpen(false);
   const openMenu = () => setIsMenuOpen(true);
-  const menuNavigate = (url: string) => {
-    closeMenu();
-    navigate(url);
-  };
-
   return (
     <Page variant="app" hideFooter>
       <div class="min-h-[100dvh] box-border relative overflow-hidden">
@@ -104,56 +95,14 @@ const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
 
       <ActionGridModal
         isOpen={isMenuOpen()}
-        title="Menu"
-        subtitle="Plan and adjust tomorrow"
+        title={ME_MENU_TITLE}
+        subtitle={ME_MENU_SUBTITLE}
         onClose={closeMenu}
-        actions={[
-          {
-            label: "Add task",
-            icon: faListCheck,
-            onClick: () => menuNavigate("/me/tomorrow/adhoc-task"),
-          },
-          {
-            label: "Add reminder",
-            icon: faBullseye,
-            onClick: () => menuNavigate("/me/tomorrow/add-reminder"),
-          },
-          {
-            label: "Add alarm",
-            icon: faBell,
-            onClick: () => menuNavigate("/me/tomorrow/add-alarm"),
-          },
-          {
-            label: isRescheduling() ? "Rescheduling…" : "Reschedule",
-            icon: faRotate,
-            onClick: async () => {
-              if (isRescheduling()) return;
-              closeMenu();
-              try {
-                setIsRescheduling(true);
-                await tomorrowAPI.reschedule();
-                refetchAll();
-              } finally {
-                setIsRescheduling(false);
-              }
-            },
-          },
-          {
-            label: "Edit day",
-            icon: faPenToSquare,
-            onClick: () => menuNavigate("/me/tommorrow/edit"),
-          },
-          {
-            label: "Navigation",
-            icon: faCompass,
-            onClick: () => menuNavigate("/me/nav"),
-          },
-          {
-            label: "Settings",
-            icon: faGear,
-            onClick: () => menuNavigate("/me/settings"),
-          },
-        ]}
+        actions={createMeMenuActions({
+          close: closeMenu,
+          navigate,
+          onRefresh: refetchAll,
+        })}
       />
     </Page>
   );

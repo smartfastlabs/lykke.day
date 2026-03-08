@@ -1,15 +1,14 @@
 import { Component, Show, createMemo, createSignal } from "solid-js";
 import { useLocation, useNavigate } from "@solidjs/router";
-import {
-  faBars,
-  faCalendarDay,
-  faCompass,
-  faGear,
-  faHouse,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
 import ActionGridModal from "@/components/shared/ActionGridModal";
+import {
+  createMeMenuActions,
+  ME_MENU_SUBTITLE,
+  ME_MENU_TITLE,
+} from "@/components/shared/meMenuActions";
 
 const MeMenuButton: Component = () => {
   const navigate = useNavigate();
@@ -26,11 +25,6 @@ const MeMenuButton: Component = () => {
       path.startsWith("/me/today") || path.startsWith("/me/tomorrow");
     return isMeRoute && !hasHeaderMenu;
   });
-
-  const go = (url: string) => {
-    close();
-    navigate(url);
-  };
 
   return (
     <Show when={shouldShow()}>
@@ -49,19 +43,13 @@ const MeMenuButton: Component = () => {
 
       <ActionGridModal
         isOpen={isOpen()}
-        title="Menu"
-        subtitle="Navigate and settings"
+        title={ME_MENU_TITLE}
+        subtitle={ME_MENU_SUBTITLE}
         onClose={close}
-        actions={[
-          { label: "Home", icon: faHouse, onClick: () => go("/me/today") },
-          {
-            label: "Tomorrow",
-            icon: faCalendarDay,
-            onClick: () => go("/me/tomorrow"),
-          },
-          { label: "Navigation", icon: faCompass, onClick: () => go("/me/nav") },
-          { label: "Settings", icon: faGear, onClick: () => go("/me/settings") },
-        ]}
+        actions={createMeMenuActions({
+          close,
+          navigate,
+        })}
       />
     </Show>
   );

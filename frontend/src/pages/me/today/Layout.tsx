@@ -1,13 +1,5 @@
 import {
-  faBell,
   faBars,
-  faBrain,
-  faCalendarDay,
-  faCompass,
-  faEnvelope,
-  faGear,
-  faPenToSquare,
-  faRotate,
 } from "@fortawesome/free-solid-svg-icons";
 import { Show, Component, ParentProps, createMemo, createSignal } from "solid-js";
 import Page from "@/components/shared/layout/Page";
@@ -16,6 +8,11 @@ import { useStreamingData } from "@/providers/streamingData";
 import TimeBlocksSummary from "@/components/today/TimeBlocksSummary";
 import ActionGridModal from "@/components/shared/ActionGridModal";
 import { useNavigate } from "@solidjs/router";
+import {
+  createMeMenuActions,
+  ME_MENU_SUBTITLE,
+  ME_MENU_TITLE,
+} from "@/components/shared/meMenuActions";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
   const navigate = useNavigate();
@@ -60,11 +57,6 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
 
   const closeMenu = () => setIsMenuOpen(false);
   const openMenu = () => setIsMenuOpen(true);
-  const menuNavigate = (url: string) => {
-    closeMenu();
-    navigate(url);
-  };
-
   return (
     <Page variant="app" hideFooter>
       <div class="min-h-[100dvh] box-border relative overflow-hidden">
@@ -111,59 +103,14 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
 
       <ActionGridModal
         isOpen={isMenuOpen()}
-        title="Menu"
-        subtitle="Quick actions for today"
+        title={ME_MENU_TITLE}
+        subtitle={ME_MENU_SUBTITLE}
         onClose={closeMenu}
-        actions={[
-          {
-            label: "Brain dumps",
-            icon: faBrain,
-            onClick: () => menuNavigate("/me/today/brain-dumps"),
-          },
-          {
-            label: "Notifications",
-            icon: faBell,
-            onClick: () => menuNavigate("/me/today/notifications"),
-          },
-          {
-            label: "Messages",
-            icon: faEnvelope,
-            onClick: () => menuNavigate("/me/today/messages"),
-          },
-          {
-            label: "Tomorrow",
-            icon: faCalendarDay,
-            onClick: () => menuNavigate("/me/tomorrow"),
-          },
-          {
-            label: "Events",
-            icon: faCalendarDay,
-            onClick: () => menuNavigate("/me/today/events"),
-          },
-          {
-            label: "Edit day",
-            icon: faPenToSquare,
-            onClick: () => menuNavigate("/me/today/edit"),
-          },
-          {
-            label: "Refresh",
-            icon: faRotate,
-            onClick: () => {
-              closeMenu();
-              sync();
-            },
-          },
-          {
-            label: "Navigation",
-            icon: faCompass,
-            onClick: () => menuNavigate("/me/nav"),
-          },
-          {
-            label: "Settings",
-            icon: faGear,
-            onClick: () => menuNavigate("/me/settings"),
-          },
-        ]}
+        actions={createMeMenuActions({
+          close: closeMenu,
+          navigate,
+          onRefresh: sync,
+        })}
       />
     </Page>
   );
