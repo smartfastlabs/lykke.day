@@ -84,15 +84,16 @@ describe("LLMSettingsPage base personality select", () => {
     const { container } = render(() => <LLMSettingsPage />);
 
     await waitFor(() => {
-      const select = container.querySelector(
-        "#base-personality",
-      ) as HTMLSelectElement | null;
+      const select = container.querySelector("#base-personality");
       expect(select).toBeTruthy();
-      expect(select?.value).toBe("custom-slug");
+      const selectedOption = container.querySelector(
+        "#base-personality option:checked",
+      );
+      expect(selectedOption?.getAttribute("value")).toBe("custom-slug");
     });
 
     const fallbackOption = screen.getByRole("option", { name: "custom-slug" });
-    expect((fallbackOption as HTMLOptionElement).value).toBe("custom-slug");
+    expect(fallbackOption.getAttribute("value")).toBe("custom-slug");
   });
 
   it("does not duplicate the option when the persisted slug already exists", async () => {
@@ -104,11 +105,12 @@ describe("LLMSettingsPage base personality select", () => {
     const { container } = render(() => <LLMSettingsPage />);
 
     await waitFor(() => {
-      const select = container.querySelector(
-        "#base-personality",
-      ) as HTMLSelectElement | null;
+      const select = container.querySelector("#base-personality");
       expect(select).toBeTruthy();
-      expect(select?.value).toBe("custom-slug");
+      const selectedOption = container.querySelector(
+        "#base-personality option:checked",
+      );
+      expect(selectedOption?.getAttribute("value")).toBe("custom-slug");
     });
 
     const options = container.querySelectorAll(

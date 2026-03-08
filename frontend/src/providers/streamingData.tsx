@@ -258,15 +258,10 @@ export function StreamingDataProvider(props: ParentProps) {
   ): BrainDump[] => (items ?? []).filter(hasNonEmptyId);
 
   const isSameAlarm = (left: Alarm, right: Alarm): boolean => {
-    if (left.id && right.id) {
-      return left.id === right.id;
-    }
-    return (
-      left.name === right.name &&
-      left.time === right.time &&
-      left.type === right.type &&
-      left.url === right.url
-    );
+    // Treat alarm ID as the only stable identity key.
+    // Content-based matching incorrectly collapses distinct alarms that happen
+    // to share the same name/time/type/url.
+    return Boolean(left.id && right.id && left.id === right.id);
   };
 
   const dedupeAlarms = (items: Alarm[]): Alarm[] => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@solidjs/testing-library";
 import { StreamingDataProvider, useStreamingData } from "./streamingData";
-import type { DayContext, Task, TaskStatus } from "@/types/api";
+import type { Alarm, DayContext, Task, TaskStatus } from "@/types/api";
 
 // Mock the API and config modules
 vi.mock("@/utils/api", () => ({
@@ -657,6 +657,83 @@ describe("StreamingDataProvider", () => {
       await waitFor(() => {
         expect(getByTestId("task-status").textContent).toBe("NOT_STARTED");
       });
+    });
+  });
+
+  describe("Alarm management", () => {
+    it("keeps distinct alarms that share the same fields", async () => {
+      const { alarmAPI } = await import("@/utils/api");
+      const createdAlarm: Alarm = {
+        id: "alarm-2",
+        name: "7:00 am Alarm",
+        time: "07:00:00",
+        type: "URL",
+        url: "",
+        status: "ACTIVE",
+        datetime: "2099-01-15T12:00:00Z",
+        snoozed_until: null,
+      };
+      vi.mocked(alarmAPI.addAlarm).mockResolvedValue(createdAlarm);
+
+      const initialContext: DayContext = {
+        day: {
+          id: "day-1",
+          user_id: "user-1",
+          date: "2099-01-15",
+          status: "STARTED",
+          alarms: [
+            {
+              id: "alarm-1",
+              name: "7:00 am Alarm",
+              time: "07:00:00",
+              type: "URL",
+              url: "",
+              status: "ACTIVE",
+              datetime: "2099-01-15T11:00:00Z",
+              snoozed_until: null,
+            },
+          ],
+        },
+        tasks: [],
+        calendar_entries: [],
+        events: [],
+      };
+
+      let context: ReturnType<typeof useStreamingData> | null = null;
+      const AlarmCount = () => {
+        context = useStreamingData();
+        return <div data-testid="alarms-count">{context.alarms().length}</div>;
+      };
+
+      const { getByTestId } = render(() => (
+        <StreamingDataProvider>
+          <AlarmCount />
+        </StreamingDataProvider>
+      ));
+
+      await waitFor(() => {
+        expect(ControllableWebSocket.instances.length).toBe(1);
+      });
+
+      const ws = ControllableWebSocket.instances[0];
+      ws.simulateOpen();
+      ws.simulateMessage({
+        type: "sync_response",
+        day_context: initialContext,
+      });
+
+      await waitFor(() => {
+        expect(getByTestId("alarms-count").textContent).toBe("1");
+      });
+
+      await context!.addAlarm({
+        name: "7:00 am Alarm",
+        time: "07:00:00",
+        alarmType: "URL",
+        url: "",
+      });
+
+      expect(getByTestId("alarms-count").textContent).toBe("2");
     });
   });
 

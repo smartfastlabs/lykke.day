@@ -86,12 +86,12 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
             ),
             "last_sync_at": calendar.last_sync_at,
             "sync_subscription_id": calendar.sync_subscription_id,
+            "sync_subscription": (
+                dataclass_to_json_dict(calendar.sync_subscription)
+                if calendar.sync_subscription
+                else None
+            ),
         }
-
-        if calendar.sync_subscription:
-            row["sync_subscription"] = dataclass_to_json_dict(
-                calendar.sync_subscription
-            )
 
         return row
 

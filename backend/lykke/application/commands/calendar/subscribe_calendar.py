@@ -85,11 +85,22 @@ class SubscribeCalendarHandler(
                         platform_id=calendar.platform_id,
                         user_id=self.user.id,
                     )
+                    # apply_update() ignores None values; clone directly so we can
+                    # explicitly clear stale subscription fields.
                     update_data = CalendarUpdateObject(
                         sync_subscription=None,
                         sync_subscription_id=None,
                     )
-                    calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
+                    calendar = calendar.clone(
+                        sync_subscription=None,
+                        sync_subscription_id=None,
+                    )
+                    calendar.add_event(
+                        CalendarUpdatedEvent(
+                            update_object=update_data,
+                            user_id=self.user.id,
+                        )
+                    )
                     uow.add(calendar)
                     return calendar
 
