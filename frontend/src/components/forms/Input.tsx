@@ -1,4 +1,4 @@
-import { Component, type Accessor } from "solid-js";
+import { Component, createEffect, type Accessor } from "solid-js";
 
 // Shared input styles
 const inputClass =
@@ -88,12 +88,28 @@ interface SelectProps<T extends string> {
 }
 
 export function Select<T extends string>(props: SelectProps<T>) {
+  let selectRef: HTMLSelectElement | undefined;
+
+  createEffect(() => {
+    const selectedValue = props.value();
+    const options = props.options;
+    if (options.length === 0) {
+      return;
+    }
+    queueMicrotask(() => {
+      if (selectRef && selectRef.value !== selectedValue) {
+        selectRef.value = selectedValue;
+      }
+    });
+  });
+
   return (
     <div>
       <label for={props.id} class="sr-only">
         {props.placeholder ?? props.id}
       </label>
       <select
+        ref={selectRef}
         id={props.id}
         value={props.value()}
         onChange={(e) => props.onChange(e.currentTarget.value as T)}

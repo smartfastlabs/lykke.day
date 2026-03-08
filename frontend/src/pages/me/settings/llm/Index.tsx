@@ -17,6 +17,12 @@ import type { NotificationUseCaseConfig } from "@/types/api";
 import type { LLMProvider } from "@/types/api/user";
 
 const LLM_PROVIDERS: LLMProvider[] = ["anthropic", "openai"];
+const DEFAULT_BASE_PERSONALITY_SLUG = "default";
+
+function normalizeBasePersonalitySlug(value: string | null | undefined): string {
+  const normalized = value?.trim() ?? "";
+  return normalized || DEFAULT_BASE_PERSONALITY_SLUG;
+}
 
 const LLMSettingsPage: Component = () => {
   const { user, refetch } = useAuth();
@@ -26,7 +32,9 @@ const LLMSettingsPage: Component = () => {
       usecaseConfigAPI.getNotificationConfig
     );
   const [provider, setProvider] = createSignal<LLMProvider | "">("");
-  const [basePersonalitySlug, setBasePersonalitySlug] = createSignal("default");
+  const [basePersonalitySlug, setBasePersonalitySlug] = createSignal(
+    DEFAULT_BASE_PERSONALITY_SLUG
+  );
   const [llmPersonalityAmendments, setLlmPersonalityAmendments] = createSignal<
     string[]
   >([]);
@@ -38,7 +46,7 @@ const LLMSettingsPage: Component = () => {
     if (currentUser) {
       setProvider(currentUser.settings.llm_provider ?? "");
       setBasePersonalitySlug(
-        currentUser.settings.base_personality_slug ?? "default"
+        normalizeBasePersonalitySlug(currentUser.settings.base_personality_slug)
       );
       setLlmPersonalityAmendments(
         currentUser.settings.llm_personality_amendments ?? []
@@ -47,14 +55,15 @@ const LLMSettingsPage: Component = () => {
   });
 
   const basePersonalityOptions = createMemo(() => {
-    const options =
-      basePersonalities()?.map((option) => ({
-        value: option.slug,
-        label: option.label,
-      })) ?? [];
+    const options = basePersonalities()?.map((option) => option.slug) ?? [];
+    const selectedSlug = normalizeBasePersonalitySlug(basePersonalitySlug());
 
-    if (!options.some((option) => option.value === "default")) {
-      options.unshift({ value: "default", label: "Default" });
+    if (!options.includes(DEFAULT_BASE_PERSONALITY_SLUG)) {
+      options.unshift(DEFAULT_BASE_PERSONALITY_SLUG);
+    }
+
+    if (selectedSlug && !options.includes(selectedSlug)) {
+      options.push(selectedSlug);
     }
 
     return options;
@@ -70,7 +79,9 @@ const LLMSettingsPage: Component = () => {
       await authAPI.updateProfile({
         settings: {
           llm_provider: selectedProvider === "" ? null : selectedProvider,
-          base_personality_slug: basePersonalitySlug().trim() || "default",
+          base_personality_slug: normalizeBasePersonalitySlug(
+            basePersonalitySlug()
+          ),
           llm_personality_amendments: llmPersonalityAmendments()
             .map((value) => value.trim())
             .filter(Boolean),
