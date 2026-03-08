@@ -54,6 +54,7 @@ from .query import (
     TimeBlockDefinitionQuery,
     TriggerQuery,
     UseCaseConfigQuery,
+    UserCheckInQuery,
     UserQuery,
 )
 from .routine_definition import (
@@ -106,6 +107,7 @@ from .user import (
     UserSettingUpdate,
     UserStatus,
 )
+from .user_check_in import UserCheckInSource
 
 __all__ = [
     "Action",
@@ -198,6 +200,8 @@ __all__ = [
     "TriggerQuery",
     "TriggerUpdateObject",
     "UseCaseConfigQuery",
+    "UserCheckInQuery",
+    "UserCheckInSource",
     "UserQuery",
     "UserSetting",
     "UserSettingUpdate",

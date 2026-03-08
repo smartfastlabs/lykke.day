@@ -3,7 +3,7 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import date as dt_date, datetime, timedelta
+from datetime import UTC, date as dt_date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -30,15 +30,39 @@ from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadOnlyProtocol,
 )
 from lykke.core.config import settings
 from lykke.core.utils.dates import get_current_datetime_in_timezone
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity, TaskEntity, UserEntity
+from lykke.domain.entities import (
+    PushNotificationEntity,
+    TaskEntity,
+    UserCheckInEntity,
+    UserEntity,
+)
 
 _SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
 _SMART_NOTIFICATION_FLOATING_TASK_WINDOW = timedelta(hours=2)
+
+
+def _score_from_check_ins(check_ins: list[UserCheckInEntity]) -> float:
+    """Compute 0-100 from numeric scores in check-ins; 50 if none."""
+    values: list[float] = []
+    for entity in check_ins:
+        for _k, v in (entity.scores or {}).items():
+            if v is None:
+                continue
+            try:
+                values.append(float(v))
+            except (TypeError, ValueError):
+                continue
+    if not values:
+        return 50.0
+    avg = sum(values) / len(values)
+    return max(0.0, min(100.0, avg))
+
 
 def _coerce_uuid(value: object) -> UUID | None:
     if isinstance(value, UUID):
@@ -210,6 +234,7 @@ class SmartNotificationHandler(
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     send_push_notification_handler: SendPushNotificationHandler
@@ -240,7 +265,35 @@ class SmartNotificationHandler(
         prompt_context = _filter_prompt_context_for_smart_notifications(
             prompt_context, current_time=current_time
         )
-        return UseCasePromptInput(prompt_context=prompt_context)
+        extra: dict[str, object] = {}
+        # Recent check-ins (e.g. todays_status, user entries) for wellbeing context; derive 0-100 score from their scores
+        try:
+            window_start = current_time.astimezone(UTC) - timedelta(days=7)
+            recent_check_ins = await self.user_check_in_ro_repo.search(
+                value_objects.UserCheckInQuery(
+                    checkin_at_after=window_start,
+                    order_by="checkin_at",
+                    order_by_desc=True,
+                    limit=20,
+                )
+            )
+            extra["derived_status_score"] = _score_from_check_ins(recent_check_ins)
+            extra["derived_status_date"] = date.isoformat()
+            summary = []
+            for c in recent_check_ins[:5]:
+                summary.append({
+                    "at": c.checkin_at.isoformat() if c.checkin_at else "",
+                    "source": c.source_name or getattr(c.source, "value", str(c.source)),
+                    "scores": c.scores or {},
+                    "text": (c.text or "")[:200],
+                })
+            extra["recent_check_ins_summary"] = summary
+        except Exception:  # pylint: disable=broad-except
+            pass
+        return UseCasePromptInput(
+            prompt_context=prompt_context,
+            extra_template_vars=extra if extra else None,
+        )
 
     def build_tools(
         self,

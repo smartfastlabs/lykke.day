@@ -203,6 +203,16 @@ class FactoidQuery(BaseQuery):
     criticality: str | None = None
 
 
+@dataclass(kw_only=True)
+class UserCheckInQuery(BaseQuery):
+    """Query class for UserCheckIn entities."""
+
+    checkin_at_after: datetime | None = None
+    checkin_at_before: datetime | None = None
+    source: str | None = None  # UserCheckInSource value
+    source_name: str | None = None  # e.g. todays_status, this_weeks_status
+
+
 T = TypeVar("T", bound=BaseQuery)
 
 

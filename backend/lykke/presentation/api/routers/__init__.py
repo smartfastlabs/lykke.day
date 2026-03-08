@@ -23,6 +23,7 @@ from . import (
     triggers,
     twilio,
     usecase_config,
+    user_check_ins,
 )
 
 router = APIRouter()
@@ -45,6 +46,11 @@ router.include_router(
         "auth",
         "user",
     ],
+)
+router.include_router(
+    user_check_ins.router,
+    prefix="/me/check-ins",
+    tags=["check-ins", "user"],
 )
 router.include_router(
     brain_dump.router,

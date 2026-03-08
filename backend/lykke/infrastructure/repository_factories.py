@@ -28,6 +28,7 @@ from lykke.infrastructure.repositories import (
     TaskRepository,
     TimeBlockDefinitionRepository,
     TriggerRepository,
+    UserCheckInRepository,
     UseCaseConfigRepository,
 )
 
@@ -54,6 +55,7 @@ if TYPE_CHECKING:
         TimeBlockDefinitionRepositoryReadOnlyProtocol,
         TriggerRepositoryReadOnlyProtocol,
         UseCaseConfigRepositoryReadOnlyProtocol,
+        UserCheckInRepositoryReadOnlyProtocol,
     )
     from lykke.application.unit_of_work import ReadOnlyRepositories
 
@@ -126,6 +128,10 @@ class SqlAlchemyReadOnlyRepositories:
         self.usecase_config_ro_repo = cast(
             "UseCaseConfigRepositoryReadOnlyProtocol",
             UseCaseConfigRepository(user=self.user),
+        )
+        self.user_check_in_ro_repo = cast(
+            "UserCheckInRepositoryReadOnlyProtocol",
+            UserCheckInRepository(user=self.user),
         )
 
         # Chatbot-related repositories

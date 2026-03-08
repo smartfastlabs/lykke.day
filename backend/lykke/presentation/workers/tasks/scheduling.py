@@ -19,10 +19,10 @@ from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 
 from .common import (
+    get_identity_access,
     get_read_only_repository_factory,
     get_schedule_day_handler,
     get_unit_of_work_factory,
-    get_identity_access,
     load_user,
 )
 

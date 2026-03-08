@@ -27,6 +27,7 @@ from lykke.domain.entities import (
     TimeBlockDefinitionEntity,
     TriggerEntity,
     UseCaseConfigEntity,
+    UserCheckInEntity,
     UserEntity,
 )
 from lykke.domain.services.timing_status import TimingStatusService
@@ -57,6 +58,7 @@ from lykke.presentation.api.schemas import (
     TimeWindowSchema,
     TriggerSchema,
     UseCaseConfigSchema,
+    UserCheckInSchema,
     UserSchema,
     UserSettingsSchema,
 )
@@ -525,6 +527,21 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
         sync_subscription=sync_subscription,
         sync_subscription_id=calendar.sync_subscription_id,
         sync_enabled=calendar.sync_subscription is not None,
+    )
+
+
+def map_user_check_in_to_schema(entity: UserCheckInEntity) -> UserCheckInSchema:
+    """Convert UserCheckIn entity to UserCheckIn schema."""
+    return UserCheckInSchema(
+        id=entity.id,
+        user_id=entity.user_id,
+        source=entity.source,
+        source_name=entity.source_name,
+        source_metadata=entity.source_metadata,
+        checkin_at=entity.checkin_at,
+        created_at=entity.created_at,
+        text=entity.text,
+        scores=entity.scores,
     )
 
 

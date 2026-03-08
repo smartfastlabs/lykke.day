@@ -21,6 +21,7 @@ from .time_block_definition import TimeBlockDefinitionEntity
 from .trigger import TriggerEntity
 from .usecase_config import UseCaseConfigEntity
 from .user import UserEntity
+from .user_check_in import UserCheckInEntity
 
 __all__ = [
     "AuthTokenEntity",
@@ -46,5 +47,6 @@ __all__ = [
     "TimeBlockDefinitionEntity",
     "TriggerEntity",
     "UseCaseConfigEntity",
+    "UserCheckInEntity",
     "UserEntity",
 ]

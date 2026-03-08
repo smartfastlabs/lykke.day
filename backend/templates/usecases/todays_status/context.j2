@@ -1,0 +1,14 @@
+{% extends "usecases/base_context.j2" %}
+{% block header %}
+# Today's status check-in context for {{ fmt_date(context.day.date) }}.
+{% endblock %}
+
+{% block extra_context %}
+{% if recent_check_ins %}
+## Recent check-ins (for continuity):
+{% for checkin in recent_check_ins %}
+- {{ fmt_datetime_plain(checkin.checkin_at) }} ({{ checkin.source_name or checkin.source.value }}): {% if checkin.text %}{{ checkin.text }}{% endif %}{% if checkin.scores %} scores: {{ checkin.scores }}{% endif %}
+
+{% endfor %}
+{% endif %}
+{% endblock %}

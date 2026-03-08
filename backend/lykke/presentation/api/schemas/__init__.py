@@ -71,6 +71,7 @@ from .trigger import (
     TriggerTacticsUpdateSchema,
     TriggerUpdateSchema,
 )
+from .user_check_in import UserCheckInCreateSchema, UserCheckInSchema
 from .usecase_config import (
     NotificationUseCaseConfigSchema,
     UseCaseConfigCreateSchema,
@@ -132,6 +133,8 @@ UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
 UserSettingsUpdateSchema.model_rebuild()
 UserUpdateSchema.model_rebuild()
+UserCheckInSchema.model_rebuild()
+UserCheckInCreateSchema.model_rebuild()
 PushSubscriptionCreateSchema.model_rebuild()
 PushSubscriptionKeysSchema.model_rebuild()
 PushSubscriptionSchema.model_rebuild()
@@ -226,6 +229,8 @@ __all__ = [
     "TriggerSchema",
     "TriggerTacticsUpdateSchema",
     "TriggerUpdateSchema",
+    "UserCheckInCreateSchema",
+    "UserCheckInSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",
     "UserSchema",
