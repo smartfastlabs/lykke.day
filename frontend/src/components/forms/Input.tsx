@@ -88,7 +88,7 @@ interface SelectProps<T extends string> {
 }
 
 export function Select<T extends string>(props: SelectProps<T>) {
-  let selectRef: HTMLSelectElement | undefined;
+  let selectRef: any;
 
   createEffect(() => {
     const selectedValue = props.value();
@@ -96,7 +96,7 @@ export function Select<T extends string>(props: SelectProps<T>) {
     if (options.length === 0) {
       return;
     }
-    queueMicrotask(() => {
+    Promise.resolve().then(() => {
       if (selectRef && selectRef.value !== selectedValue) {
         selectRef.value = selectedValue;
       }

@@ -430,7 +430,6 @@ class SmartNotificationHandler(
                             referenced_entities=coerced_references,
                         )
                         await uow.create(notification)
-                        await uow.commit()
                     return None
 
                 await self.send_push_notification_handler.handle(

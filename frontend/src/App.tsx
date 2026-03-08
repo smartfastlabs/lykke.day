@@ -74,6 +74,9 @@ import MorningOverviewConfigPage from "@/pages/me/settings/morning/Index";
 import MessagingConfigPage from "@/pages/me/settings/messaging/Index";
 import AlarmPresetsPage from "@/pages/me/settings/alarms/Index";
 import CalendarNotificationsPage from "@/pages/me/settings/calendar-notifications/Index";
+import TodaysStatusCheckInConfigPage from "@/pages/me/settings/check-ins/todays-status/Index";
+import ThisWeeksStatusCheckInConfigPage from "@/pages/me/settings/check-ins/this-weeks-status/Index";
+import ThisMonthStatusCheckInConfigPage from "@/pages/me/settings/check-ins/this-month-status/Index";
 import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/Index";
 import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/New";
 import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detail";
@@ -473,6 +476,18 @@ export default function App() {
                     component={MorningOverviewConfigPage}
                   />
                   <Route path="/messaging" component={MessagingConfigPage} />
+                  <Route
+                    path="/check-ins/todays-status"
+                    component={TodaysStatusCheckInConfigPage}
+                  />
+                  <Route
+                    path="/check-ins/this-weeks-status"
+                    component={ThisWeeksStatusCheckInConfigPage}
+                  />
+                  <Route
+                    path="/check-ins/this-month-status"
+                    component={ThisMonthStatusCheckInConfigPage}
+                  />
                   <Route path="/alarms" component={AlarmPresetsPage} />
                   <Route
                     path="/notifications/push"

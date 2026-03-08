@@ -1,23 +1,10 @@
 """Command to run the this_weeks_status LLM use case and persist a check-in."""
 
 from dataclasses import dataclass
-from datetime import UTC, date as dt_date, datetime, timedelta
-from typing import Any
 
-from loguru import logger
+from lykke.application.commands.base import Command
 
-from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
-from lykke.application.queries.get_llm_prompt_context import (
-    GetLLMPromptContextHandler,
-    GetLLMPromptContextQuery,
-)
-from lykke.application.repositories import (
-    UserCheckInRepositoryReadOnlyProtocol,
-)
-from lykke.domain import value_objects
-from lykke.domain.entities import UserCheckInEntity
-from pydantic import BaseModel, Field
+from .base_llm_user_check_in_handler import BaseLLMUserCheckInHandler, StatusAssessment
 
 
 @dataclass(frozen=True)
@@ -25,70 +12,14 @@ class ThisWeeksStatusCommand(Command):
     """Command to run this_weeks_status use case and persist an LLM-generated check-in."""
 
 
-class ThisWeeksStatusAssessment(BaseModel):
-    """Validated assessment payload returned by this_weeks_status."""
-
-    text: str | None = None
-    scores: dict[str, float | int] = Field(default_factory=dict)
+ThisWeeksStatusAssessment = StatusAssessment
 
 
-class ThisWeeksStatusHandler(
-    LLMHandlerMixin, BaseCommandHandler[ThisWeeksStatusCommand, None]
-):
+class ThisWeeksStatusHandler(BaseLLMUserCheckInHandler[ThisWeeksStatusCommand]):
     """Runs this_weeks_status LLM use case and persists a UserCheckIn with source=llm_use_case, source_name=this_weeks_status."""
 
-    get_llm_prompt_context_handler: GetLLMPromptContextHandler
-    user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
     name = "this_weeks_status"
     template_usecase = "this_weeks_status"
-
-    async def handle(self, command: ThisWeeksStatusCommand) -> None:
-        """Run LLM and persist check-in from validated assessment output."""
-        _ = command
-        result = await self.run_assessment_llm(ThisWeeksStatusAssessment)
-        if result is None:
-            return
-        assessment = result.assessment
-        scores_clean: dict[str, Any] = {}
-        for k, v in (assessment.scores or {}).items():
-            if isinstance(k, str) and v is not None:
-                try:
-                    scores_clean[k] = float(v)
-                except (TypeError, ValueError):
-                    continue
-        entity = UserCheckInEntity(
-            user_id=self.user.id,
-            source=value_objects.UserCheckInSource.LLM_USE_CASE,
-            source_name="this_weeks_status",
-            source_metadata={
-                "llm_provider": result.llm_provider.value,
-                "usecase": "this_weeks_status",
-            },
-            checkin_at=result.current_time,
-            text=assessment.text.strip() if assessment.text and assessment.text.strip() else None,
-            scores=scores_clean,
-        )
-        entity.create()
-        async with self._uow_factory.create(self.user) as uow:
-            await uow.create(entity)
-        logger.info(f"Persisted this_weeks_status check-in for user {self.user.id}")
-
-    async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
-        """Build prompt with today's context and last 7 days of check-ins."""
-        prompt_context = await self.get_llm_prompt_context_handler.handle(
-            GetLLMPromptContextQuery(date=date)
-        )
-        window_start = datetime.now(UTC) - timedelta(days=7)
-        recent = await self.user_check_in_ro_repo.search(
-            value_objects.UserCheckInQuery(
-                checkin_at_after=window_start,
-                order_by="checkin_at",
-                order_by_desc=True,
-                limit=50,
-            )
-        )
-        return UseCasePromptInput(
-            prompt_context=prompt_context,
-            extra_template_vars={"recent_check_ins": recent},
-        )
-
+    recent_checkin_window_days = 7
+    recent_checkin_limit = 50
+    assessment_model = ThisWeeksStatusAssessment

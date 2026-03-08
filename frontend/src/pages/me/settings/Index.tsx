@@ -17,6 +17,7 @@ import {
   faMobileScreenButton,
   faCommentDots,
   faSun,
+  faClipboardCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -147,6 +148,30 @@ const settingsSections: SettingsSection[] = [
         description: "Control AI behavior and integrations.",
         icon: faBrain,
         url: "/me/settings/llm",
+      },
+    ],
+  },
+  {
+    title: "Check Ins",
+    description: "Configure recurring AI check-in use cases.",
+    items: [
+      {
+        label: "Today's Status",
+        description: "Tune prompts for daily status assessments.",
+        icon: faClipboardCheck,
+        url: "/me/settings/check-ins/todays-status",
+      },
+      {
+        label: "This Week's Status",
+        description: "Tune prompts for weekly status assessments.",
+        icon: faClipboardCheck,
+        url: "/me/settings/check-ins/this-weeks-status",
+      },
+      {
+        label: "This Month's Status",
+        description: "Tune prompts for monthly status assessments.",
+        icon: faClipboardCheck,
+        url: "/me/settings/check-ins/this-month-status",
       },
     ],
   },

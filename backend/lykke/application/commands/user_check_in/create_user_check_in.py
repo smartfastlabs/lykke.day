@@ -36,6 +36,5 @@ class CreateUserCheckInHandler(
                 text=command.text,
                 scores=scores,
             )
-            entity.create()
             created = await uow.create(entity)
             return created

@@ -33,9 +33,7 @@ describe("Select", () => {
     const { container } = render(() => <AsyncSelect />);
 
     await waitFor(() => {
-      const select = container.querySelector("#async-select") as
-        | HTMLSelectElement
-        | null;
+      const select = container.querySelector("#async-select") as any;
       expect(select).toBeTruthy();
       expect(select?.value).toBe("custom-slug");
     });
