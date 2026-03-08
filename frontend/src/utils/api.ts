@@ -496,6 +496,9 @@ export const authAPI = {
       body: JSON.stringify(payload),
     });
   },
+
+  getLLMSystemPromptPreview: (): Promise<{ rendered_prompt: string }> =>
+    fetchData<{ rendered_prompt: string }>("/api/me/llm/system-prompt-preview"),
 };
 
 export const basePersonalityAPI = {

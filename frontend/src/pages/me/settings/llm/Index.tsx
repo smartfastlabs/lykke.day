@@ -12,8 +12,7 @@ import AmendmentsEditor from "@/components/shared/AmendmentsEditor";
 import { FormError, Select, SubmitButton } from "@/components/forms";
 import { useAuth } from "@/providers/auth";
 import { globalNotifications } from "@/providers/notifications";
-import { authAPI, basePersonalityAPI, usecaseConfigAPI } from "@/utils/api";
-import type { NotificationUseCaseConfig } from "@/types/api";
+import { authAPI, basePersonalityAPI } from "@/utils/api";
 import type { LLMProvider } from "@/types/api/user";
 
 const LLM_PROVIDERS: LLMProvider[] = ["anthropic", "openai"];
@@ -27,10 +26,9 @@ function normalizeBasePersonalitySlug(value: string | null | undefined): string 
 const LLMSettingsPage: Component = () => {
   const { user, refetch } = useAuth();
   const [basePersonalities] = createResource(basePersonalityAPI.list);
-  const [notificationConfig, { refetch: refetchNotificationConfig }] =
-    createResource<NotificationUseCaseConfig>(
-      usecaseConfigAPI.getNotificationConfig
-    );
+  const [promptPreview, { refetch: refetchPromptPreview }] = createResource(
+    authAPI.getLLMSystemPromptPreview
+  );
   const [provider, setProvider] = createSignal<LLMProvider | "">("");
   const [basePersonalitySlug, setBasePersonalitySlug] = createSignal(
     DEFAULT_BASE_PERSONALITY_SLUG
@@ -88,7 +86,7 @@ const LLMSettingsPage: Component = () => {
         },
       });
       await refetch();
-      refetchNotificationConfig();
+      refetchPromptPreview();
       globalNotifications.addSuccess("LLM settings updated");
     } catch (err: unknown) {
       const message =
@@ -112,10 +110,10 @@ const LLMSettingsPage: Component = () => {
           <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
             <div>
               <h2 class="text-lg font-medium text-neutral-900">
-                Smart notifications
+                Provider
               </h2>
               <p class="text-sm text-neutral-500">
-                Choose the LLM provider used to evaluate smart notifications.
+                Choose the default LLM provider used across LLM-powered features.
               </p>
             </div>
 
@@ -134,7 +132,7 @@ const LLMSettingsPage: Component = () => {
                 placeholder="No provider selected"
               />
               <p class="text-xs text-neutral-400">
-                Leave this empty to disable LLM-based smart notifications.
+                Leave this empty to disable LLM-powered features.
               </p>
             </div>
           </div>
@@ -182,17 +180,17 @@ const LLMSettingsPage: Component = () => {
                 Prompt preview
               </h2>
               <p class="text-sm text-neutral-500">
-                Preview of the system prompt used for notification decisions.
-                Save changes to refresh.
+                Preview of your general system prompt (base personality plus
+                personality amendments). Save changes to refresh.
               </p>
             </div>
 
             <Show
-              when={!notificationConfig.loading}
+              when={!promptPreview.loading}
               fallback={<div class="text-sm text-neutral-500">Loading...</div>}
             >
               <Show
-                when={notificationConfig()?.rendered_prompt}
+                when={promptPreview()?.rendered_prompt}
                 fallback={
                   <div class="text-sm text-neutral-500">
                     No prompt available yet.
@@ -201,7 +199,7 @@ const LLMSettingsPage: Component = () => {
               >
                 <div class="bg-gray-50 border border-gray-200 rounded-md p-4 overflow-auto">
                   <pre class="text-sm text-gray-800 whitespace-pre-wrap font-mono">
-                    {notificationConfig()?.rendered_prompt}
+                    {promptPreview()?.rendered_prompt}
                   </pre>
                 </div>
               </Show>

@@ -31,6 +31,7 @@ from lykke.application.commands.day import (
 )
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
+from lykke.application.llm import render_general_system_prompt
 from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
 from lykke.application.queries.list_base_personalities import (
     ListBasePersonalitiesHandler,
@@ -181,6 +182,14 @@ async def list_base_personalities(
         BasePersonalitySchema.model_validate(personality)
         for personality in personalities
     ]
+
+
+@router.get("/llm/system-prompt-preview", response_model=dict[str, str])
+async def get_general_llm_system_prompt_preview(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> dict[str, str]:
+    """Return the general LLM system prompt preview."""
+    return {"rendered_prompt": render_general_system_prompt(user=user)}
 
 
 # ============================================================================

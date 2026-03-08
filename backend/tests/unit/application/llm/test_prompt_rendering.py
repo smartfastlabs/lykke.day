@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 from dobles import allow
 
-from lykke.application.llm import render_system_prompt
+from lykke.application.llm import render_general_system_prompt, render_system_prompt
 from lykke.application.llm.prompt_rendering import render_context_prompt
 from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
@@ -81,4 +81,26 @@ async def test_render_system_prompt_uses_base_personality_slug() -> None:
         usecase_config_ro_repo=usecase_config_repo,
     )
 
+    assert "# Role" in result
+    assert "# Goals" in result
+    assert "# Personality Layer: Direct" in result
     assert "direct, no-nonsense tone" in result
+
+
+def test_render_general_system_prompt_excludes_usecase_specific_instructions() -> None:
+    """General prompt preview should not include smart notification directives."""
+    user_id = uuid4()
+    user = UserEntity(
+        id=user_id,
+        email="test@example.com",
+        hashed_password="hash",
+        settings=value_objects.UserSetting(
+            template_defaults=["default"] * 7,
+            base_personality_slug="direct",
+        ),
+    )
+
+    result = render_general_system_prompt(user=user)
+
+    assert "direct, no-nonsense tone" in result
+    assert "smart notification" not in result.lower()

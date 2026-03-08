@@ -8,12 +8,12 @@ import LLMSettingsPage from "./Index";
 const {
   updateProfileMock,
   listBasePersonalitiesMock,
-  getNotificationConfigMock,
+  getLLMSystemPromptPreviewMock,
   refetchMock,
 } = vi.hoisted(() => ({
   updateProfileMock: vi.fn(),
   listBasePersonalitiesMock: vi.fn(),
-  getNotificationConfigMock: vi.fn(),
+  getLLMSystemPromptPreviewMock: vi.fn(),
   refetchMock: vi.fn(),
 }));
 
@@ -29,12 +29,10 @@ vi.mock("@/providers/auth", () => ({
 vi.mock("@/utils/api", () => ({
   authAPI: {
     updateProfile: updateProfileMock,
+    getLLMSystemPromptPreview: getLLMSystemPromptPreviewMock,
   },
   basePersonalityAPI: {
     list: listBasePersonalitiesMock,
-  },
-  usecaseConfigAPI: {
-    getNotificationConfig: getNotificationConfigMock,
   },
 }));
 
@@ -53,7 +51,7 @@ describe("LLMSettingsPage base personality select", () => {
   beforeEach(() => {
     updateProfileMock.mockReset();
     listBasePersonalitiesMock.mockReset();
-    getNotificationConfigMock.mockReset();
+    getLLMSystemPromptPreviewMock.mockReset();
     refetchMock.mockReset();
 
     currentUser = {
@@ -73,8 +71,7 @@ describe("LLMSettingsPage base personality select", () => {
       updated_at: null,
     };
 
-    getNotificationConfigMock.mockResolvedValue({
-      user_amendments: [],
+    getLLMSystemPromptPreviewMock.mockResolvedValue({
       rendered_prompt: "",
     });
   });

@@ -37,3 +37,4 @@ async def test_list_base_personalities_includes_defaults() -> None:
     assert "direct" in slugs
     assert "cheerful" in slugs
     assert "analytical" in slugs
+    assert "_base" not in slugs

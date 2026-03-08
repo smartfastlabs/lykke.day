@@ -7,7 +7,7 @@ from typing import Any
 
 from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.core.utils.day_context_serialization import serialize_day_context
-from lykke.core.utils.templates import render_for_user
+from lykke.core.utils.templates import render, render_for_user, resolve_base_personality_slug
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 
@@ -55,6 +55,28 @@ async def render_system_prompt(
         user=user,
         user_name=user_name,
         user_timezone=user_timezone,
+    )
+
+
+def render_general_system_prompt(*, user: UserEntity) -> str:
+    """Render the general LLM system prompt without usecase instructions."""
+    base_personality_slug = None
+    llm_personality_amendments: list[str] | None = None
+    user_timezone = None
+    if user.settings:
+        base_personality_slug = user.settings.base_personality_slug
+        llm_personality_amendments = user.settings.llm_personality_amendments
+        user_timezone = user.settings.timezone
+    user_name = user.email
+
+    return render(
+        "usecases/base_system.j2",
+        base_personality_slug=resolve_base_personality_slug(base_personality_slug),
+        llm_personality_amendments=llm_personality_amendments,
+        user=user,
+        user_name=user_name,
+        user_timezone=user_timezone,
+        user_amendments=[],
     )
 
 

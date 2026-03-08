@@ -263,6 +263,8 @@ def list_base_personalities() -> list[dict[str, str]]:
     personalities = []
     for path in sorted(base_root.glob("*.j2")):
         slug = path.stem
+        if slug.startswith("_"):
+            continue
         personalities.append({"slug": slug, "label": template_display_name(slug)})
 
     if not any(item["slug"] == DEFAULT_BASE_PERSONALITY_SLUG for item in personalities):

@@ -1,4 +1,4 @@
-import { Component, For, Show, createSignal } from "solid-js";
+import { Component, Index, Show, createSignal } from "solid-js";
 
 interface AmendmentsEditorProps {
   amendments: string[];
@@ -44,19 +44,19 @@ const AmendmentsEditor: Component<AmendmentsEditorProps> = (props) => {
       </Show>
 
       <div class="space-y-3">
-        <For each={props.amendments}>
+        <Index each={props.amendments}>
           {(amendment, index) => (
             <div class="flex gap-2 items-start">
               <textarea
-                value={amendment}
-                onInput={(e) => handleUpdate(index(), e.currentTarget.value)}
+                value={amendment()}
+                onInput={(e) => handleUpdate(index, e.currentTarget.value)}
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={2}
                 disabled={props.disabled}
               />
               <button
                 type="button"
-                onClick={() => handleRemove(index())}
+                onClick={() => handleRemove(index)}
                 class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={props.disabled}
               >
@@ -64,7 +64,7 @@ const AmendmentsEditor: Component<AmendmentsEditorProps> = (props) => {
               </button>
             </div>
           )}
-        </For>
+        </Index>
 
         <div class="flex gap-2">
           <textarea

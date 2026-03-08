@@ -16,7 +16,7 @@ from loguru import logger
 
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.core.config import settings
-from lykke.core.exceptions import TokenExpiredError
+from lykke.core.exceptions import NotFoundError, TokenExpiredError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuthTokenEntity,
@@ -649,6 +649,12 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             )
         except RefreshError as exc:
             raise TokenExpiredError("User needs to re-authenticate") from exc
+        except HttpError as exc:
+            if exc.resp.status == 404:
+                raise NotFoundError(
+                    "Calendar not found or no longer accessible"
+                ) from exc
+            raise
 
     async def subscribe_to_calendar(
         self,

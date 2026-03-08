@@ -3,6 +3,7 @@
 from .command_tools import build_args_model_from_command, make_command_tool
 from .mixin import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
 from .prompt_rendering import (
+    render_general_system_prompt,
     render_ask_prompt,
     render_context_prompt,
     render_system_prompt,
@@ -15,6 +16,7 @@ __all__ = [
     "UseCasePromptInput",
     "build_args_model_from_command",
     "make_command_tool",
+    "render_general_system_prompt",
     "render_ask_prompt",
     "render_context_prompt",
     "render_system_prompt",

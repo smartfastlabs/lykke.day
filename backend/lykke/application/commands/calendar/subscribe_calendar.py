@@ -3,12 +3,14 @@
 import secrets
 import uuid
 from dataclasses import dataclass
-from uuid import UUID
+
+from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import AuthTokenRepositoryReadOnlyProtocol
 from lykke.core.config import settings
+from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -67,13 +69,29 @@ class SubscribeCalendarHandler(
                 webhook_url = f"{base_url}/google/webhook/{self.user.id}/{calendar.id}"
 
                 # Subscribe to calendar changes via Google API
-                subscription = await self.google_gateway.subscribe_to_calendar(
-                    calendar=calendar,
-                    token=token,
-                    webhook_url=webhook_url,
-                    channel_id=channel_id,
-                    client_state=client_state,
-                )
+                try:
+                    subscription = await self.google_gateway.subscribe_to_calendar(
+                        calendar=calendar,
+                        token=token,
+                        webhook_url=webhook_url,
+                        channel_id=channel_id,
+                        client_state=client_state,
+                    )
+                except NotFoundError:
+                    logger.warning(
+                        "Calendar no longer accessible during subscription; "
+                        "clearing saved sync subscription",
+                        calendar_id=calendar.id,
+                        platform_id=calendar.platform_id,
+                        user_id=self.user.id,
+                    )
+                    update_data = CalendarUpdateObject(
+                        sync_subscription=None,
+                        sync_subscription_id=None,
+                    )
+                    calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
+                    uow.add(calendar)
+                    return calendar
 
                 update_data = CalendarUpdateObject(
                     sync_subscription=SyncSubscription(
