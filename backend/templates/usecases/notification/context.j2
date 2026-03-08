@@ -31,7 +31,14 @@
 
 {% if derived_status_score is defined and derived_status_score is not none %}
 # Wellbeing / status
-- Derived status score (0-100): {{ derived_status_score }}{% if derived_status_date is defined %} (as of {{ derived_status_date }}){% endif %}
+- Derived status score statistics by key{% if derived_status_date is defined %} (as of {{ derived_status_date }}){% endif %}:
+{% if derived_status_score %}
+{% for stat in derived_status_score %}
+  - {{ stat.key }} (n={{ stat.count }}) -> mean: {{ stat.mean }}, median: {{ stat.median }}, min: {{ stat.min }}, max: {{ stat.max }}, stddev: {{ stat.stddev }}
+{% endfor %}
+{% else %}
+  - No numeric score values found in recent check-ins.
+{% endif %}
 {% if recent_check_ins_summary is defined and recent_check_ins_summary %}
 - Recent check-ins (last 5):{% for c in recent_check_ins_summary %}
   - {{ c.at }} | {{ c.source }} | scores: {{ c.scores }} | {{ c.text }}

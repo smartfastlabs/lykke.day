@@ -107,7 +107,7 @@ from .user import (
     UserSettingUpdate,
     UserStatus,
 )
-from .user_check_in import UserCheckInSource
+from .user_check_in import CheckInScoreStats, UserCheckInSource
 
 __all__ = [
     "Action",
@@ -137,6 +137,7 @@ __all__ = [
     "CalendarEntryUpdateObject",
     "CalendarQuery",
     "CalendarSubscription",
+    "CheckInScoreStats",
     "CalendarUpdateObject",
     "DateQuery",
     "DayContext",

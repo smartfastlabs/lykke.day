@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import statistics
 from dataclasses import dataclass
 from datetime import UTC, date as dt_date, datetime, timedelta
 from typing import Literal
@@ -47,21 +48,41 @@ _SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
 _SMART_NOTIFICATION_FLOATING_TASK_WINDOW = timedelta(hours=2)
 
 
-def _score_from_check_ins(check_ins: list[UserCheckInEntity]) -> float:
-    """Compute 0-100 from numeric scores in check-ins; 50 if none."""
-    values: list[float] = []
+def _score_from_check_ins(
+    check_ins: list[UserCheckInEntity],
+) -> list[value_objects.CheckInScoreStats]:
+    """Compute per-score-key statistics from numeric check-in scores."""
+    values_by_key: dict[str, list[float]] = {}
     for entity in check_ins:
-        for _k, v in (entity.scores or {}).items():
-            if v is None:
+        for key, v in (entity.scores or {}).items():
+            if not isinstance(key, str) or not key.strip() or v is None:
                 continue
+            normalized_key = key.strip()
             try:
-                values.append(float(v))
+                numeric_value = float(v)
             except (TypeError, ValueError):
                 continue
-    if not values:
-        return 50.0
-    avg = sum(values) / len(values)
-    return max(0.0, min(100.0, avg))
+            values_by_key.setdefault(normalized_key, []).append(numeric_value)
+
+    if not values_by_key:
+        return []
+
+    stats_by_key: list[value_objects.CheckInScoreStats] = []
+    for key in sorted(values_by_key):
+        values = values_by_key[key]
+        stats_by_key.append(
+            value_objects.CheckInScoreStats(
+                key=key,
+                count=len(values),
+                mean=round(statistics.fmean(values), 2),
+                median=round(statistics.median(values), 2),
+                min=round(min(values), 2),
+                max=round(max(values), 2),
+                stddev=round(statistics.pstdev(values), 2),
+            )
+        )
+
+    return stats_by_key
 
 
 def _coerce_uuid(value: object) -> UUID | None:
@@ -266,7 +287,7 @@ class SmartNotificationHandler(
             prompt_context, current_time=current_time
         )
         extra: dict[str, object] = {}
-        # Recent check-ins (e.g. todays_status, user entries) for wellbeing context; derive 0-100 score from their scores
+        # Recent check-ins (e.g. todays_status, user entries) for wellbeing context.
         try:
             window_start = current_time.astimezone(UTC) - timedelta(days=7)
             recent_check_ins = await self.user_check_in_ro_repo.search(
