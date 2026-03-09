@@ -210,7 +210,7 @@ class UserCheckInQuery(BaseQuery):
     checkin_at_after: datetime | None = None
     checkin_at_before: datetime | None = None
     source: str | None = None  # UserCheckInSource value
-    source_name: str | None = None  # e.g. todays_status, this_weeks_status
+    source_name: str | None = None  # e.g. user_status_use_case
 
 
 T = TypeVar("T", bound=BaseQuery)

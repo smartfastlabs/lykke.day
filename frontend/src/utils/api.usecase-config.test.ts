@@ -31,13 +31,18 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
       makeJsonResponse(404, { detail: "Not found" }) as any,
     );
 
-    const result = await usecaseConfigAPI.getConfigForUseCase("todays_status");
+    const result = await usecaseConfigAPI.getConfigForUseCase(
+      "user_status_use_case",
+    );
 
     expect(result).toEqual({ user_amendments: [] });
-    expect(fetch).toHaveBeenCalledWith("/api/usecase-configs/todays_status", {
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/usecase-configs/user_status_use_case",
+      {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   });
 
   it("returns null when getLLMSnapshotPreviewForUseCase receives 404", async () => {
@@ -46,11 +51,13 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
     );
 
     const result =
-      await usecaseConfigAPI.getLLMSnapshotPreviewForUseCase("todays_status");
+      await usecaseConfigAPI.getLLMSnapshotPreviewForUseCase(
+        "user_status_use_case",
+      );
 
     expect(result).toBeNull();
     expect(fetch).toHaveBeenCalledWith(
-      "/api/usecase-configs/todays_status/llm-preview",
+      "/api/usecase-configs/user_status_use_case/llm-preview",
       {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -64,7 +71,7 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
     );
 
     await expect(
-      usecaseConfigAPI.getConfigForUseCase("todays_status"),
+      usecaseConfigAPI.getConfigForUseCase("user_status_use_case"),
     ).rejects.toMatchObject({
       name: "ApiRequestError",
       status: 500,

@@ -14,7 +14,7 @@ class UserCheckIn(Base):
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     source = Column(String, nullable=False)  # UserCheckInSource enum as string
-    source_name = Column(String, nullable=True)  # e.g. todays_status
+    source_name = Column(String, nullable=True)  # e.g. user_status_use_case
     source_metadata = Column(JSONB, nullable=True)  # usecase, provider, etc.
     checkin_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False)

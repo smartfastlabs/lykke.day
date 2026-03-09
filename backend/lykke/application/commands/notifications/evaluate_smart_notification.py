@@ -287,7 +287,7 @@ class SmartNotificationHandler(
             prompt_context, current_time=current_time
         )
         extra: dict[str, object] = {}
-        # Recent check-ins (e.g. todays_status, user entries) for wellbeing context.
+        # Recent check-ins (e.g. user_status_use_case, user entries) for wellbeing context.
         try:
             window_start = current_time.astimezone(UTC) - timedelta(days=7)
             recent_check_ins = await self.user_check_in_ro_repo.search(

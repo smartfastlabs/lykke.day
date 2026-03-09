@@ -18,7 +18,7 @@ class UserCheckInEntity(BaseEntityObject):
 
     user_id: UUID
     source: value_objects.UserCheckInSource
-    source_name: str | None = None  # e.g. todays_status, this_weeks_status
+    source_name: str | None = None  # e.g. user_status_use_case
     source_metadata: dict[str, Any] = field(default_factory=dict)
     checkin_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))

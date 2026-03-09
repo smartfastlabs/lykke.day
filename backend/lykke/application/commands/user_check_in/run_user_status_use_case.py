@@ -1,9 +1,9 @@
-"""Shared handler logic for LLM-generated user check-ins."""
+"""Command to run the user_status_use_case LLM use case and persist a check-in."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, date as dt_date, datetime, timedelta
-from typing import Generic, TypeVar
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -18,31 +18,35 @@ from lykke.application.repositories import UserCheckInRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import UserCheckInEntity
 
-CommandT = TypeVar("CommandT", bound=Command)
+
+@dataclass(frozen=True)
+class UserStatusUseCaseCommand(Command):
+    """Command to run user_status_use_case and persist an LLM-generated check-in."""
 
 
-class StatusAssessment(BaseModel):
-    """Validated status assessment payload returned by LLM use cases."""
+class UserStatusUseCaseAssessment(BaseModel):
+    """Validated status assessment payload returned by this use case."""
 
     text: str | None = None
     scores: dict[str, float | int] = Field(default_factory=dict)
 
 
-class BaseLLMUserCheckInHandler(
-    LLMHandlerMixin, BaseCommandHandler[CommandT, None], Generic[CommandT]
+class UserStatusUseCaseHandler(
+    LLMHandlerMixin, BaseCommandHandler[UserStatusUseCaseCommand, None]
 ):
-    """Shared implementation for daily/weekly/monthly LLM check-in handlers."""
+    """Runs user_status_use_case and persists a normalized UserCheckIn."""
 
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
 
-    # Subclasses must override these.
-    recent_checkin_window_days: int = 0
-    recent_checkin_limit: int = 0
-    assessment_model: type[BaseModel] = StatusAssessment
+    name = "user_status_use_case"
+    template_usecase = "user_status_use_case"
+    recent_checkin_window_days = 3
+    recent_checkin_limit = 20
+    assessment_model = UserStatusUseCaseAssessment
 
-    async def handle(self, command: CommandT) -> None:
-        """Run assessment LLM and persist a normalized check-in."""
+    async def handle(self, command: UserStatusUseCaseCommand) -> None:
+        """Run assessment LLM and persist the resulting check-in."""
         _ = command
         result = await self.run_assessment_llm(self.assessment_model)
         if result is None:
@@ -69,7 +73,9 @@ class BaseLLMUserCheckInHandler(
         async with self.new_uow() as uow:
             await uow.create(entity)
 
-        logger.info(f"Persisted {self.template_usecase} check-in for user {self.user.id}")
+        logger.info(
+            f"Persisted {self.template_usecase} check-in for user {self.user.id}"
+        )
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
         """Build prompt input with recent check-ins for continuity."""

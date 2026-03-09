@@ -13,12 +13,8 @@ from .calendar import (
     sync_single_calendar_task,
 )
 from .check_in_status import (
-    run_this_month_status_for_all_users_task,
-    run_this_month_status_task,
-    run_this_weeks_status_for_all_users_task,
-    run_this_weeks_status_task,
-    run_todays_status_for_all_users_task,
-    run_todays_status_task,
+    run_user_status_use_case_for_all_users_task,
+    run_user_status_use_case_task,
 )
 from .common import (
     get_calendar_entry_notification_handler,
@@ -33,9 +29,7 @@ from .common import (
     get_subscribe_calendar_handler,
     get_sync_all_calendars_handler,
     get_sync_calendar_handler,
-    get_this_months_status_handler,
-    get_this_weeks_status_handler,
-    get_todays_status_handler,
+    get_user_status_use_case_handler,
     get_unit_of_work_factory,
 )
 from .inbound_sms import process_inbound_sms_message_task
@@ -100,17 +94,11 @@ __all__ = [
     "get_subscribe_calendar_handler",
     "get_sync_all_calendars_handler",
     "get_sync_calendar_handler",
-    "get_this_months_status_handler",
-    "get_this_weeks_status_handler",
-    "get_todays_status_handler",
+    "get_user_status_use_case_handler",
     "get_unit_of_work_factory",
     "get_worker",
-    "run_this_month_status_for_all_users_task",
-    "run_this_month_status_task",
-    "run_todays_status_for_all_users_task",
-    "run_todays_status_task",
-    "run_this_weeks_status_for_all_users_task",
-    "run_this_weeks_status_task",
+    "run_user_status_use_case_for_all_users_task",
+    "run_user_status_use_case_task",
     "heartbeat_task",
     "process_brain_dump_item_task",
     "process_inbound_sms_message_task",

@@ -32,11 +32,7 @@ if TYPE_CHECKING:
         MorningOverviewHandler,
         SmartNotificationHandler,
     )
-    from lykke.application.commands.user_check_in import (
-        ThisMonthsStatusHandler,
-        ThisWeeksStatusHandler,
-        TodaysStatusHandler,
-    )
+    from lykke.application.commands.user_check_in import UserStatusUseCaseHandler
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
 
@@ -217,12 +213,12 @@ def get_morning_overview_handler(
     return factory.create(MorningOverviewHandler)
 
 
-def get_todays_status_handler(
+def get_user_status_use_case_handler(
     user: UserEntity,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> TodaysStatusHandler:
-    """Get a TodaysStatusHandler instance for a user."""
+) -> UserStatusUseCaseHandler:
+    """Get a UserStatusUseCaseHandler instance for a user."""
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
     factory = CommandHandlerFactory(
@@ -230,39 +226,7 @@ def get_todays_status_handler(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )
-    return factory.create(TodaysStatusHandler)
-
-
-def get_this_weeks_status_handler(
-    user: UserEntity,
-    uow_factory: UnitOfWorkFactory,
-    ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> ThisWeeksStatusHandler:
-    """Get a ThisWeeksStatusHandler instance for a user."""
-    from lykke.presentation.handler_factory import CommandHandlerFactory
-
-    factory = CommandHandlerFactory(
-        user=user,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(ThisWeeksStatusHandler)
-
-
-def get_this_months_status_handler(
-    user: UserEntity,
-    uow_factory: UnitOfWorkFactory,
-    ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> ThisMonthsStatusHandler:
-    """Get a ThisMonthsStatusHandler instance for a user."""
-    from lykke.presentation.handler_factory import CommandHandlerFactory
-
-    factory = CommandHandlerFactory(
-        user=user,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(ThisMonthsStatusHandler)
+    return factory.create(UserStatusUseCaseHandler)
 
 
 def get_calendar_entry_notification_handler(

@@ -153,25 +153,13 @@ const settingsSections: SettingsSection[] = [
   },
   {
     title: "Check Ins",
-    description: "Configure recurring AI check-in use cases.",
+    description: "Configure recurring AI check-ins.",
     items: [
       {
-        label: "Today's Status",
+        label: "User Status",
         description: "Tune prompts for daily status assessments.",
         icon: faClipboardCheck,
-        url: "/me/settings/check-ins/todays-status",
-      },
-      {
-        label: "This Week's Status",
-        description: "Tune prompts for weekly status assessments.",
-        icon: faClipboardCheck,
-        url: "/me/settings/check-ins/this-weeks-status",
-      },
-      {
-        label: "This Month's Status",
-        description: "Tune prompts for monthly status assessments.",
-        icon: faClipboardCheck,
-        url: "/me/settings/check-ins/this-month-status",
+        url: "/me/settings/check-ins/user-status",
       },
     ],
   },

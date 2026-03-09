@@ -62,12 +62,8 @@ from .timing_status import EvaluateTimingStatusCommand, EvaluateTimingStatusHand
 from .user_check_in import (
     CreateUserCheckInCommand,
     CreateUserCheckInHandler,
-    ThisMonthsStatusCommand,
-    ThisMonthsStatusHandler,
-    ThisWeeksStatusCommand,
-    ThisWeeksStatusHandler,
-    TodaysStatusCommand,
-    TodaysStatusHandler,
+    UserStatusUseCaseCommand,
+    UserStatusUseCaseHandler,
 )
 
 __all__ = [
@@ -79,12 +75,8 @@ __all__ = [
     "CreateBrainDumpHandler",
     "CreateUserCheckInCommand",
     "CreateUserCheckInHandler",
-    "ThisMonthsStatusCommand",
-    "ThisMonthsStatusHandler",
-    "ThisWeeksStatusCommand",
-    "ThisWeeksStatusHandler",
-    "TodaysStatusCommand",
-    "TodaysStatusHandler",
+    "UserStatusUseCaseCommand",
+    "UserStatusUseCaseHandler",
     "DeleteBrainDumpCommand",
     "DeleteBrainDumpHandler",
     "DeleteTaskCommand",

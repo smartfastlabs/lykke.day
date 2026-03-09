@@ -12,17 +12,9 @@ from lykke.application.commands.user_check_in.create_user_check_in import (
     CreateUserCheckInCommand,
     CreateUserCheckInHandler,
 )
-from lykke.application.commands.user_check_in.run_this_month_status import (
-    ThisMonthsStatusCommand,
-    ThisMonthsStatusHandler,
-)
-from lykke.application.commands.user_check_in.run_this_weeks_status import (
-    ThisWeeksStatusCommand,
-    ThisWeeksStatusHandler,
-)
-from lykke.application.commands.user_check_in.run_todays_status import (
-    TodaysStatusCommand,
-    TodaysStatusHandler,
+from lykke.application.commands.user_check_in.run_user_status_use_case import (
+    UserStatusUseCaseCommand,
+    UserStatusUseCaseHandler,
 )
 from lykke.application.llm.mixin import LLMAssessmentResult
 from lykke.domain import value_objects
@@ -47,9 +39,13 @@ class _RepositoryFactory:
 @pytest.mark.parametrize(
     ("handler_cls", "command", "expected_usecase", "expected_window_days", "expected_limit"),
     [
-        (TodaysStatusHandler, TodaysStatusCommand(), "todays_status", 3, 20),
-        (ThisWeeksStatusHandler, ThisWeeksStatusCommand(), "this_weeks_status", 7, 50),
-        (ThisMonthsStatusHandler, ThisMonthsStatusCommand(), "this_month_status", 30, 200),
+        (
+            UserStatusUseCaseHandler,
+            UserStatusUseCaseCommand(),
+            "user_status_use_case",
+            3,
+            20,
+        ),
     ],
 )
 async def test_status_handlers_persist_normalized_llm_checkins(
@@ -59,7 +55,7 @@ async def test_status_handlers_persist_normalized_llm_checkins(
     expected_window_days: int,
     expected_limit: int,
 ) -> None:
-    """Status handlers persist normalized check-ins through shared base logic."""
+    """User status use case persists normalized LLM check-ins."""
     user = UserEntity(id=uuid4(), email="test@example.com", hashed_password="hash")
     uow = create_uow_double()
     handler = handler_cls(
@@ -105,10 +101,10 @@ async def test_status_handlers_persist_normalized_llm_checkins(
 
 
 @pytest.mark.asyncio
-async def test_todays_status_build_prompt_input_uses_recent_checkins() -> None:
+async def test_user_status_use_case_build_prompt_input_uses_recent_checkins() -> None:
     """Prompt input includes recent check-ins using configured query window."""
     user = UserEntity(id=uuid4(), email="test@example.com", hashed_password="hash")
-    handler = TodaysStatusHandler(
+    handler = UserStatusUseCaseHandler(
         user=user,
         uow_factory=create_uow_factory_double(create_uow_double()),
         repository_factory=_RepositoryFactory(create_read_only_repos_double()),
