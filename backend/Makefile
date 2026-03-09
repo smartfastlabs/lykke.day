@@ -3,7 +3,7 @@
 COMPOSE_FILE := ../docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 API_SERVICE := api
-DOCKER_RUN_API := $(COMPOSE) run --rm --no-deps $(API_SERVICE)
+DOCKER_RUN_API := $(COMPOSE) run --rm --no-deps -T $(API_SERVICE)
 TEST_DATABASE_URL := postgresql+psycopg://lykke_test:password@postgres:5432/lykke_test
 RESOLVE_PRODUCTION_DB_URL = if [ -n "$$PRODUCTION_MIGRATION_DB_URL" ]; then DATABASE_URL="$$PRODUCTION_MIGRATION_DB_URL"; elif [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); else echo "Error: PRODUCTION_MIGRATION_DB_URL not set and not found in .env.prod"; exit 1; fi;
 
@@ -41,7 +41,7 @@ migrate-dev: docker-up
 	@$(DOCKER_RUN_API) poetry run alembic upgrade head
 
 migrate-test: docker-up
-	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) $(API_SERVICE) poetry run alembic upgrade head
+	@$(COMPOSE) run --rm --no-deps -T -e DATABASE_URL=$(TEST_DATABASE_URL) $(API_SERVICE) poetry run alembic upgrade head
 
 migrate-reset-dev: docker-up
 	@echo "Resetting dev database and migrating to current branch head..."
@@ -64,7 +64,7 @@ migrate-create: docker-up
 	@$(DOCKER_RUN_API) poetry run alembic revision --autogenerate -m "$(MSG)"
 
 migrate-prod: docker-build
-	@bash -c '$(RESOLVE_PRODUCTION_DB_URL) $(COMPOSE) run --rm --no-deps -e DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run alembic upgrade head'
+	@bash -c '$(RESOLVE_PRODUCTION_DB_URL) $(COMPOSE) run --rm --no-deps -T -e DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run alembic upgrade head'
 
 serve-prod: docker-up
 	@echo "Starting API + Taskiq worker + scheduler against production DB..."
@@ -86,10 +86,10 @@ worker-prod: docker-up
 
 # Quality and tests
 test: docker-up
-	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest tests --vcr-record=once
+	@$(COMPOSE) run --rm --no-deps -T -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest tests --vcr-record=once
 
 test-target: docker-up
-	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
+	@$(COMPOSE) run --rm --no-deps -T -e DATABASE_URL=$(TEST_DATABASE_URL) -e ENV_FILE=.env.test $(API_SERVICE) poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
 
 typecheck:
 	@$(DOCKER_RUN_API) poetry run mypy lykke
@@ -116,7 +116,7 @@ generate-types: export-openapi
 migrate-data-to-prod: docker-build
 	@if [ -z "$$DEST_DATABASE_URL" ]; then \
 		$(RESOLVE_PRODUCTION_DB_URL) \
-		$(COMPOSE) run --rm --no-deps -e DEST_DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+		$(COMPOSE) run --rm --no-deps -T -e DEST_DATABASE_URL=$$DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 	else \
-		$(COMPOSE) run --rm --no-deps -e DEST_DATABASE_URL=$$DEST_DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+		$(COMPOSE) run --rm --no-deps -T -e DEST_DATABASE_URL=$$DEST_DATABASE_URL $(API_SERVICE) poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 	fi
