@@ -15,6 +15,9 @@ export const MeIndexPage: Component = () => {
         code: oauthCode,
         state: oauthState,
       });
+      // Remove OAuth params from the current URL immediately so refresh/back
+      // cannot re-trigger callback forwarding from a stale /me URL.
+      window.history.replaceState({}, "", "/me");
       window.location.replace(
         `/api/google/callback/login?${callbackParams.toString()}`
       );

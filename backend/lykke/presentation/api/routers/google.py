@@ -213,10 +213,10 @@ async def google_login_callback(
             )
             if consumed_marker is not None:
                 logger.warning(
-                    "google_oauth_duplicate_callback state={} already_consumed=true redirecting_to_me=true",
+                    "google_oauth_duplicate_callback state={} already_consumed=true redirecting_to_me_today=true",
                     _state_tag(state),
                 )
-                return RedirectResponse(url="/me")
+                return RedirectResponse(url="/me/today")
         raise
     auth_token_id = _parse_auth_token_id_from_state(state_data)
 
@@ -245,7 +245,7 @@ async def google_login_callback(
     await storage_gateway.delete(_oauth_state_key(state))
     logger.info("google_oauth_state_consumed state={}", _state_tag(state))
 
-    return RedirectResponse(url="/me")
+    return RedirectResponse(url="/me/today")
 
 
 @router.post("/webhook/{user_id}/{calendar_id}")
