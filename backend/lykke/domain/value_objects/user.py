@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import time
 from enum import Enum
 from typing import Any, cast
@@ -96,6 +96,127 @@ class CalendarEntryNotificationSettings(BaseValueObject):
 
 
 @dataclass(kw_only=True)
+class StatusSignalGoal(BaseValueObject):
+    """Goal guidance for a status signal."""
+
+    text: str = ""
+    value: float | None = None
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any] | None) -> "StatusSignalGoal":
+        if data is None:
+            return cls()
+        raw_text = data.get("text", "")
+        text = raw_text.strip() if isinstance(raw_text, str) else ""
+        raw_value = data.get("value")
+        value: float | None = None
+        if raw_value is not None:
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                value = None
+        return cls(text=text, value=value)
+
+
+@dataclass(kw_only=True)
+class StatusSignal(BaseValueObject):
+    """User-defined signal tracked in status check-ins."""
+
+    name: str
+    slug: str
+    description: str = ""
+    goal: StatusSignalGoal = field(default_factory=StatusSignalGoal)
+
+    @staticmethod
+    def _slugify(value: str) -> str:
+        cleaned = value.strip().lower()
+        slug_chars: list[str] = []
+        prev_dash = False
+        for char in cleaned:
+            if char.isalnum():
+                slug_chars.append(char)
+                prev_dash = False
+            elif not prev_dash:
+                slug_chars.append("-")
+                prev_dash = True
+        slug = "".join(slug_chars).strip("-")
+        return slug
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "StatusSignal | None":
+        raw_name = data.get("name")
+        if not isinstance(raw_name, str):
+            return None
+        name = raw_name.strip()
+        if not name:
+            return None
+        raw_slug = data.get("slug")
+        slug = raw_slug.strip() if isinstance(raw_slug, str) else ""
+        slug = cls._slugify(slug or name)
+        if not slug:
+            return None
+        raw_description = data.get("description", "")
+        description = raw_description.strip() if isinstance(raw_description, str) else ""
+        raw_goal = data.get("goal")
+        goal: StatusSignalGoal
+        if isinstance(raw_goal, StatusSignalGoal):
+            goal = raw_goal
+        elif isinstance(raw_goal, Mapping):
+            goal = StatusSignalGoal.from_dict(raw_goal)
+        else:
+            goal = StatusSignalGoal()
+        return cls(name=name, slug=slug, description=description, goal=goal)
+
+
+def _default_status_signals() -> list[StatusSignal]:
+    return [
+        StatusSignal(
+            name="Cravings",
+            slug="cravings",
+            description="Urge intensity and frequency.",
+        ),
+        StatusSignal(
+            name="Depression",
+            slug="depression",
+            description="Low mood, hopelessness, and emotional heaviness.",
+        ),
+        StatusSignal(
+            name="Anxiety",
+            slug="anxiety",
+            description="Stress, worry, and nervous system activation.",
+        ),
+        StatusSignal(
+            name="Mood",
+            slug="mood",
+            description="Overall emotional tone for the day.",
+        ),
+        StatusSignal(
+            name="Energy",
+            slug="energy",
+            description="Mental and physical energy availability.",
+        ),
+        StatusSignal(
+            name="Focus",
+            slug="focus",
+            description="Attention quality and ability to stay on task.",
+        ),
+    ]
+
+
+def _parse_morning_overview_time(value: Any) -> time | None:
+    if value is None:
+        return None
+    if isinstance(value, time):
+        return value
+    if isinstance(value, str):
+        try:
+            return time.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
+
+
+@dataclass(kw_only=True)
 class UserSetting(BaseValueObject):
     template_defaults: list[str] = field(default_factory=lambda: ["default"] * 7)
     llm_provider: LLMProvider | None = None  # LLM provider for smart notifications
@@ -107,19 +228,7 @@ class UserSetting(BaseValueObject):
     calendar_entry_notification_settings: CalendarEntryNotificationSettings = field(
         default_factory=CalendarEntryNotificationSettings
     )
-
-    @staticmethod
-    def _parse_morning_overview_time(value: Any) -> time | None:
-        if value is None:
-            return None
-        if isinstance(value, time):
-            return value
-        if isinstance(value, str):
-            try:
-                return time.fromisoformat(value)
-            except ValueError:
-                return None
-        return None
+    status_signals: list[StatusSignal] = field(default_factory=_default_status_signals)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any] | None) -> "UserSetting":
@@ -132,10 +241,10 @@ class UserSetting(BaseValueObject):
         if data is None:
             return cls()
 
-        allowed_keys = set(cls.__dataclass_fields__.keys())
+        allowed_keys = {field_info.name for field_info in fields(cls)}
         filtered = {k: v for k, v in data.items() if k in allowed_keys}
         if "morning_overview_time" in filtered:
-            filtered["morning_overview_time"] = cls._parse_morning_overview_time(
+            filtered["morning_overview_time"] = _parse_morning_overview_time(
                 filtered["morning_overview_time"]
             )
         return cls(**filtered)
@@ -170,6 +279,26 @@ class UserSetting(BaseValueObject):
                 self.calendar_entry_notification_settings = (
                     CalendarEntryNotificationSettings()
                 )
+        raw_signals = cast("list[Any]", self.status_signals)
+        if raw_signals:
+            normalized_signals: list[StatusSignal] = []
+            seen: set[str] = set()
+            for signal in raw_signals:
+                candidate: StatusSignal | None = None
+                if isinstance(signal, StatusSignal):
+                    candidate = signal
+                elif hasattr(signal, "model_dump"):
+                    candidate = StatusSignal.from_dict(signal.model_dump())
+                elif isinstance(signal, Mapping):
+                    candidate = StatusSignal.from_dict(signal)
+                if candidate is None:
+                    continue
+                key = candidate.slug.casefold()
+                if key in seen:
+                    continue
+                seen.add(key)
+                normalized_signals.append(candidate)
+            self.status_signals = normalized_signals or _default_status_signals()
 
 
 @dataclass(kw_only=True)
@@ -185,7 +314,7 @@ class UserSettingUpdate(BaseRequestObject):
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "UserSettingUpdate":
-        allowed_keys = set(UserSetting.__dataclass_fields__.keys())
+        allowed_keys = {field_info.name for field_info in fields(UserSetting)}
         filtered = {k: v for k, v in data.items() if k in allowed_keys}
         return cls(data=dict(filtered))
 
@@ -249,10 +378,15 @@ class UserSettingUpdate(BaseRequestObject):
             calendar_entry_notification_settings = (
                 existing.calendar_entry_notification_settings
             )
+        status_signals = (
+            cast("list[Any]", self.data.get("status_signals"))
+            if "status_signals" in self.data and self.data.get("status_signals") is not None
+            else existing.status_signals
+        )
 
         # morning_overview_time is special: explicit null should clear the value.
         if "morning_overview_time" in self.data:
-            morning_overview_time = UserSetting._parse_morning_overview_time(
+            morning_overview_time = _parse_morning_overview_time(
                 self.data.get("morning_overview_time")
             )
         else:
@@ -267,6 +401,7 @@ class UserSettingUpdate(BaseRequestObject):
             morning_overview_time=morning_overview_time,
             alarm_presets=cast("list[AlarmPreset]", alarm_presets),
             calendar_entry_notification_settings=calendar_entry_notification_settings,
+            status_signals=cast("list[StatusSignal]", status_signals),
         )
 
 

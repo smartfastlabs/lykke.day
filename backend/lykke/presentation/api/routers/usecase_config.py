@@ -23,7 +23,6 @@ from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     NotificationUseCaseConfigSchema,
-    UseCaseMetricSchema,
     UserStatusCheckInPreviewSchema,
 )
 
@@ -34,45 +33,6 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-def _normalize_metrics(metrics: object) -> list[dict[str, str]]:
-    if not isinstance(metrics, list):
-        return []
-    deduped: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for metric in metrics:
-        name = ""
-        description = ""
-
-        if isinstance(metric, str):
-            cleaned_metric = metric.strip()
-            if not cleaned_metric:
-                continue
-            if ":" in cleaned_metric:
-                name_part, description_part = cleaned_metric.split(":", 1)
-                name = name_part.strip()
-                description = description_part.strip()
-            else:
-                name = cleaned_metric
-        elif isinstance(metric, dict):
-            raw_name = metric.get("name")
-            raw_description = metric.get("description", "")
-            if isinstance(raw_name, str):
-                name = raw_name.strip()
-            if isinstance(raw_description, str):
-                description = raw_description.strip()
-        else:
-            continue
-
-        if not name:
-            continue
-        key = name.casefold()
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped.append({"name": name, "description": description})
-    return deduped
-
-
 def _map_config_to_schema(
     *,
     config: dict[str, Any],
@@ -81,16 +41,11 @@ def _map_config_to_schema(
     user_amendments = config.get("user_amendments", [])
     if not isinstance(user_amendments, list):
         user_amendments = []
-    metrics = [
-        UseCaseMetricSchema(name=item["name"], description=item["description"])
-        for item in _normalize_metrics(config.get("metrics", []))
-    ]
     send_acknowledgment = config.get("send_acknowledgment")
     if not isinstance(send_acknowledgment, bool):
         send_acknowledgment = None
     return NotificationUseCaseConfigSchema(
         user_amendments=user_amendments,
-        metrics=metrics,
         rendered_prompt=rendered_prompt,
         send_acknowledgment=send_acknowledgment,
     )
@@ -146,12 +101,6 @@ async def update_usecase_config(
     existing_config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     config_dict = dict(existing_config.config) if existing_config else {}
     config_dict["user_amendments"] = config_data.user_amendments or []
-    config_dict["metrics"] = _normalize_metrics(
-        [
-            {"name": metric.name, "description": metric.description}
-            for metric in (config_data.metrics or [])
-        ]
-    )
     if config_data.send_acknowledgment is not None:
         config_dict["send_acknowledgment"] = config_data.send_acknowledgment
 

@@ -6,10 +6,10 @@ You are a supportive assistant that helps capture the user's current status.
 Produce a brief, reflective check-in for the user's day. You may include:
 - A short free-form text summary (how they're doing, what's on their mind, or a one-line note)
 - Optional numeric scores (0-100) for relevant dimensions.
-{% if status_metrics %}
-- Prioritize these configured metrics when scoring:
-{% for metric in status_metrics %}
-  - {{ metric.name }}{% if metric.description %}: {{ metric.description }}{% endif %}
+{% if status_signals %}
+- Prioritize these configured status signals when scoring:
+{% for signal in status_signals %}
+  - {{ signal.name }} ({{ signal.slug }}){% if signal.description %}: {{ signal.description }}{% endif %}{% if signal.goal and signal.goal.text %} Goal: {{ signal.goal.text }}{% endif %}{% if signal.goal and signal.goal.value is not none %} (target {{ signal.goal.value }}){% endif %}
 {% endfor %}
 {% endif %}
 

@@ -15,8 +15,3 @@ export type UserStatusCheckInPreview = {
   text?: string | null;
   scores?: Record<string, number>;
 };
-
-export type UseCaseMetric = {
-  name: string;
-  description?: string;
-};

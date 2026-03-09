@@ -28,18 +28,10 @@ class UseCaseConfigCreateSchema(BaseSchema):
     config: dict[str, Any]
 
 
-class UseCaseMetricSchema(BaseSchema):
-    """Metric definition for usecase-specific scoring dimensions."""
-
-    name: str
-    description: str = ""
-
-
 class NotificationUseCaseConfigSchema(BaseSchema):
     """Schema for notification usecase config (typed)."""
 
     user_amendments: list[str] = Field(default_factory=list)
-    metrics: list[UseCaseMetricSchema] = Field(default_factory=list)
     rendered_prompt: str | None = None
     send_acknowledgment: bool | None = None
 

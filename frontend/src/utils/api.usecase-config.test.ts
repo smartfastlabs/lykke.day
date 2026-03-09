@@ -54,7 +54,6 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
       "user_status_use_case",
       {
         user_amendments: [],
-        metrics: [{ name: "anxiety", description: "Stress level" }],
       },
     );
 
@@ -62,7 +61,6 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
       exists: false,
       config: {
         user_amendments: [],
-        metrics: [{ name: "anxiety", description: "Stress level" }],
       },
     });
   });

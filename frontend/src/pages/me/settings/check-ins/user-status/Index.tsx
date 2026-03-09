@@ -9,45 +9,92 @@ import {
 import UseCaseConfigPageLayout from "@/components/settings/UseCaseConfigPageLayout";
 import { globalNotifications } from "@/providers/notifications";
 import type {
+  CurrentUser,
   LLMRunResultSnapshot,
-  UseCaseMetric,
+  StatusSignal,
   UserStatusCheckInPreview,
 } from "@/types/api";
-import { usecaseConfigAPI } from "@/utils/api";
+import { authAPI, usecaseConfigAPI } from "@/utils/api";
 
 const USER_STATUS_USECASE = "user_status_use_case";
-const DEFAULT_USER_STATUS_METRICS: UseCaseMetric[] = [
-  { name: "cravings", description: "Urge intensity and frequency." },
+const DEFAULT_USER_STATUS_SIGNALS: StatusSignal[] = [
   {
-    name: "depression",
-    description: "Low mood, hopelessness, and emotional heaviness.",
+    name: "Cravings",
+    slug: "cravings",
+    description: "Urge intensity and frequency.",
+    goal: { text: "", value: null },
   },
-  { name: "anxiety", description: "Stress, worry, and nervous system activation." },
-  { name: "mood", description: "Overall emotional tone for the day." },
-  { name: "energy", description: "Mental and physical energy availability." },
-  { name: "focus", description: "Attention quality and ability to stay on task." },
+  {
+    name: "Depression",
+    slug: "depression",
+    description: "Low mood, hopelessness, and emotional heaviness.",
+    goal: { text: "", value: null },
+  },
+  {
+    name: "Anxiety",
+    slug: "anxiety",
+    description: "Stress, worry, and nervous system activation.",
+    goal: { text: "", value: null },
+  },
+  {
+    name: "Mood",
+    slug: "mood",
+    description: "Overall emotional tone for the day.",
+    goal: { text: "", value: null },
+  },
+  {
+    name: "Energy",
+    slug: "energy",
+    description: "Mental and physical energy availability.",
+    goal: { text: "", value: null },
+  },
+  {
+    name: "Focus",
+    slug: "focus",
+    description: "Attention quality and ability to stay on task.",
+    goal: { text: "", value: null },
+  },
 ];
 
-type EditableMetric = {
+type EditableSignal = {
   name: string;
+  slug: string;
   description: string;
+  goal_text: string;
+  goal_value: string;
 };
 
-const normalizeMetrics = (metrics: unknown): EditableMetric[] => {
-  if (!Array.isArray(metrics)) {
-    return DEFAULT_USER_STATUS_METRICS.map((metric) => ({
-      name: metric.name,
-      description: metric.description ?? "",
+const slugify = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const normalizeStatusSignals = (signals: unknown): EditableSignal[] => {
+  if (!Array.isArray(signals)) {
+    return DEFAULT_USER_STATUS_SIGNALS.map((signal) => ({
+      name: signal.name,
+      slug: signal.slug,
+      description: signal.description ?? "",
+      goal_text: signal.goal.text ?? "",
+      goal_value:
+        signal.goal.value !== null && signal.goal.value !== undefined
+          ? String(signal.goal.value)
+          : "",
     }));
   }
 
-  const deduped: EditableMetric[] = [];
+  const deduped: EditableSignal[] = [];
   const seen = new Set<string>();
-  for (const metric of metrics) {
+  for (const signal of signals) {
     let name = "";
+    let slug = "";
     let description = "";
-    if (typeof metric === "string") {
-      const cleaned = metric.trim();
+    let goalText = "";
+    let goalValue = "";
+    if (typeof signal === "string") {
+      const cleaned = signal.trim();
       if (!cleaned) continue;
       if (cleaned.includes(":")) {
         const [namePart, descriptionPart] = cleaned.split(":", 2);
@@ -56,31 +103,63 @@ const normalizeMetrics = (metrics: unknown): EditableMetric[] => {
       } else {
         name = cleaned;
       }
-    } else if (metric && typeof metric === "object") {
+    } else if (signal && typeof signal === "object") {
       const nameCandidate =
-        "name" in metric && typeof metric.name === "string"
-          ? metric.name.trim()
+        "name" in signal && typeof signal.name === "string"
+          ? signal.name.trim()
+          : "";
+      const slugCandidate =
+        "slug" in signal && typeof signal.slug === "string"
+          ? signal.slug.trim()
           : "";
       const descriptionCandidate =
-        "description" in metric && typeof metric.description === "string"
-          ? metric.description.trim()
+        "description" in signal && typeof signal.description === "string"
+          ? signal.description.trim()
           : "";
+      const goalCandidate = "goal" in signal ? signal.goal : undefined;
       name = nameCandidate;
+      slug = slugCandidate;
       description = descriptionCandidate;
+      if (goalCandidate && typeof goalCandidate === "object") {
+        goalText =
+          "text" in goalCandidate && typeof goalCandidate.text === "string"
+            ? goalCandidate.text.trim()
+            : "";
+        goalValue =
+          "value" in goalCandidate &&
+          (typeof goalCandidate.value === "number" ||
+            typeof goalCandidate.value === "string")
+            ? String(goalCandidate.value)
+            : "";
+      }
     }
 
     if (!name) continue;
-    const key = name.toLowerCase();
+    slug = slugify(slug || name);
+    if (!slug) continue;
+    const key = slug.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    deduped.push({ name, description });
+    deduped.push({
+      name,
+      slug,
+      description,
+      goal_text: goalText,
+      goal_value: goalValue,
+    });
   }
 
   return deduped.length
     ? deduped
-    : DEFAULT_USER_STATUS_METRICS.map((metric) => ({
-        name: metric.name,
-        description: metric.description ?? "",
+    : DEFAULT_USER_STATUS_SIGNALS.map((signal) => ({
+        name: signal.name,
+        slug: signal.slug,
+        description: signal.description ?? "",
+        goal_text: signal.goal.text ?? "",
+        goal_value:
+          signal.goal.value !== null && signal.goal.value !== undefined
+            ? String(signal.goal.value)
+            : "",
       }));
 };
 
@@ -88,18 +167,26 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
   const [config, { mutate }] = createResource(() =>
     usecaseConfigAPI.getConfigForUseCaseWithStatus(USER_STATUS_USECASE, {
       user_amendments: [],
-      metrics: DEFAULT_USER_STATUS_METRICS.map((metric) => ({ ...metric })),
     }),
+  );
+  const [currentUser, { refetch: refetchCurrentUser }] = createResource<CurrentUser | null>(
+    () => authAPI.me(),
   );
   const [snapshotPreview, { refetch: refetchSnapshotPreview }] =
     createResource<LLMRunResultSnapshot | null>(() =>
       usecaseConfigAPI.getLLMSnapshotPreviewForUseCase(USER_STATUS_USECASE),
     );
   const [amendments, setAmendments] = createSignal<string[]>([]);
-  const [metrics, setMetrics] = createSignal<EditableMetric[]>(
-    DEFAULT_USER_STATUS_METRICS.map((metric) => ({
-      name: metric.name,
-      description: metric.description ?? "",
+  const [statusSignals, setStatusSignals] = createSignal<EditableSignal[]>(
+    DEFAULT_USER_STATUS_SIGNALS.map((signal) => ({
+      name: signal.name,
+      slug: signal.slug,
+      description: signal.description ?? "",
+      goal_text: signal.goal.text ?? "",
+      goal_value:
+        signal.goal.value !== null && signal.goal.value !== undefined
+          ? String(signal.goal.value)
+          : "",
     })),
   );
   const [isConfigured, setIsConfigured] = createSignal(false);
@@ -122,48 +209,73 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
 
     setIsConfigured(configData.exists);
     setAmendments([...(configData.config.user_amendments ?? [])]);
-    setMetrics(normalizeMetrics(configData.config.metrics));
     setError("");
   });
 
-  const addMetric = () => {
-    setMetrics((current) => [...current, { name: "", description: "" }]);
+  createEffect(() => {
+    const userData = currentUser();
+    if (!userData) return;
+    setStatusSignals(normalizeStatusSignals(userData.settings?.status_signals));
+  });
+
+  const addStatusSignal = () => {
+    setStatusSignals((current) => [
+      ...current,
+      { name: "", slug: "", description: "", goal_text: "", goal_value: "" },
+    ]);
   };
 
-  const removeMetric = (index: number) => {
-    setMetrics((current) => current.filter((_, idx) => idx !== index));
+  const removeStatusSignal = (index: number) => {
+    setStatusSignals((current) => current.filter((_, idx) => idx !== index));
   };
 
-  const updateMetric = (
+  const updateStatusSignal = (
     index: number,
-    key: keyof EditableMetric,
+    key: keyof EditableSignal,
     value: string,
   ) => {
-    setMetrics((current) =>
-      current.map((metric, idx) =>
-        idx === index ? { ...metric, [key]: value } : metric,
+    setStatusSignals((current) =>
+      current.map((signal, idx) =>
+        idx === index ? { ...signal, [key]: value } : signal,
       ),
     );
   };
 
-  const sanitizedMetrics = () => normalizeMetrics(metrics()).map((metric) => ({
-    name: metric.name,
-    description: metric.description,
-  }));
+  const sanitizedStatusSignals = (): StatusSignal[] =>
+    normalizeStatusSignals(statusSignals()).map((signal) => ({
+      name: signal.name,
+      slug: slugify(signal.slug || signal.name),
+      description: signal.description,
+      goal: {
+        text: signal.goal_text,
+        value: (() => {
+          if (signal.goal_value.trim().length === 0) {
+            return null;
+          }
+          const parsed = Number.parseFloat(signal.goal_value);
+          return Number.isFinite(parsed) ? parsed : null;
+        })(),
+      },
+    }));
 
   const handleSave = async () => {
     setIsSaving(true);
     setError("");
     try {
       const wasConfigured = isConfigured();
+      await authAPI.updateProfile({
+        settings: {
+          status_signals: sanitizedStatusSignals(),
+        },
+      });
       const updated = await usecaseConfigAPI.updateConfigForUseCase(
         USER_STATUS_USECASE,
         {
           user_amendments: amendments(),
-          metrics: sanitizedMetrics(),
         },
       );
       mutate({ config: updated, exists: true });
+      await refetchCurrentUser();
       setIsConfigured(true);
       refetchSnapshotPreview();
       globalNotifications.addSuccess(
@@ -225,7 +337,7 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
           </h2>
           <p class="text-sm text-emerald-800">
             Turn this on to have Lykke generate reflective check-ins using your
-            day context. Start by choosing the metrics you want scored, then
+            day context. Start by choosing the status signals you want scored, then
             save.
           </p>
           <button
@@ -242,36 +354,50 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
       <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-lg font-semibold text-gray-900">Metrics to score</h2>
+            <h2 class="text-lg font-semibold text-gray-900">Status signals to score</h2>
             <p class="text-sm text-gray-600">
-              Define each metric as a name and description so the model knows
-              exactly what to score from 0-100.
+              Define each signal with a name, slug, description, and optional goal.
             </p>
           </div>
           <button
             type="button"
-            onClick={addMetric}
+            onClick={addStatusSignal}
             disabled={isSaving() || config.loading}
             class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
           >
-            + Add Metric
+            + Add Signal
           </button>
         </div>
 
         <div class="space-y-3">
-          <For each={metrics()}>
-            {(metric, index) => (
+          <For each={statusSignals()}>
+            {(signal, index) => (
               <div class="rounded-md border border-gray-200 p-3 bg-gray-50/40">
-                <div class="grid grid-cols-1 md:grid-cols-[220px_1fr_auto] gap-3 items-start">
+                <div class="grid grid-cols-1 md:grid-cols-[180px_160px_1fr_1fr_120px_auto] gap-3 items-start">
                   <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">
                       Name
                     </label>
                     <input
                       type="text"
-                      value={metric.name}
+                      value={signal.name}
                       onInput={(event) =>
-                        updateMetric(index(), "name", event.currentTarget.value)
+                        updateStatusSignal(index(), "name", event.currentTarget.value)
+                      }
+                      placeholder="e.g. Anxiety"
+                      disabled={isSaving() || config.loading}
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                      Slug
+                    </label>
+                    <input
+                      type="text"
+                      value={signal.slug}
+                      onInput={(event) =>
+                        updateStatusSignal(index(), "slug", event.currentTarget.value)
                       }
                       placeholder="e.g. anxiety"
                       disabled={isSaving() || config.loading}
@@ -284,15 +410,54 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
                     </label>
                     <input
                       type="text"
-                      value={metric.description}
+                      value={signal.description}
                       onInput={(event) =>
-                        updateMetric(
+                        updateStatusSignal(
                           index(),
                           "description",
                           event.currentTarget.value,
                         )
                       }
-                      placeholder="What this metric should represent"
+                      placeholder="What this signal should represent"
+                      disabled={isSaving() || config.loading}
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                      Goal text
+                    </label>
+                    <input
+                      type="text"
+                      value={signal.goal_text}
+                      onInput={(event) =>
+                        updateStatusSignal(
+                          index(),
+                          "goal_text",
+                          event.currentTarget.value,
+                        )
+                      }
+                      placeholder="Describe your target"
+                      disabled={isSaving() || config.loading}
+                      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                      Goal value
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={signal.goal_value}
+                      onInput={(event) =>
+                        updateStatusSignal(
+                          index(),
+                          "goal_value",
+                          event.currentTarget.value,
+                        )
+                      }
+                      placeholder="0-100"
                       disabled={isSaving() || config.loading}
                       class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
@@ -300,8 +465,10 @@ const UserStatusUseCaseCheckInConfigPage: Component = () => {
                   <div class="pt-6">
                     <button
                       type="button"
-                      onClick={() => removeMetric(index())}
-                      disabled={isSaving() || config.loading || metrics().length <= 1}
+                      onClick={() => removeStatusSignal(index())}
+                      disabled={
+                        isSaving() || config.loading || statusSignals().length <= 1
+                      }
                       class="px-3 py-2 rounded-md border border-red-200 text-red-700 text-sm hover:bg-red-50 disabled:text-gray-300 disabled:border-gray-200 disabled:bg-white"
                     >
                       Remove

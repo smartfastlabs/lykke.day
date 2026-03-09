@@ -14,6 +14,18 @@ export interface CalendarEntryNotificationSettings {
   rules: CalendarEntryNotificationRule[];
 }
 
+export interface StatusSignalGoal {
+  text: string;
+  value?: number | null;
+}
+
+export interface StatusSignal {
+  name: string;
+  slug: string;
+  description: string;
+  goal: StatusSignalGoal;
+}
+
 export interface UserSettings {
   template_defaults: string[];
   llm_provider?: LLMProvider | null;
@@ -23,6 +35,7 @@ export interface UserSettings {
   morning_overview_time?: string | null; // HH:MM[:SS] format in user's local timezone
   alarm_presets?: AlarmPreset[];
   calendar_entry_notification_settings?: CalendarEntryNotificationSettings;
+  status_signals?: StatusSignal[];
 }
 
 export interface UserSettingsUpdate {
@@ -36,6 +49,7 @@ export interface UserSettingsUpdate {
   calendar_entry_notification_settings?:
     | CalendarEntryNotificationSettings
     | null;
+  status_signals?: StatusSignal[] | null;
 }
 
 export interface CurrentUser {

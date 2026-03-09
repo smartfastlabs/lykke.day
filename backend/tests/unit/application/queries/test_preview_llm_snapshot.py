@@ -16,7 +16,6 @@ from lykke.application.queries.preview_llm_snapshot import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_repo_double,
@@ -100,6 +99,22 @@ async def test_preview_user_status_snapshot_uses_assessment_path(
         settings=value_objects.UserSetting(
             llm_provider=value_objects.LLMProvider.OPENAI,
             timezone="UTC",
+            status_signals=[
+                value_objects.StatusSignal(
+                    name="Anxiety",
+                    slug="anxiety",
+                    description="Stress level",
+                    goal=value_objects.StatusSignalGoal(
+                        text="Keep this low",
+                        value=30,
+                    ),
+                ),
+                value_objects.StatusSignal(
+                    name="Energy",
+                    slug="energy",
+                    description="Current energy",
+                ),
+            ],
         ),
     )
     prompt_context = _build_prompt_context(user_id)
@@ -107,21 +122,7 @@ async def test_preview_user_status_snapshot_uses_assessment_path(
     usecase_config_repo = create_repo_double(
         "lykke.application.repositories.UseCaseConfigRepositoryReadOnlyProtocol"
     )
-    allow(usecase_config_repo).search.and_return(
-        [
-            UseCaseConfigEntity(
-                user_id=user_id,
-                usecase="user_status_use_case",
-                config={
-                    "metrics": [
-                        {"name": "anxiety", "description": "Stress level"},
-                        "energy:Current energy",
-                        {"name": "ANXIETY", "description": "duplicate"},
-                    ]
-                },
-            )
-        ]
-    )
+    allow(usecase_config_repo).search.and_return([])
     user_check_in_repo = create_repo_double(
         "lykke.application.repositories.UserCheckInRepositoryReadOnlyProtocol"
     )
@@ -192,7 +193,17 @@ async def test_preview_user_status_snapshot_uses_assessment_path(
     assert snapshot.tool_choice == {"name": "assessment-schema"}
     assert captured_context_vars["recent_check_ins"] == recent_check_ins
     assert captured_ask_vars["recent_check_ins"] == recent_check_ins
-    assert captured_context_vars["status_metrics"] == [
-        {"name": "anxiety", "description": "Stress level"},
-        {"name": "energy", "description": "Current energy"},
+    assert captured_context_vars["status_signals"] == [
+        {
+            "name": "Anxiety",
+            "slug": "anxiety",
+            "description": "Stress level",
+            "goal": {"text": "Keep this low", "value": 30},
+        },
+        {
+            "name": "Energy",
+            "slug": "energy",
+            "description": "Current energy",
+            "goal": {"text": "", "value": None},
+        },
     ]

@@ -30,6 +30,22 @@ class CalendarEntryNotificationSettingsSchema(BaseSchema):
     rules: list[CalendarEntryNotificationRuleSchema] = Field(default_factory=list)
 
 
+class StatusSignalGoalSchema(BaseSchema):
+    """Goal guidance for a user status signal."""
+
+    text: str = ""
+    value: float | None = None
+
+
+class StatusSignalSchema(BaseSchema):
+    """Schema for a user-defined status signal."""
+
+    name: str
+    slug: str
+    description: str = ""
+    goal: StatusSignalGoalSchema = Field(default_factory=StatusSignalGoalSchema)
+
+
 class UserSettingsSchema(BaseSchema):
     """Schema for user settings."""
 
@@ -41,6 +57,7 @@ class UserSettingsSchema(BaseSchema):
     morning_overview_time: time | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPresetSchema] = Field(default_factory=list)
     calendar_entry_notification_settings: CalendarEntryNotificationSettingsSchema
+    status_signals: list[StatusSignalSchema] = Field(default_factory=list)
 
 
 class UserSchema(BaseSchema):
@@ -73,6 +90,7 @@ class UserSettingsUpdateSchema(BaseSchema):
     calendar_entry_notification_settings: (
         CalendarEntryNotificationSettingsSchema | None
     ) = None
+    status_signals: list[StatusSignalSchema] | None = None
 
 
 class UserUpdateSchema(BaseSchema):

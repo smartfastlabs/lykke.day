@@ -74,7 +74,6 @@ from .trigger import (
 from .user_check_in import UserCheckInCreateSchema, UserCheckInSchema
 from .usecase_config import (
     NotificationUseCaseConfigSchema,
-    UseCaseMetricSchema,
     UserStatusCheckInPreviewSchema,
     UseCaseConfigCreateSchema,
     UseCaseConfigSchema,
@@ -82,6 +81,8 @@ from .usecase_config import (
 from .user import (
     CalendarEntryNotificationRuleSchema,
     CalendarEntryNotificationSettingsSchema,
+    StatusSignalGoalSchema,
+    StatusSignalSchema,
     UserSchema,
     UserSettingsSchema,
     UserSettingsUpdateSchema,
@@ -135,6 +136,8 @@ UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
 UserSettingsUpdateSchema.model_rebuild()
 UserUpdateSchema.model_rebuild()
+StatusSignalSchema.model_rebuild()
+StatusSignalGoalSchema.model_rebuild()
 UserCheckInSchema.model_rebuild()
 UserCheckInCreateSchema.model_rebuild()
 PushSubscriptionCreateSchema.model_rebuild()
@@ -173,6 +176,8 @@ __all__ = [
     "CalendarCreateSchema",
     "CalendarEntryNotificationRuleSchema",
     "CalendarEntryNotificationSettingsSchema",
+    "StatusSignalGoalSchema",
+    "StatusSignalSchema",
     "CalendarEntryCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
@@ -197,7 +202,6 @@ __all__ = [
     "HighLevelPlanSchema",
     "MessageSchema",
     "NotificationUseCaseConfigSchema",
-    "UseCaseMetricSchema",
     "UserStatusCheckInPreviewSchema",
     "PagedResponseSchema",
     "PushNotificationSchema",

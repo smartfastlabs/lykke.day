@@ -13,10 +13,6 @@ from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
 )
 from lykke.application.gateways.llm_protocol import LLMTool
-from lykke.application.llm.user_status_metrics import (
-    default_user_status_metrics,
-    normalize_user_status_metrics,
-)
 from lykke.application.llm.prompt_rendering import (
     combine_system_prompt,
     render_ask_prompt,
@@ -97,10 +93,10 @@ class PreviewLLMSnapshotHandler(
             tools = self._build_morning_overview_tools()
         elif query.usecase == "user_status_use_case":
             tools = []
-            status_metrics = await self._get_user_status_metrics()
+            status_signals = self._get_user_status_signals()
             recent_check_ins = await self._get_recent_check_ins(current_time=current_time)
             extra_template_vars = {
-                "status_metrics": status_metrics,
+                "status_signals": status_signals,
                 "recent_check_ins": recent_check_ins,
             }
         else:
@@ -215,13 +211,21 @@ class PreviewLLMSnapshotHandler(
             )
         )
 
-    async def _get_user_status_metrics(self) -> list[dict[str, str]]:
-        configs = await self.usecase_config_ro_repo.search(
-            value_objects.UseCaseConfigQuery(usecase="user_status_use_case")
-        )
-        if not configs:
-            return default_user_status_metrics()
-        return normalize_user_status_metrics(configs[0].config.get("metrics"))
+    def _get_user_status_signals(self) -> list[dict[str, object]]:
+        if not self.user.settings or not self.user.settings.status_signals:
+            return []
+        return [
+            {
+                "name": signal.name,
+                "slug": signal.slug,
+                "description": signal.description,
+                "goal": {
+                    "text": signal.goal.text,
+                    "value": signal.goal.value,
+                },
+            }
+            for signal in self.user.settings.status_signals
+        ]
 
     @staticmethod
     def _build_notification_tools() -> list[LLMTool]:

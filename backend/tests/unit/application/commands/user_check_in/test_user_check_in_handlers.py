@@ -127,14 +127,8 @@ async def test_user_status_use_case_build_prompt_input_uses_recent_checkins() ->
             captured_query = query
             return recent_checkins
 
-    class _UseCaseConfigRepo:
-        async def search(self, query: object) -> list[object]:
-            _ = query
-            return []
-
     handler.get_llm_prompt_context_handler = _PromptContextHandler()  # type: ignore[assignment]
     handler.user_check_in_ro_repo = _UserCheckInRepo()  # type: ignore[assignment]
-    handler.usecase_config_ro_repo = _UseCaseConfigRepo()  # type: ignore[assignment]
 
     target_date = dt_date(2026, 3, 7)
     prompt_input = await handler.build_prompt_input(target_date)
@@ -145,13 +139,21 @@ async def test_user_status_use_case_build_prompt_input_uses_recent_checkins() ->
     assert captured_query.order_by == "checkin_at"
     assert captured_query.order_by_desc is True
     assert prompt_input.prompt_context is prompt_context
-    expected_metrics = [
-        {"name": name, "description": description}
-        for name, description in UserStatusUseCaseHandler.default_metrics
+    expected_signals = [
+        {
+            "name": signal.name,
+            "slug": signal.slug,
+            "description": signal.description,
+            "goal": {
+                "text": signal.goal.text,
+                "value": signal.goal.value,
+            },
+        }
+        for signal in user.settings.status_signals
     ]
     assert prompt_input.extra_template_vars == {
         "recent_check_ins": recent_checkins,
-        "status_metrics": expected_metrics,
+        "status_signals": expected_signals,
     }
 
 
