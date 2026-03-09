@@ -9,22 +9,6 @@ vi.mock("@solidjs/router", () => ({
   useNavigate: () => navigateMock,
 }));
 
-const createLocalStorageMock = () => {
-  const store = new Map<string, string>();
-  return {
-    getItem: (key: string) => store.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      store.set(key, value);
-    },
-    removeItem: (key: string) => {
-      store.delete(key);
-    },
-    clear: () => {
-      store.clear();
-    },
-  };
-};
-
 describe("/me entry route", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -33,37 +17,9 @@ describe("/me entry route", () => {
   beforeEach(() => {
     navigateMock.mockReset();
     window.history.replaceState({}, "", "/me");
-
-    // Ensure a stable localStorage API regardless of test environment.
-    Object.defineProperty(window, "localStorage", {
-      value: createLocalStorageMock(),
-      configurable: true,
-    });
   });
 
-  it("redirects to the last stored /me path", async () => {
-    window.localStorage.setItem("lykke:last-me-path", "/me/settings/profile");
-
-    render(() => <MeIndexPage />);
-
-    await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith("/me/settings/profile", {
-        replace: true,
-      });
-    });
-  });
-
-  it("falls back to /me/today when no last path is stored", async () => {
-    render(() => <MeIndexPage />);
-
-    await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith("/me/today", { replace: true });
-    });
-  });
-
-  it("ignores invalid stored values and falls back", async () => {
-    window.localStorage.setItem("lykke:last-me-path", "https://evil.example/");
-
+  it("always redirects to /me/today", async () => {
     render(() => <MeIndexPage />);
 
     await waitFor(() => {
@@ -88,17 +44,5 @@ describe("/me entry route", () => {
     });
   });
 
-  it("ignores stored OAuth callback URLs and falls back", async () => {
-    window.localStorage.setItem(
-      "lykke:last-me-path",
-      "/me?state=oauth-state&code=oauth-code&iss=https://accounts.google.com",
-    );
-
-    render(() => <MeIndexPage />);
-
-    await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith("/me/today", { replace: true });
-    });
-  });
 });
 

@@ -40,8 +40,18 @@ def _oauth_state_key(state: str) -> str:
     return f"oauth-state:{state}"
 
 
+def _oauth_state_consumed_key(state: str) -> str:
+    return f"oauth-state-consumed:{state}"
+
+
 def _oauth_state_ttl_seconds() -> int:
     return max(1, int(OAUTH_STATE_EXPIRY.total_seconds()))
+
+
+def _state_tag(state: str) -> str:
+    if not state:
+        return "empty"
+    return state[:8]
 
 
 async def _store_oauth_state(
@@ -55,9 +65,26 @@ async def _store_oauth_state(
         "action": action,
         "auth_token_id": str(auth_token_id) if auth_token_id else None,
     }
+    logger.info(
+        "google_oauth_state_store state={} action={} has_auth_token_id={} ttl_seconds={}",
+        _state_tag(state),
+        action,
+        auth_token_id is not None,
+        _oauth_state_ttl_seconds(),
+    )
     await storage_gateway.set_json(
         key=_oauth_state_key(state),
         value=payload,
+        ttl_seconds=_oauth_state_ttl_seconds(),
+    )
+
+
+async def _mark_oauth_state_consumed(
+    *, storage_gateway: RedisStorageGatewayProtocol, state: str
+) -> None:
+    await storage_gateway.set_json(
+        key=_oauth_state_consumed_key(state),
+        value={"consumed": True},
         ttl_seconds=_oauth_state_ttl_seconds(),
     )
 
@@ -69,13 +96,20 @@ async def google_login(
     ],
     auth_token_id: UUID | None = None,
 ) -> RedirectResponse:
-    state = secrets.token_urlsafe(16)
+    generated_state = secrets.token_urlsafe(16)
     authorization_url, state = GoogleCalendarGateway.get_flow(
         "login"
     ).authorization_url(
         access_type="offline",
-        state=state,
+        state=generated_state,
         prompt="consent select_account",
+    )
+    logger.info(
+        "google_oauth_login_redirect generated_state={} returned_state={} state_matches={} has_auth_token_id={}",
+        _state_tag(generated_state),
+        _state_tag(state),
+        generated_state == state,
+        auth_token_id is not None,
     )
 
     # Store state in Redis with TTL to support multi-worker callbacks.
@@ -99,14 +133,36 @@ async def verify_state(
     Returns the state data if valid.
     """
 
+    logger.info(
+        "google_oauth_state_lookup state={} expected_action={}",
+        _state_tag(state),
+        expected_action,
+    )
     state_data = await storage_gateway.get_json(_oauth_state_key(state))
     if state_data is None:
+        logger.warning(
+            "google_oauth_state_miss state={} expected_action={}",
+            _state_tag(state),
+            expected_action,
+        )
         raise HTTPException(
             status_code=400,
             detail="Invalid state parameter",
         )
+    logger.info(
+        "google_oauth_state_hit state={} action={} has_auth_token_id={}",
+        _state_tag(state),
+        state_data.get("action"),
+        state_data.get("auth_token_id") is not None,
+    )
     if state_data.get("action") != expected_action:
         await storage_gateway.delete(_oauth_state_key(state))
+        logger.warning(
+            "google_oauth_state_action_mismatch state={} expected_action={} actual_action={}",
+            _state_tag(state),
+            expected_action,
+            state_data.get("action"),
+        )
         raise HTTPException(
             status_code=400,
             detail="Invalid action parameter",
@@ -142,8 +198,26 @@ async def google_login_callback(
             status_code=400,
             detail="Missing required parameters",
         )
+    logger.info(
+        "google_oauth_callback_received state={} code_len={}",
+        _state_tag(state),
+        len(code),
+    )
 
-    state_data = await verify_state(storage_gateway, state, "login")
+    try:
+        state_data = await verify_state(storage_gateway, state, "login")
+    except HTTPException as exc:
+        if exc.status_code == 400 and exc.detail == "Invalid state parameter":
+            consumed_marker = await storage_gateway.get_json(
+                _oauth_state_consumed_key(state)
+            )
+            if consumed_marker is not None:
+                logger.warning(
+                    "google_oauth_duplicate_callback state={} already_consumed=true redirecting_to_me=true",
+                    _state_tag(state),
+                )
+                return RedirectResponse(url="/me")
+        raise
     auth_token_id = _parse_auth_token_id_from_state(state_data)
 
     result = await handler.handle(
@@ -167,7 +241,9 @@ async def google_login_callback(
             )
 
     # Consume state so it cannot be reused.
+    await _mark_oauth_state_consumed(storage_gateway=storage_gateway, state=state)
     await storage_gateway.delete(_oauth_state_key(state))
+    logger.info("google_oauth_state_consumed state={}", _state_tag(state))
 
     return RedirectResponse(url="/me")
 
