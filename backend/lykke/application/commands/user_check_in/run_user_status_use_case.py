@@ -10,11 +10,19 @@ from pydantic import BaseModel, Field
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
+from lykke.application.llm.user_status_metrics import (
+    USER_STATUS_DEFAULT_METRICS,
+    default_user_status_metrics,
+    normalize_user_status_metrics,
+)
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
-from lykke.application.repositories import UserCheckInRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    UseCaseConfigRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import UserCheckInEntity
 
@@ -31,6 +39,14 @@ class UserStatusUseCaseAssessment(BaseModel):
     scores: dict[str, float | int] = Field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class GeneratedUserStatusCheckIn:
+    """Normalized generated check-in payload."""
+
+    text: str | None
+    scores: dict[str, float]
+
+
 class UserStatusUseCaseHandler(
     LLMHandlerMixin, BaseCommandHandler[UserStatusUseCaseCommand, None]
 ):
@@ -38,12 +54,14 @@ class UserStatusUseCaseHandler(
 
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
 
     name = "user_status_use_case"
     template_usecase = "user_status_use_case"
     recent_checkin_window_days = 3
     recent_checkin_limit = 20
     assessment_model = UserStatusUseCaseAssessment
+    default_metrics = USER_STATUS_DEFAULT_METRICS
 
     async def handle(self, command: UserStatusUseCaseCommand) -> None:
         """Run assessment LLM and persist the resulting check-in."""
@@ -52,10 +70,7 @@ class UserStatusUseCaseHandler(
         if result is None:
             return
 
-        assessment = result.assessment
-        raw_scores = getattr(assessment, "scores", None)
-        raw_text = getattr(assessment, "text", None)
-        scores_clean = self._normalize_scores(raw_scores)
+        generated = self._normalize_assessment(result.assessment)
 
         entity = UserCheckInEntity(
             user_id=self.user.id,
@@ -66,8 +81,8 @@ class UserStatusUseCaseHandler(
                 "usecase": self.template_usecase,
             },
             checkin_at=result.current_time,
-            text=raw_text.strip() if isinstance(raw_text, str) and raw_text.strip() else None,
-            scores=scores_clean,
+            text=generated.text,
+            scores=generated.scores,
         )
 
         async with self.new_uow() as uow:
@@ -91,10 +106,21 @@ class UserStatusUseCaseHandler(
                 limit=self.recent_checkin_limit,
             )
         )
+        metrics = await self._load_metrics()
         return UseCasePromptInput(
             prompt_context=prompt_context,
-            extra_template_vars={"recent_check_ins": recent},
+            extra_template_vars={
+                "recent_check_ins": recent,
+                "status_metrics": metrics,
+            },
         )
+
+    async def preview_generated_checkin(self) -> GeneratedUserStatusCheckIn | None:
+        """Run the usecase and return normalized check-in payload without persisting."""
+        result = await self.run_assessment_llm(self.assessment_model)
+        if result is None:
+            return None
+        return self._normalize_assessment(result.assessment)
 
     @staticmethod
     def _normalize_scores(scores: object) -> dict[str, float]:
@@ -111,3 +137,19 @@ class UserStatusUseCaseHandler(
             except (TypeError, ValueError):
                 continue
         return cleaned
+
+    async def _load_metrics(self) -> list[dict[str, str]]:
+        configs = await self.usecase_config_ro_repo.search(
+            value_objects.UseCaseConfigQuery(usecase=self.template_usecase)
+        )
+        if not configs:
+            return default_user_status_metrics()
+        return normalize_user_status_metrics(configs[0].config.get("metrics"))
+
+    def _normalize_assessment(self, assessment: object) -> GeneratedUserStatusCheckIn:
+        raw_scores = getattr(assessment, "scores", None)
+        raw_text = getattr(assessment, "text", None)
+        return GeneratedUserStatusCheckIn(
+            text=raw_text.strip() if isinstance(raw_text, str) and raw_text.strip() else None,
+            scores=self._normalize_scores(raw_scores),
+        )

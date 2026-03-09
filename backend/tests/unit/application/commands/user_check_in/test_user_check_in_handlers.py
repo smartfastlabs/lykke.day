@@ -127,8 +127,14 @@ async def test_user_status_use_case_build_prompt_input_uses_recent_checkins() ->
             captured_query = query
             return recent_checkins
 
+    class _UseCaseConfigRepo:
+        async def search(self, query: object) -> list[object]:
+            _ = query
+            return []
+
     handler.get_llm_prompt_context_handler = _PromptContextHandler()  # type: ignore[assignment]
     handler.user_check_in_ro_repo = _UserCheckInRepo()  # type: ignore[assignment]
+    handler.usecase_config_ro_repo = _UseCaseConfigRepo()  # type: ignore[assignment]
 
     target_date = dt_date(2026, 3, 7)
     prompt_input = await handler.build_prompt_input(target_date)
@@ -139,7 +145,50 @@ async def test_user_status_use_case_build_prompt_input_uses_recent_checkins() ->
     assert captured_query.order_by == "checkin_at"
     assert captured_query.order_by_desc is True
     assert prompt_input.prompt_context is prompt_context
-    assert prompt_input.extra_template_vars == {"recent_check_ins": recent_checkins}
+    expected_metrics = [
+        {"name": name, "description": description}
+        for name, description in UserStatusUseCaseHandler.default_metrics
+    ]
+    assert prompt_input.extra_template_vars == {
+        "recent_check_ins": recent_checkins,
+        "status_metrics": expected_metrics,
+    }
+
+
+@pytest.mark.asyncio
+async def test_user_status_use_case_preview_normalizes_generated_checkin() -> None:
+    """Preview returns normalized text/scores without persistence."""
+    user = UserEntity(id=uuid4(), email="test@example.com", hashed_password="hash")
+    uow = create_uow_double()
+    handler = UserStatusUseCaseHandler(
+        user=user,
+        uow_factory=create_uow_factory_double(uow),
+        repository_factory=_RepositoryFactory(create_read_only_repos_double()),
+    )
+
+    async def run_assessment_llm_stub(_: object) -> LLMAssessmentResult:
+        class _Assessment:
+            text = "  Doing okay overall  "
+            scores = {"anxiety": "42", "noise": None}
+
+        return LLMAssessmentResult(
+            assessment=cast(Any, _Assessment()),
+            prompt_context=cast(value_objects.LLMPromptContext, None),
+            current_time=datetime(2026, 3, 7, 8, 30, tzinfo=UTC),
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            system_prompt="system",
+            context_prompt="context",
+            ask_prompt="ask",
+        )
+
+    handler.run_assessment_llm = run_assessment_llm_stub  # type: ignore[method-assign]
+
+    preview = await handler.preview_generated_checkin()
+
+    assert preview is not None
+    assert preview.text == "Doing okay overall"
+    assert preview.scores == {"anxiety": 42.0}
+    assert not uow.created
 
 
 @pytest.mark.asyncio

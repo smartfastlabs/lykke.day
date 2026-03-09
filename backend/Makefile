@@ -1,4 +1,4 @@
-.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types worker scheduler check-mappers fix worker-prod dozzle
+.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create migrate-reset-dev migrate-reset-test init-db migrate-data-to-prod docker-build export-openapi generate-types worker scheduler check-mappers fix worker-prod dozzle
 
 COMPOSE_FILE := ../docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
@@ -42,6 +42,19 @@ migrate-dev: docker-up
 
 migrate-test: docker-up
 	@$(COMPOSE) run --rm --no-deps -e DATABASE_URL=$(TEST_DATABASE_URL) $(API_SERVICE) poetry run alembic upgrade head
+
+migrate-reset-dev: docker-up
+	@echo "Resetting dev database and migrating to current branch head..."
+	@$(COMPOSE) exec -T postgres psql -v ON_ERROR_STOP=1 -U lykke -d postgres -c "DROP DATABASE IF EXISTS lykke_dev WITH (FORCE);"
+	@$(COMPOSE) exec -T postgres psql -v ON_ERROR_STOP=1 -U lykke -d postgres -c "CREATE DATABASE lykke_dev OWNER lykke;"
+	@$(MAKE) migrate-dev
+
+migrate-reset-test: docker-up
+	@echo "Resetting test database and migrating to current branch head..."
+	@$(COMPOSE) exec -T postgres psql -v ON_ERROR_STOP=1 -U lykke -d postgres -c "DROP DATABASE IF EXISTS lykke_test WITH (FORCE);"
+	@$(COMPOSE) exec -T postgres psql -v ON_ERROR_STOP=1 -U lykke -d postgres -c "CREATE DATABASE lykke_test OWNER lykke_test;"
+	@$(COMPOSE) exec -T postgres psql -v ON_ERROR_STOP=1 -U lykke -d lykke_test -c "GRANT ALL ON SCHEMA public TO lykke_test;"
+	@$(MAKE) migrate-test
 
 migrate-create: docker-up
 	@if [ -z "$(MSG)" ]; then \

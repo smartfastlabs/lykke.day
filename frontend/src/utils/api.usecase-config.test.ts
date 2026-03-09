@@ -45,6 +45,28 @@ describe("usecaseConfigAPI generic usecase helpers", () => {
     );
   });
 
+  it("returns exists=false for 404 in getConfigForUseCaseWithStatus", async () => {
+    vi.mocked(fetch as any).mockResolvedValueOnce(
+      makeJsonResponse(404, { detail: "Not found" }) as any,
+    );
+
+    const result = await usecaseConfigAPI.getConfigForUseCaseWithStatus(
+      "user_status_use_case",
+      {
+        user_amendments: [],
+        metrics: [{ name: "anxiety", description: "Stress level" }],
+      },
+    );
+
+    expect(result).toEqual({
+      exists: false,
+      config: {
+        user_amendments: [],
+        metrics: [{ name: "anxiety", description: "Stress level" }],
+      },
+    });
+  });
+
   it("returns null when getLLMSnapshotPreviewForUseCase receives 404", async () => {
     vi.mocked(fetch as any).mockResolvedValueOnce(
       makeJsonResponse(404, { detail: "Not found" }) as any,

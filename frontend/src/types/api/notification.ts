@@ -10,3 +10,13 @@ export type LLMRunResultSnapshot = {
 };
 
 export type ReferencedEntity = { entity_type: string; entity_id: string };
+
+export type UserStatusCheckInPreview = {
+  text?: string | null;
+  scores?: Record<string, number>;
+};
+
+export type UseCaseMetric = {
+  name: string;
+  description?: string;
+};

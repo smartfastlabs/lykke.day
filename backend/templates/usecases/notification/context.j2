@@ -39,9 +39,9 @@
 {% else %}
   - No numeric score values found in recent check-ins.
 {% endif %}
-{% if recent_check_ins_summary is defined and recent_check_ins_summary %}
-- Recent check-ins (last 5):{% for c in recent_check_ins_summary %}
-  - {{ c.at }} | {{ c.source }} | scores: {{ c.scores }} | {{ c.text }}
+{% if recent_check_ins is defined and recent_check_ins %}
+- Recent check-ins (last 5):{% for c in recent_check_ins %}
+  - {{ c.checkin_at.isoformat() if c.checkin_at else "" }} | {{ c.source_name or (c.source.value if c.source else "") }} | scores: {{ c.scores or {} }} | {{ c.text or "" }}
 {% endfor %}
   Use for tone: if scores or text suggest lower wellbeing, prefer gentler, supportive wording.
 {% endif %}

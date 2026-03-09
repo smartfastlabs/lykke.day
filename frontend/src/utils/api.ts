@@ -18,6 +18,7 @@ import {
   NotificationUseCaseConfig,
   MessagingUseCaseConfig,
   LLMRunResultSnapshot,
+  UserStatusCheckInPreview,
   Alarm,
   BrainDump,
   PushNotification,
@@ -134,6 +135,11 @@ async function fetchData<T>(
 
 interface EntityWithId {
   id?: string | null;
+}
+
+export interface UseCaseConfigFetchResult<TConfig> {
+  config: TConfig;
+  exists: boolean;
 }
 
 function createCrudMethods<T extends EntityWithId>(type: string) {
@@ -632,6 +638,28 @@ const getUseCaseConfigOrDefault = async <TConfig>(
   }
 };
 
+const getUseCaseConfigWithStatus = async <TConfig>(
+  usecase: string,
+  defaultConfig: TConfig,
+): Promise<UseCaseConfigFetchResult<TConfig>> => {
+  try {
+    const config = await fetchData<TConfig>(`/api/usecase-configs/${usecase}`, {
+      suppressError: true,
+    });
+    return { config, exists: true };
+  } catch (err) {
+    if (
+      (err instanceof ApiRequestError && err.status === 404) ||
+      (err instanceof Error &&
+        (err.message.includes("404") ||
+          err.message.toLowerCase().includes("not found")))
+    ) {
+      return { config: defaultConfig, exists: false };
+    }
+    throw err;
+  }
+};
+
 const getUseCaseLLMSnapshotPreviewOrNull = async (
   usecase: string,
 ): Promise<LLMRunResultSnapshot | null> => {
@@ -678,6 +706,12 @@ export const usecaseConfigAPI = {
       user_amendments: [],
     }),
 
+  getConfigForUseCaseWithStatus: (
+    usecase: string,
+    defaultConfig: NotificationUseCaseConfig = { user_amendments: [] },
+  ): Promise<UseCaseConfigFetchResult<NotificationUseCaseConfig>> =>
+    getUseCaseConfigWithStatus<NotificationUseCaseConfig>(usecase, defaultConfig),
+
   updateConfigForUseCase: (
     usecase: string,
     config: NotificationUseCaseConfig,
@@ -691,6 +725,14 @@ export const usecaseConfigAPI = {
     usecase: string,
   ): Promise<LLMRunResultSnapshot | null> =>
     getUseCaseLLMSnapshotPreviewOrNull(usecase),
+
+  runUserStatusCheckInPreview: (): Promise<UserStatusCheckInPreview | null> =>
+    fetchData<UserStatusCheckInPreview | null>(
+      "/api/usecase-configs/user_status_use_case/checkin-preview",
+      {
+        method: "POST",
+      },
+    ),
 
   // Typed methods for notification usecase
   getNotificationConfig: (): Promise<NotificationUseCaseConfig> =>

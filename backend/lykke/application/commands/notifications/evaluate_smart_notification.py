@@ -300,15 +300,7 @@ class SmartNotificationHandler(
             )
             extra["derived_status_score"] = _score_from_check_ins(recent_check_ins)
             extra["derived_status_date"] = date.isoformat()
-            summary = []
-            for c in recent_check_ins[:5]:
-                summary.append({
-                    "at": c.checkin_at.isoformat() if c.checkin_at else "",
-                    "source": c.source_name or getattr(c.source, "value", str(c.source)),
-                    "scores": c.scores or {},
-                    "text": (c.text or "")[:200],
-                })
-            extra["recent_check_ins_summary"] = summary
+            extra["recent_check_ins"] = recent_check_ins[:5]
         except Exception:  # pylint: disable=broad-except
             pass
         return UseCasePromptInput(

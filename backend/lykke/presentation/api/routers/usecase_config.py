@@ -11,6 +11,7 @@ from lykke.application.commands.usecase_config import (
     DeleteUseCaseConfigCommand,
     DeleteUseCaseConfigHandler,
 )
+from lykke.application.commands.user_check_in import UserStatusUseCaseHandler
 from lykke.application.llm import render_system_prompt
 from lykke.application.queries import PreviewLLMSnapshotHandler, PreviewLLMSnapshotQuery
 from lykke.application.queries.usecase_config import (
@@ -20,13 +21,79 @@ from lykke.application.queries.usecase_config import (
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.domain.entities import UserEntity
-from lykke.presentation.api.schemas import NotificationUseCaseConfigSchema
+from lykke.presentation.api.schemas import (
+    NotificationUseCaseConfigSchema,
+    UseCaseMetricSchema,
+    UserStatusCheckInPreviewSchema,
+)
 
 from .dependencies.factories import create_command_handler, create_query_handler
 from .dependencies.services import get_read_only_repository_factory
 from .dependencies.user import get_current_user
 
 router = APIRouter()
+
+
+def _normalize_metrics(metrics: object) -> list[dict[str, str]]:
+    if not isinstance(metrics, list):
+        return []
+    deduped: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for metric in metrics:
+        name = ""
+        description = ""
+
+        if isinstance(metric, str):
+            cleaned_metric = metric.strip()
+            if not cleaned_metric:
+                continue
+            if ":" in cleaned_metric:
+                name_part, description_part = cleaned_metric.split(":", 1)
+                name = name_part.strip()
+                description = description_part.strip()
+            else:
+                name = cleaned_metric
+        elif isinstance(metric, dict):
+            raw_name = metric.get("name")
+            raw_description = metric.get("description", "")
+            if isinstance(raw_name, str):
+                name = raw_name.strip()
+            if isinstance(raw_description, str):
+                description = raw_description.strip()
+        else:
+            continue
+
+        if not name:
+            continue
+        key = name.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append({"name": name, "description": description})
+    return deduped
+
+
+def _map_config_to_schema(
+    *,
+    config: dict[str, Any],
+    rendered_prompt: str,
+) -> NotificationUseCaseConfigSchema:
+    user_amendments = config.get("user_amendments", [])
+    if not isinstance(user_amendments, list):
+        user_amendments = []
+    metrics = [
+        UseCaseMetricSchema(name=item["name"], description=item["description"])
+        for item in _normalize_metrics(config.get("metrics", []))
+    ]
+    send_acknowledgment = config.get("send_acknowledgment")
+    if not isinstance(send_acknowledgment, bool):
+        send_acknowledgment = None
+    return NotificationUseCaseConfigSchema(
+        user_amendments=user_amendments,
+        metrics=metrics,
+        rendered_prompt=rendered_prompt,
+        send_acknowledgment=send_acknowledgment,
+    )
 
 
 @router.get(
@@ -44,13 +111,6 @@ async def get_usecase_config(
     """Get usecase config by usecase key."""
     config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     if config:
-        user_amendments = config.config.get("user_amendments", [])
-        if not isinstance(user_amendments, list):
-            user_amendments = []
-        send_acknowledgment = config.config.get("send_acknowledgment")
-        if not isinstance(send_acknowledgment, bool):
-            send_acknowledgment = None
-
         ro_repos = ro_repo_factory.create(_user)
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
@@ -58,10 +118,9 @@ async def get_usecase_config(
             usecase_config_ro_repo=ro_repos.usecase_config_ro_repo,
         )
 
-        return NotificationUseCaseConfigSchema(
-            user_amendments=user_amendments,
+        return _map_config_to_schema(
+            config=config.config,
             rendered_prompt=rendered_prompt,
-            send_acknowledgment=send_acknowledgment,
         )
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -87,6 +146,12 @@ async def update_usecase_config(
     existing_config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     config_dict = dict(existing_config.config) if existing_config else {}
     config_dict["user_amendments"] = config_data.user_amendments or []
+    config_dict["metrics"] = _normalize_metrics(
+        [
+            {"name": metric.name, "description": metric.description}
+            for metric in (config_data.metrics or [])
+        ]
+    )
     if config_data.send_acknowledgment is not None:
         config_dict["send_acknowledgment"] = config_data.send_acknowledgment
 
@@ -101,13 +166,6 @@ async def update_usecase_config(
     # Fetch and return the saved config using query handler
     saved_config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     if saved_config:
-        user_amendments = saved_config.config.get("user_amendments", [])
-        if not isinstance(user_amendments, list):
-            user_amendments = []
-        send_acknowledgment = saved_config.config.get("send_acknowledgment")
-        if not isinstance(send_acknowledgment, bool):
-            send_acknowledgment = None
-
         ro_repos = ro_repo_factory.create(user)
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
@@ -115,10 +173,9 @@ async def update_usecase_config(
             usecase_config_ro_repo=ro_repos.usecase_config_ro_repo,
         )
 
-        return NotificationUseCaseConfigSchema(
-            user_amendments=user_amendments,
+        return _map_config_to_schema(
+            config=saved_config.config,
             rendered_prompt=rendered_prompt,
-            send_acknowledgment=send_acknowledgment,
         )
 
     return config_data
@@ -138,6 +195,23 @@ async def get_llm_snapshot_preview(
     if snapshot is None:
         return None
     return dataclass_to_json_dict(snapshot)
+
+
+@router.post(
+    "/usecase-configs/user_status_use_case/checkin-preview",
+    response_model=UserStatusCheckInPreviewSchema | None,
+)
+async def get_user_status_checkin_preview(
+    handler: Annotated[
+        UserStatusUseCaseHandler,
+        Depends(create_command_handler(UserStatusUseCaseHandler)),
+    ],
+) -> UserStatusCheckInPreviewSchema | None:
+    """Run user status use case and return generated check-in without saving."""
+    preview = await handler.preview_generated_checkin()
+    if preview is None:
+        return None
+    return UserStatusCheckInPreviewSchema(text=preview.text, scores=preview.scores)
 
 
 @router.delete("/usecase-configs/{usecase_config_id}", status_code=200)

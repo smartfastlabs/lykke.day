@@ -74,6 +74,8 @@ from .trigger import (
 from .user_check_in import UserCheckInCreateSchema, UserCheckInSchema
 from .usecase_config import (
     NotificationUseCaseConfigSchema,
+    UseCaseMetricSchema,
+    UserStatusCheckInPreviewSchema,
     UseCaseConfigCreateSchema,
     UseCaseConfigSchema,
 )
@@ -195,6 +197,8 @@ __all__ = [
     "HighLevelPlanSchema",
     "MessageSchema",
     "NotificationUseCaseConfigSchema",
+    "UseCaseMetricSchema",
+    "UserStatusCheckInPreviewSchema",
     "PagedResponseSchema",
     "PushNotificationSchema",
     "PushSubscriptionCreateSchema",

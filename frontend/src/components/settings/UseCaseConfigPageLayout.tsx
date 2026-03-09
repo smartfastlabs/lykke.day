@@ -18,6 +18,7 @@ interface UseCaseConfigPageLayoutProps {
   amendmentsHeading?: string;
   amendmentsDescription: string;
   amendmentsPlaceholder?: string;
+  showSnapshotPreview?: boolean;
   children?: JSX.Element;
 }
 
@@ -54,31 +55,33 @@ const UseCaseConfigPageLayout: Component<UseCaseConfigPageLayoutProps> = (
           disabled={props.isSaving || props.isLoading}
         />
 
-        <div class="rounded-2xl border border-emerald-100/80 bg-white/80 p-5 shadow-sm shadow-emerald-900/5 space-y-4">
-          <div>
-            <h2 class="text-lg font-semibold mb-2">LLM Request Payload</h2>
-            <p class="text-sm text-gray-600">
-              Preview the exact payload that would be sent to the LLM provider.
-            </p>
-          </div>
-          <Show
-            when={!props.snapshotLoading}
-            fallback={<div class="text-sm text-stone-500">Loading preview...</div>}
-          >
+        <Show when={props.showSnapshotPreview ?? true}>
+          <div class="rounded-2xl border border-emerald-100/80 bg-white/80 p-5 shadow-sm shadow-emerald-900/5 space-y-4">
+            <div>
+              <h2 class="text-lg font-semibold mb-2">LLM Request Payload</h2>
+              <p class="text-sm text-gray-600">
+                Preview the exact payload that would be sent to the LLM provider.
+              </p>
+            </div>
             <Show
-              when={props.snapshotPreview}
-              fallback={
-                <div class="text-sm text-stone-500">
-                  No LLM snapshot preview is available yet. Save this use case
-                  once and ensure an LLM provider is configured to preview the
-                  request payload.
-                </div>
-              }
+              when={!props.snapshotLoading}
+              fallback={<div class="text-sm text-stone-500">Loading preview...</div>}
             >
-              {(snapshot) => <LLMSnapshotDetails snapshot={snapshot()!} />}
+              <Show
+                when={props.snapshotPreview}
+                fallback={
+                  <div class="text-sm text-stone-500">
+                    No LLM snapshot preview is available yet. Save this use case
+                    once and ensure an LLM provider is configured to preview the
+                    request payload.
+                  </div>
+                }
+              >
+                {(snapshot) => <LLMSnapshotDetails snapshot={snapshot()!} />}
+              </Show>
             </Show>
-          </Show>
-        </div>
+          </div>
+        </Show>
 
         <div class="flex justify-end gap-3 pt-4 border-t">
           <button
