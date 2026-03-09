@@ -8,7 +8,7 @@ from sqlalchemy.sql import Select
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity
+from lykke.domain.entities import DayEntity, MessageEntity
 from lykke.infrastructure.database.tables import messages_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetimes_utc,
@@ -43,9 +43,15 @@ class MessageRepository(
     @staticmethod
     def entity_to_row(message: MessageEntity) -> dict[str, Any]:
         """Convert a Message entity to a database row dict."""
+        message_date = message.date or message.created_at.date()
+        day_id = message.day_id or DayEntity.id_from_date_and_user(
+            message_date, message.user_id
+        )
         return {
             "id": message.id,
             "user_id": message.user_id,
+            "date": message_date,
+            "day_id": day_id,
             "role": message.role.value,
             "type": message.type.value,
             "content": message.content,

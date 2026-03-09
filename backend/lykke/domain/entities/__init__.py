@@ -8,6 +8,7 @@ from .calendar_entry_series import CalendarEntrySeriesEntity
 from .day import DayEntity
 from .day_template import DayTemplateEntity
 from .factoid import FactoidEntity
+from .has_date import HasDateMixin
 from .message import MessageEntity
 from .push_notification import PushNotificationEntity
 from .push_subscription import PushSubscriptionEntity
@@ -35,6 +36,7 @@ __all__ = [
     "DayEntity",
     "DayTemplateEntity",
     "FactoidEntity",
+    "HasDateMixin",
     "MessageEntity",
     "PushNotificationEntity",
     "PushSubscriptionEntity",

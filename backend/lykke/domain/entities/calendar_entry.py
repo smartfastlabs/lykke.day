@@ -22,9 +22,11 @@ from lykke.domain.events.calendar_entry_events import (
 )
 from lykke.domain.value_objects.update import CalendarEntryUpdateObject
 
+from .has_date import HasDateMixin
+
 
 @dataclass(kw_only=True)
-class CalendarEntryEntity(BaseEntityObject):
+class CalendarEntryEntity(HasDateMixin, BaseEntityObject):
     user_id: UUID
     name: str
     calendar_id: UUID
@@ -57,6 +59,7 @@ class CalendarEntryEntity(BaseEntityObject):
         if current_id is None:
             generated_id = self.id_from_platform(self.platform, self.platform_id)
             object.__setattr__(self, "id", generated_id)
+        self.resolve_day_id()
 
     @classmethod
     def id_from_platform(cls, platform: str, platform_id: str) -> UUID:

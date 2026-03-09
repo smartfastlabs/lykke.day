@@ -1,19 +1,19 @@
 """Calendar entries table definition."""
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
+from .mixins import HasDateMixin
 
 
-class CalendarEntry(Base):
+class CalendarEntry(HasDateMixin, Base):
     """CalendarEntry table for storing calendar entries."""
 
     __tablename__ = "calendar_entries"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
-    date = Column(Date, nullable=False)  # extracted from starts_at for querying
     name = Column(String, nullable=False)
     calendar_id = Column(PGUUID, ForeignKey("calendars.id"), nullable=False)
     calendar_entry_series_id = Column(
@@ -36,6 +36,7 @@ class CalendarEntry(Base):
 
     __table_args__ = (
         Index("idx_calendar_entries_date", "date"),
+        Index("idx_calendar_entries_day_id", "day_id"),
         Index("idx_calendar_entries_calendar_id", "calendar_id"),
         Index("idx_calendar_entries_user_id", "user_id"),
         Index("idx_calendar_entries_series_id", "calendar_entry_series_id"),

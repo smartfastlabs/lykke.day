@@ -4,7 +4,7 @@ from typing import Any, ClassVar
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import TaskEntity
+from lykke.domain.entities import DayEntity, TaskEntity
 from lykke.infrastructure.database.tables import tasks_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetimes_utc,
@@ -61,7 +61,9 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         row: dict[str, Any] = {
             "id": task.id,
             "user_id": task.user_id,
-            "date": task.scheduled_date,  # Extract date from scheduled_date for querying
+            "date": task.date,
+            "day_id": task.day_id
+            or DayEntity.id_from_date_and_user(task.date, task.user_id),
             "scheduled_date": task.scheduled_date,
             "name": task.name,
             "status": get_enum_value(task.status),

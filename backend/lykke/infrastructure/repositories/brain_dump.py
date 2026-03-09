@@ -7,7 +7,7 @@ from sqlalchemy.sql import Select
 from lykke.core.utils.encryption import decrypt_text, encrypt_text
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import BrainDumpEntity
+from lykke.domain.entities import BrainDumpEntity, DayEntity
 from lykke.infrastructure.database.tables import brain_dumps_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetimes_utc,
@@ -31,6 +31,8 @@ class BrainDumpRepository(
             "id": item.id,
             "user_id": item.user_id,
             "date": item.date,
+            "day_id": item.day_id
+            or DayEntity.id_from_date_and_user(item.date, item.user_id),
             "text": encrypt_text(item.text),
             "status": item.status.value,
             "type": item.type.value,

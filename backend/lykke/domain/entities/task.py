@@ -5,6 +5,7 @@ from uuid import UUID
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
+from lykke.domain.entities.day import DayEntity
 from lykke.domain.events.task_events import (
     TaskCreatedEvent,
     TaskStateUpdatedEvent,
@@ -13,10 +14,11 @@ from lykke.domain.events.task_events import (
 from lykke.domain.value_objects.update import TaskUpdateObject
 
 from .base import BaseEntityObject
+from .has_date import HasDateMixin
 
 
 @dataclass(kw_only=True)
-class TaskEntity(BaseEntityObject):
+class TaskEntity(HasDateMixin, BaseEntityObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str
@@ -31,6 +33,14 @@ class TaskEntity(BaseEntityObject):
     routine_definition_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
     actions: list[value_objects.Action] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self.resolve_day_id()
+
+    @property
+    def date(self) -> dt_date:
+        """Expose a shared day-scoped date for this task."""
+        return self.scheduled_date
 
     def create(self) -> "TaskEntity":
         """Mark this task as created and emit a user-facing event."""
@@ -114,7 +124,11 @@ class TaskEntity(BaseEntityObject):
     def reschedule(self, scheduled_date: dt_date) -> "TaskEntity":
         """Reschedule this task to a new date via an update event."""
         update = TaskUpdateObject(scheduled_date=scheduled_date)
-        return self.apply_update(update, TaskUpdatedEvent)
+        updated = self.apply_update(update, TaskUpdatedEvent)
+        updated.day_id = DayEntity.id_from_date_and_user(
+            updated.scheduled_date, updated.user_id
+        )
+        return updated
 
     def mark_pending(self) -> value_objects.TaskStatus:
         """Mark the task as pending (ready to be worked on).

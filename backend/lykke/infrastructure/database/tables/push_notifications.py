@@ -4,9 +4,10 @@ from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PGUUID
 
 from .base import Base
+from .mixins import HasDateMixin
 
 
-class PushNotification(Base):
+class PushNotification(HasDateMixin, Base):
     """Push notification table for tracking sent push notifications."""
 
     __tablename__ = "push_notifications"
@@ -31,6 +32,8 @@ class PushNotification(Base):
     referenced_entities = Column(JSONB, nullable=True)
 
     __table_args__ = (
+        Index("idx_push_notifications_date", "date"),
+        Index("idx_push_notifications_day_id", "day_id"),
         Index("idx_push_notifications_user_id", "user_id"),
         Index("idx_push_notifications_status", "status"),
         Index("idx_push_notifications_sent_at", "sent_at"),

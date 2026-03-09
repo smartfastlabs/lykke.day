@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import UTC, date as datetime_date, datetime, time, timedelta
+from datetime import date as datetime_date
 from typing import cast
 
 from lykke.application.queries.base import BaseQueryHandler, Query
@@ -19,6 +19,7 @@ from lykke.application.repositories import (
 )
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
 from lykke.core.exceptions import NotFoundError
+from lykke.core.utils.dates import get_utc_day_bounds
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     BrainDumpEntity,
@@ -68,8 +69,9 @@ class GetDayContextHandler(
         """
         day_id = DayEntity.id_from_date_and_user(date, self.user.id)
 
-        start_of_day = datetime.combine(date, time.min, tzinfo=UTC)
-        end_of_day = start_of_day + timedelta(days=1)
+        start_of_day, end_of_day = get_utc_day_bounds(
+            date, timezone=self.user.settings.timezone
+        )
 
         (
             tasks_result,

@@ -1,19 +1,19 @@
 """Routines table definition."""
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
+from .mixins import HasDateMixin
 
 
-class Routine(Base):
+class Routine(HasDateMixin, Base):
     """Routine table for storing scheduled routine instances."""
 
     __tablename__ = "routines"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
-    date = Column(Date, nullable=False)
     routine_definition_id = Column(
         PGUUID, ForeignKey("routine_definitions.id"), nullable=False
     )
@@ -26,6 +26,7 @@ class Routine(Base):
 
     __table_args__ = (
         Index("idx_routines_date", "date"),
+        Index("idx_routines_day_id", "day_id"),
         Index("idx_routines_routine_definition_id", "routine_definition_id"),
         Index("idx_routines_user_id", "user_id"),
     )

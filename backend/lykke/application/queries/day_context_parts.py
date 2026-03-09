@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date as datetime_date, datetime, time, timedelta
+from datetime import date as datetime_date
 
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
@@ -17,6 +17,7 @@ from lykke.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
 )
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
+from lykke.core.utils.dates import get_utc_day_bounds
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     BrainDumpEntity,
@@ -198,8 +199,9 @@ class GetDayPushNotificationsHandler(
         self, query: GetDayPushNotificationsQuery
     ) -> list[PushNotificationEntity]:
         """Handle push notifications lookup query."""
-        start_of_day = datetime.combine(query.date, time.min, tzinfo=UTC)
-        end_of_day = start_of_day + timedelta(days=1)
+        start_of_day, end_of_day = get_utc_day_bounds(
+            query.date, timezone=self.user.settings.timezone
+        )
         notifications = await self.push_notification_ro_repo.search(
             value_objects.PushNotificationQuery(
                 sent_after=start_of_day,
@@ -227,8 +229,9 @@ class GetDayMessagesHandler(BaseQueryHandler[GetDayMessagesQuery, list[MessageEn
 
     async def handle(self, query: GetDayMessagesQuery) -> list[MessageEntity]:
         """Handle messages lookup query."""
-        start_of_day = datetime.combine(query.date, time.min, tzinfo=UTC)
-        end_of_day = start_of_day + timedelta(days=1)
+        start_of_day, end_of_day = get_utc_day_bounds(
+            query.date, timezone=self.user.settings.timezone
+        )
         messages = await self.message_ro_repo.search(
             value_objects.MessageQuery(
                 created_after=start_of_day,

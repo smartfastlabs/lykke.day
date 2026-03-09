@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date as dt_date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -11,10 +11,11 @@ from lykke.domain import value_objects
 from lykke.domain.events.ai_chat_events import MessageLLMRunRecordedEvent
 
 from .base import BaseEntityObject
+from .has_date import HasDateMixin
 
 
 @dataclass(kw_only=True)
-class MessageEntity(BaseEntityObject):
+class MessageEntity(HasDateMixin, BaseEntityObject):
     """Message entity representing a single message."""
 
     user_id: UUID
@@ -24,7 +25,13 @@ class MessageEntity(BaseEntityObject):
     meta: dict[str, Any] = field(default_factory=dict)  # Provider-specific metadata
     llm_run_result: value_objects.LLMRunResultSnapshot | None = None
     triggered_by: str | None = None
+    date: dt_date | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+    def __post_init__(self) -> None:
+        if self.date is None:
+            self.date = self.created_at.date()
+        self.resolve_day_id()
 
     def get_content_preview(self, max_length: int = 100) -> str:
         """Get a preview of the message content.

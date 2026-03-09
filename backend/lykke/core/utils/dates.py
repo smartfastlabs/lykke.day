@@ -56,6 +56,18 @@ def get_current_time(timezone: str | None = None) -> datetime.time:
     return datetime.datetime.now(tz=desired_timezone).time()
 
 
+def get_utc_day_bounds(
+    date_value: datetime.date, timezone: str | None = None
+) -> tuple[datetime.datetime, datetime.datetime]:
+    """Return UTC start/end datetimes for a user's local calendar date."""
+    desired_timezone = resolve_timezone(timezone)
+    local_start = datetime.datetime.combine(
+        date_value, datetime.time.min, tzinfo=desired_timezone
+    )
+    local_end = local_start + datetime.timedelta(days=1)
+    return local_start.astimezone(UTC), local_end.astimezone(UTC)
+
+
 def get_tomorrows_date(timezone: str | None = None) -> datetime.date:
     """Get tomorrow's date in the provided timezone (UTC fallback)."""
     return get_current_date(timezone) + datetime.timedelta(days=1)

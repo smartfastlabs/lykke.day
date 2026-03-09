@@ -2,7 +2,6 @@
 
 import datetime
 from datetime import UTC
-from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
@@ -13,6 +12,7 @@ from lykke.core.utils.dates import (
     get_current_time,
     get_time_between,
     get_tomorrows_date,
+    get_utc_day_bounds,
 )
 
 USER_TIMEZONE = "America/Chicago"
@@ -130,3 +130,13 @@ def test_get_time_between_mixed_time_datetime(test_date: datetime.date) -> None:
         # Should be approximately 2 hours (accounting for timezone conversion)
         # t1 is converted to UTC from local timezone, so there may be offset
         assert abs(result.total_seconds()) < 86400  # Within 24 hours (reasonable range)
+
+
+def test_get_utc_day_bounds_uses_user_timezone() -> None:
+    """Local-day bounds should be converted to UTC correctly."""
+    start, end = get_utc_day_bounds(
+        datetime.date(2025, 11, 27), timezone="America/Chicago"
+    )
+
+    assert start == datetime.datetime(2025, 11, 27, 6, 0, 0, tzinfo=UTC)
+    assert end == datetime.datetime(2025, 11, 28, 6, 0, 0, tzinfo=UTC)

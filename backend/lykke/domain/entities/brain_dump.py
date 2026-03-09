@@ -16,11 +16,11 @@ from lykke.domain.events.day_events import (
 )
 
 from .base import BaseEntityObject
-from .day import DayEntity
+from .has_date import HasDateMixin
 
 
 @dataclass(kw_only=True)
-class BrainDumpEntity(BaseEntityObject):
+class BrainDumpEntity(HasDateMixin, BaseEntityObject):
     """Brain dump entity representing a single captured item."""
 
     user_id: UUID
@@ -30,6 +30,9 @@ class BrainDumpEntity(BaseEntityObject):
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     type: value_objects.BrainDumpType = value_objects.BrainDumpType.GENERAL
     llm_run_result: value_objects.LLMRunResultSnapshot | None = None
+
+    def __post_init__(self) -> None:
+        self.resolve_day_id()
 
     def mark_added(self) -> None:
         """Record a brain dump item creation event."""
@@ -126,4 +129,4 @@ class BrainDumpEntity(BaseEntityObject):
         return updated
 
     def _get_day_id(self) -> UUID:
-        return DayEntity.id_from_date_and_user(self.date, self.user_id)
+        return self.resolve_day_id()

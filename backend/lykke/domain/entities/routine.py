@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
+from lykke.domain.entities.has_date import HasDateMixin
 
 if TYPE_CHECKING:
     from datetime import date as dt_date, datetime
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class RoutineEntity(BaseEntityObject):
+class RoutineEntity(HasDateMixin, BaseEntityObject):
     user_id: UUID
     date: dt_date
     routine_definition_id: UUID
@@ -24,6 +25,9 @@ class RoutineEntity(BaseEntityObject):
     status: value_objects.TaskStatus = value_objects.TaskStatus.NOT_STARTED
     snoozed_until: datetime | None = None
     time_window: value_objects.TimeWindow | None = None
+
+    def __post_init__(self) -> None:
+        self.resolve_day_id()
 
     @classmethod
     def from_definition(

@@ -4,7 +4,7 @@ from sqlalchemy.sql import Select
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineEntity
+from lykke.domain.entities import DayEntity, RoutineEntity
 from lykke.domain.value_objects.task import TaskCategory
 from lykke.infrastructure.database.tables import routines_tbl
 from lykke.infrastructure.repositories.base.utils import (
@@ -46,6 +46,8 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
             "id": routine.id,
             "user_id": routine.user_id,
             "date": routine.date,
+            "day_id": routine.day_id
+            or DayEntity.id_from_date_and_user(routine.date, routine.user_id),
             "routine_definition_id": routine.routine_definition_id,
             "name": routine.name,
             "category": enum_to_value(routine.category),

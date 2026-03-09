@@ -1,19 +1,19 @@
 """Brain dumps table definition."""
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
+from .mixins import HasDateMixin
 
 
-class BrainDump(Base):
+class BrainDump(HasDateMixin, Base):
     """Brain dump table for storing captured entries."""
 
     __tablename__ = "brain_dumps"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
-    date = Column(Date, nullable=False)
     text = Column(Text, nullable=False)
     status = Column(String, nullable=False)  # BrainDumpStatus enum as string
     type = Column(String, nullable=False)  # BrainDumpType enum as string
@@ -22,5 +22,6 @@ class BrainDump(Base):
 
     __table_args__ = (
         Index("idx_brain_dumps_date", "date"),
+        Index("idx_brain_dumps_day_id", "day_id"),
         Index("idx_brain_dumps_user_id", "user_id"),
     )

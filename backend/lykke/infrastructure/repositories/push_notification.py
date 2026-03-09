@@ -6,7 +6,7 @@ from sqlalchemy.sql import Select
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity
+from lykke.domain.entities import DayEntity, PushNotificationEntity
 from lykke.infrastructure.database.tables import push_notifications_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetimes_utc,
@@ -61,9 +61,15 @@ class PushNotificationRepository(
     @staticmethod
     def entity_to_row(push_notification: PushNotificationEntity) -> dict[str, Any]:
         """Convert a PushNotification entity to a database row dict."""
+        notification_date = push_notification.date or push_notification.sent_at.date()
+        day_id = push_notification.day_id or DayEntity.id_from_date_and_user(
+            notification_date, push_notification.user_id
+        )
         row: dict[str, Any] = {
             "id": push_notification.id,
             "user_id": push_notification.user_id,
+            "date": notification_date,
+            "day_id": day_id,
             "push_subscription_ids": push_notification.push_subscription_ids,
             "content": push_notification.content,
             "status": push_notification.status,

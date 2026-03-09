@@ -6,7 +6,7 @@ from sqlalchemy.sql import Select
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntryEntity
+from lykke.domain.entities import CalendarEntryEntity, DayEntity
 from lykke.infrastructure.database.tables import calendar_entries_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetime_utc,
@@ -82,6 +82,8 @@ class CalendarEntryRepository(
             "id": calendar_entry.id,
             "user_id": calendar_entry.user_id,
             "date": date_for_user,
+            "day_id": calendar_entry.day_id
+            or DayEntity.id_from_date_and_user(date_for_user, calendar_entry.user_id),
             "name": calendar_entry.name,
             "calendar_id": calendar_entry.calendar_id,
             "calendar_entry_series_id": calendar_entry.calendar_entry_series_id,

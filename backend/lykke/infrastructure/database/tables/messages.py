@@ -4,9 +4,10 @@ from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
+from .mixins import HasDateMixin
 
 
-class Message(Base):
+class Message(HasDateMixin, Base):
     """Message table for storing individual messages."""
 
     __tablename__ = "messages"
@@ -24,6 +25,8 @@ class Message(Base):
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (
+        Index("idx_messages_date", "date"),
+        Index("idx_messages_day_id", "day_id"),
         Index("idx_messages_user_id", "user_id"),
         Index("idx_messages_created_at", "created_at"),
         Index("idx_messages_user_created", "user_id", "created_at"),

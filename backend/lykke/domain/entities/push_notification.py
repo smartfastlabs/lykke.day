@@ -1,16 +1,17 @@
 """PushNotification entity for tracking sent push notifications."""
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date as dt_date, datetime
 from uuid import UUID
 
 from lykke.domain import value_objects
 
 from .base import BaseEntityObject
+from .has_date import HasDateMixin
 
 
 @dataclass(kw_only=True)
-class PushNotificationEntity(BaseEntityObject):
+class PushNotificationEntity(HasDateMixin, BaseEntityObject):
     """Entity representing a push notification that was sent.
 
     Tracks push notifications sent to users, including delivery status and
@@ -25,6 +26,7 @@ class PushNotificationEntity(BaseEntityObject):
     content: str  # JSON string of the notification payload
     status: str  # "success", "failed", "partial_failure", "skipped"
     error_message: str | None = None
+    date: dt_date | None = None
     sent_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     # Smart notification metadata (optional for non-LLM pushes)
     message: str | None = None
@@ -36,3 +38,8 @@ class PushNotificationEntity(BaseEntityObject):
     referenced_entities: list[value_objects.LLMReferencedEntitySnapshot] = field(
         default_factory=list
     )
+
+    def __post_init__(self) -> None:
+        if self.date is None:
+            self.date = self.sent_at.date()
+        self.resolve_day_id()
