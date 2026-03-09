@@ -17,6 +17,7 @@ import {
   faMobileScreenButton,
   faCommentDots,
   faSun,
+  faClipboardCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -147,6 +148,18 @@ const settingsSections: SettingsSection[] = [
         description: "Control AI behavior and integrations.",
         icon: faBrain,
         url: "/me/settings/llm",
+      },
+    ],
+  },
+  {
+    title: "Check Ins",
+    description: "Configure recurring AI check-ins.",
+    items: [
+      {
+        label: "User Status",
+        description: "Tune prompts for daily status assessments.",
+        icon: faClipboardCheck,
+        url: "/me/settings/check-ins/user-status",
       },
     ],
   },

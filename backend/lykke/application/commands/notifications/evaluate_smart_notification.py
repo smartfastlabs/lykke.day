@@ -2,8 +2,9 @@
 
 import hashlib
 import json
+import statistics
 from dataclasses import dataclass
-from datetime import date as dt_date, datetime, timedelta
+from datetime import UTC, date as dt_date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -30,15 +31,59 @@ from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadOnlyProtocol,
 )
 from lykke.core.config import settings
 from lykke.core.utils.dates import get_current_datetime_in_timezone
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity, TaskEntity, UserEntity
+from lykke.domain.entities import (
+    PushNotificationEntity,
+    TaskEntity,
+    UserCheckInEntity,
+    UserEntity,
+)
 
 _SMART_NOTIFICATION_LOOKAHEAD = timedelta(minutes=60)
 _SMART_NOTIFICATION_FLOATING_TASK_WINDOW = timedelta(hours=2)
+
+
+def _score_from_check_ins(
+    check_ins: list[UserCheckInEntity],
+) -> list[value_objects.CheckInScoreStats]:
+    """Compute per-score-key statistics from numeric check-in scores."""
+    values_by_key: dict[str, list[float]] = {}
+    for entity in check_ins:
+        for key, v in (entity.scores or {}).items():
+            if not isinstance(key, str) or not key.strip() or v is None:
+                continue
+            normalized_key = key.strip()
+            try:
+                numeric_value = float(v)
+            except (TypeError, ValueError):
+                continue
+            values_by_key.setdefault(normalized_key, []).append(numeric_value)
+
+    if not values_by_key:
+        return []
+
+    stats_by_key: list[value_objects.CheckInScoreStats] = []
+    for key in sorted(values_by_key):
+        values = values_by_key[key]
+        stats_by_key.append(
+            value_objects.CheckInScoreStats(
+                key=key,
+                count=len(values),
+                mean=round(statistics.fmean(values), 2),
+                median=round(statistics.median(values), 2),
+                min=round(min(values), 2),
+                max=round(max(values), 2),
+                stddev=round(statistics.pstdev(values), 2),
+            )
+        )
+
+    return stats_by_key
+
 
 def _coerce_uuid(value: object) -> UUID | None:
     if isinstance(value, UUID):
@@ -210,6 +255,7 @@ class SmartNotificationHandler(
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
     llm_gateway_factory: LLMGatewayFactoryProtocol
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     send_push_notification_handler: SendPushNotificationHandler
@@ -240,7 +286,27 @@ class SmartNotificationHandler(
         prompt_context = _filter_prompt_context_for_smart_notifications(
             prompt_context, current_time=current_time
         )
-        return UseCasePromptInput(prompt_context=prompt_context)
+        extra: dict[str, object] = {}
+        # Recent check-ins (e.g. user_status_use_case, user entries) for wellbeing context.
+        try:
+            window_start = current_time.astimezone(UTC) - timedelta(days=7)
+            recent_check_ins = await self.user_check_in_ro_repo.search(
+                value_objects.UserCheckInQuery(
+                    checkin_at_after=window_start,
+                    order_by="checkin_at",
+                    order_by_desc=True,
+                    limit=20,
+                )
+            )
+            extra["derived_status_score"] = _score_from_check_ins(recent_check_ins)
+            extra["derived_status_date"] = date.isoformat()
+            extra["recent_check_ins"] = recent_check_ins[:5]
+        except Exception:  # pylint: disable=broad-except
+            pass
+        return UseCasePromptInput(
+            prompt_context=prompt_context,
+            extra_template_vars=extra if extra else None,
+        )
 
     def build_tools(
         self,
@@ -356,7 +422,6 @@ class SmartNotificationHandler(
                             referenced_entities=coerced_references,
                         )
                         await uow.create(notification)
-                        await uow.commit()
                     return None
 
                 await self.send_push_notification_handler.handle(

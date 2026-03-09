@@ -31,6 +31,7 @@ from lykke.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     TriggerRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
 )
 from lykke.domain import value_objects
@@ -219,6 +220,7 @@ class ReadOnlyRepositories(Protocol):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
+    user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
 
 

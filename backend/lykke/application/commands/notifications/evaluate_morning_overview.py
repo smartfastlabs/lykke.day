@@ -203,7 +203,6 @@ class MorningOverviewHandler(
                             ),
                         )
                         await uow.create(notification)
-                        await uow.commit()
                     return None
 
                 await self.send_push_notification_handler.handle(

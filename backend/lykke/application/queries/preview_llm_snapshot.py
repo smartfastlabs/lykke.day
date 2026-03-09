@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time, timedelta
 from typing import Any, Literal, cast
 from uuid import UUID
+
+from pydantic import BaseModel, Field
 
 from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
 )
 from lykke.application.gateways.llm_protocol import LLMTool
+from lykke.application.llm.user_status_metrics import (
+    default_user_status_metrics,
+    normalize_user_status_metrics,
+)
 from lykke.application.llm.prompt_rendering import (
     combine_system_prompt,
     render_ask_prompt,
@@ -23,12 +29,26 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
-from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    UseCaseConfigRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadOnlyProtocol,
+)
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
+
+
+class _UserStatusUseCaseAssessment(BaseModel):
+    """Validation model for user status use case preview payload."""
+
+    text: str | None = None
+    scores: dict[str, float | int] = Field(default_factory=dict)
+
+
+_USER_STATUS_RECENT_CHECKIN_WINDOW = timedelta(days=3)
+_USER_STATUS_RECENT_CHECKIN_LIMIT = 20
 
 
 @dataclass(frozen=True)
@@ -46,6 +66,7 @@ class PreviewLLMSnapshotHandler(
     get_llm_prompt_context_handler: GetLLMPromptContextHandler
     llm_gateway_factory: LLMGatewayFactoryProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    user_check_in_ro_repo: UserCheckInRepositoryReadOnlyProtocol
 
     async def handle(
         self, query: PreviewLLMSnapshotQuery
@@ -55,6 +76,7 @@ class PreviewLLMSnapshotHandler(
             "notification",
             "morning_overview",
             "process_inbound_sms",
+            "user_status_use_case",
         }:
             return None
 
@@ -67,20 +89,28 @@ class PreviewLLMSnapshotHandler(
         prompt_context = await self.get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=current_date)
         )
+        extra_template_vars: dict[str, Any] = {}
 
         if query.usecase == "notification":
             tools = self._build_notification_tools()
         elif query.usecase == "morning_overview":
             tools = self._build_morning_overview_tools()
+        elif query.usecase == "user_status_use_case":
+            tools = []
+            status_metrics = await self._get_user_status_metrics()
+            recent_check_ins = await self._get_recent_check_ins(current_time=current_time)
+            extra_template_vars = {
+                "status_metrics": status_metrics,
+                "recent_check_ins": recent_check_ins,
+            }
         else:
             send_acknowledgment = await self._get_send_acknowledgment(query.usecase)
             tools = self._build_inbound_sms_tools(send_acknowledgment)
-
-        tools_prompt = render_tools_prompt(tools)
-
         if query.usecase in {"notification", "morning_overview"}:
-            extra_template_vars: dict[str, Any] = {"tools_prompt": tools_prompt}
-        else:
+            tools_prompt = render_tools_prompt(tools)
+            extra_template_vars = {"tools_prompt": tools_prompt}
+        elif query.usecase == "process_inbound_sms":
+            tools_prompt = render_tools_prompt(tools)
             inbound_message = MessageEntity(
                 user_id=self.user.id,
                 role=value_objects.MessageRole.USER,
@@ -134,20 +164,31 @@ class PreviewLLMSnapshotHandler(
         except DomainError:
             return None
 
-        request_payload = await llm_gateway.preview_usecase(
-            combined_system_prompt,
-            ask_prompt,
-            tools,
-            metadata={
-                "user_id": str(self.user.id),
-                "handler": "preview_llm_snapshot",
-                "usecase": query.usecase,
-                "llm_provider": user.settings.llm_provider.value,
-            },
-        )
+        metadata = {
+            "user_id": str(self.user.id),
+            "handler": "preview_llm_snapshot",
+            "usecase": query.usecase,
+            "llm_provider": user.settings.llm_provider.value,
+        }
+        if query.usecase == "user_status_use_case":
+            request_payload = await llm_gateway.preview_assessment_usecase(
+                combined_system_prompt,
+                ask_prompt,
+                _UserStatusUseCaseAssessment,
+                metadata=metadata,
+            )
+            request_tools = None
+            request_tool_choice = request_payload.get("assessment_schema")
+        else:
+            request_payload = await llm_gateway.preview_usecase(
+                combined_system_prompt,
+                ask_prompt,
+                tools,
+                metadata=metadata,
+            )
+            request_tools = request_payload.get("request_tools")
+            request_tool_choice = request_payload.get("request_tool_choice")
         request_messages = request_payload.get("request_messages")
-        request_tools = request_payload.get("request_tools")
-        request_tool_choice = request_payload.get("request_tool_choice")
         request_model_params = request_payload.get("request_model_params")
 
         return value_objects.LLMRunResultSnapshot(
@@ -160,6 +201,27 @@ class PreviewLLMSnapshotHandler(
             tool_choice=request_tool_choice,
             model_params=request_model_params,
         )
+
+    async def _get_recent_check_ins(
+        self, *, current_time: datetime
+    ) -> list[Any]:
+        cutoff = current_time - _USER_STATUS_RECENT_CHECKIN_WINDOW
+        return await self.user_check_in_ro_repo.search(
+            value_objects.UserCheckInQuery(
+                checkin_at_after=cutoff,
+                order_by="checkin_at",
+                order_by_desc=True,
+                limit=_USER_STATUS_RECENT_CHECKIN_LIMIT,
+            )
+        )
+
+    async def _get_user_status_metrics(self) -> list[dict[str, str]]:
+        configs = await self.usecase_config_ro_repo.search(
+            value_objects.UseCaseConfigQuery(usecase="user_status_use_case")
+        )
+        if not configs:
+            return default_user_status_metrics()
+        return normalize_user_status_metrics(configs[0].config.get("metrics"))
 
     @staticmethod
     def _build_notification_tools() -> list[LLMTool]:

@@ -33,6 +33,8 @@ if TYPE_CHECKING:
     from datetime import date as datetime_date
     from uuid import UUID
 
+    from pydantic import BaseModel
+
     from lykke.domain import value_objects
     from lykke.domain.entities import UserEntity
 
@@ -57,6 +59,20 @@ class LLMRunResult:
     context_prompt: str
     ask_prompt: str
     tools_prompt: str
+    request_payload: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class LLMAssessmentResult:
+    """Result returned by the LLM assessment runner."""
+
+    assessment: BaseModel
+    prompt_context: value_objects.LLMPromptContext
+    current_time: datetime
+    llm_provider: value_objects.LLMProvider
+    system_prompt: str
+    context_prompt: str
+    ask_prompt: str
     request_payload: dict[str, Any] | None = None
 
 
@@ -88,7 +104,6 @@ class LLMHandlerMixin(ABC):
     async def build_prompt_input(self, date: datetime_date) -> UseCasePromptInput:
         """Build the prompt inputs for this handler."""
 
-    @abstractmethod
     def build_tools(
         self,
         *,
@@ -96,7 +111,14 @@ class LLMHandlerMixin(ABC):
         prompt_context: value_objects.LLMPromptContext,
         llm_provider: value_objects.LLMProvider,
     ) -> list[LLMTool]:
-        """Build tool definitions for this handler."""
+        """Build tool definitions for this handler.
+
+        Handlers that use `run_assessment_llm` can keep the default empty list.
+        """
+        _ = current_time
+        _ = prompt_context
+        _ = llm_provider
+        return []
 
     async def run_llm(self) -> LLMRunResult | None:
         """Run the LLM flow for this handler."""
@@ -220,4 +242,111 @@ class LLMHandlerMixin(ABC):
             ask_prompt=ask_prompt,
             tools_prompt=tools_prompt,
             request_payload=tool_result.request_payload,
+        )
+
+    async def run_assessment_llm(
+        self, assessment_model: type[BaseModel]
+    ) -> LLMAssessmentResult | None:
+        """Run the LLM flow for an assessment payload."""
+        user = self.user
+
+        if not user.settings or not user.settings.llm_provider:
+            logger.debug(
+                f"User {self.user.id} has no LLM provider configured, skipping"
+            )
+            return None
+
+        llm_provider = user.settings.llm_provider
+        current_time = get_current_datetime_in_timezone(user.settings.timezone)
+        current_date = get_current_date(user.settings.timezone)
+
+        try:
+            prompt_input = await self.build_prompt_input(current_date)
+        except Exception as exc:  # pylint: disable=broad-except
+            if isinstance(exc, NotFoundError):
+                logger.debug(
+                    f"Skipping LLM prompt context for user {self.user.id}: {exc}"
+                )
+                return None
+            logger.error(
+                f"Failed to load LLM prompt context for user {self.user.id}: {exc}"
+            )
+            return None
+
+        extra_template_vars = dict(prompt_input.extra_template_vars or {})
+        system_prompt = await render_system_prompt(
+            usecase=self.template_usecase,
+            user=user,
+            usecase_config_ro_repo=self.usecase_config_ro_repo,
+        )
+        context_prompt = render_context_prompt(
+            usecase=self.template_usecase,
+            prompt_context=prompt_input.prompt_context,
+            current_time=current_time,
+            extra_template_vars=extra_template_vars,
+        )
+        ask_prompt = render_ask_prompt(
+            usecase=self.template_usecase,
+            extra_template_vars=extra_template_vars,
+        )
+        combined_system_prompt = combine_system_prompt(
+            system_prompt=system_prompt, context_prompt=context_prompt
+        )
+
+        try:
+            llm_gateway = self.llm_gateway_factory.create_gateway(llm_provider)
+        except DomainError as exc:
+            logger.error(
+                f"Failed to create LLM gateway for provider {llm_provider}: {exc}"
+            )
+            return None
+
+        metadata = {
+            "user_id": str(self.user.id),
+            "handler": self.name,
+            "usecase": self.template_usecase,
+            "llm_provider": llm_provider.value,
+        }
+        request_payload = await llm_gateway.preview_assessment_usecase(
+            combined_system_prompt,
+            ask_prompt,
+            assessment_model,
+            metadata=metadata,
+        )
+        request_messages = request_payload.get("request_messages")
+        request_model_params = request_payload.get("request_model_params")
+        request_schema = request_payload.get("assessment_schema")
+
+        self._llm_snapshot_context = LLMRunSnapshotContext(
+            prompt_context=prompt_input.prompt_context,
+            current_time=current_time,
+            llm_provider=llm_provider,
+            system_prompt=system_prompt,
+            messages=request_messages,
+            tools=None,
+            tool_choice=request_schema,
+            model_params=request_model_params,
+        )
+
+        assessment_result = await llm_gateway.run_assessment_usecase(
+            combined_system_prompt,
+            ask_prompt,
+            assessment_model,
+            metadata=metadata,
+        )
+        if assessment_result is None:
+            logger.debug(
+                f"LLM returned no assessment for handler {self.template_usecase}"
+            )
+            return None
+
+        return LLMAssessmentResult(
+            assessment=assessment_result.assessment,
+            prompt_context=prompt_input.prompt_context,
+            current_time=current_time,
+            llm_provider=llm_provider,
+            system_prompt=system_prompt,
+            context_prompt=context_prompt,
+            ask_prompt=ask_prompt,
+            request_payload=assessment_result.request_payload,
         )

@@ -4,7 +4,7 @@
  */
 
 import type { components } from "./api.generated";
-import type { LLMRunResultSnapshot } from "./notification";
+import type { LLMRunResultSnapshot, UseCaseMetric } from "./notification";
 
 // API Response wrapper type
 export interface ApiResponse<T> {
@@ -136,7 +136,9 @@ export interface UseCaseConfig {
 
 export interface NotificationUseCaseConfig {
   user_amendments: string[];
+  metrics?: UseCaseMetric[];
   rendered_prompt?: string;
+  send_acknowledgment?: boolean;
 }
 
 export interface MessagingUseCaseConfig {

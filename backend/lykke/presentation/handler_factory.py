@@ -26,6 +26,9 @@ from lykke.application.commands.notifications import (
     MorningOverviewHandler,
     SmartNotificationHandler,
 )
+from lykke.application.commands.user_check_in import (
+    UserStatusUseCaseHandler,
+)
 from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.commands.task import (
     CreateAdhocTaskHandler,
@@ -380,6 +383,18 @@ def _build_morning_overview_handler(
     )
 
 
+def _build_user_status_use_case_handler(
+    factory: CommandHandlerFactory,
+) -> UserStatusUseCaseHandler:
+    return UserStatusUseCaseHandler(
+        user=factory.user,
+        uow_factory=factory.uow_factory,
+        command_factory=factory,
+        gateway_factory=factory,
+        repository_factory=factory.ro_repo_factory,
+    )
+
+
 def _build_process_brain_dump_handler(
     factory: CommandHandlerFactory,
 ) -> ProcessBrainDumpHandler:
@@ -422,6 +437,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     SmartNotificationHandler: _build_smart_notification_handler,
     CalendarEntryNotificationHandler: _build_calendar_entry_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
+    UserStatusUseCaseHandler: _build_user_status_use_case_handler,
     ProcessBrainDumpHandler: _build_process_brain_dump_handler,
     ProcessInboundSmsHandler: _build_process_inbound_sms_handler,
 }

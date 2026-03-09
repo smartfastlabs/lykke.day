@@ -45,6 +45,7 @@ from lykke.domain.entities import (
     TimeBlockDefinitionEntity,
     TriggerEntity,
     UseCaseConfigEntity,
+    UserCheckInEntity,
     UserEntity,
 )
 from lykke.domain.entities.base import BaseEntityObject
@@ -80,6 +81,7 @@ from lykke.infrastructure.repositories import (
     TaskRepository,
     TimeBlockDefinitionRepository,
     TriggerRepository,
+    UserCheckInRepository,
     UseCaseConfigRepository,
 )
 
@@ -111,6 +113,7 @@ if TYPE_CHECKING:
         TaskRepositoryReadWriteProtocol,
         TimeBlockDefinitionRepositoryReadWriteProtocol,
         TriggerRepositoryReadWriteProtocol,
+        UserCheckInRepositoryReadWriteProtocol,
         UseCaseConfigRepositoryReadWriteProtocol,
     )
     from lykke.application.unit_of_work import UnitOfWorkProtocol
@@ -155,6 +158,7 @@ class SqlAlchemyUnitOfWork:
         PushSubscriptionEntity: "_push_subscription_rw_repo",
         AuthTokenEntity: "_auth_token_rw_repo",
         UseCaseConfigEntity: "_usecase_config_rw_repo",
+        UserCheckInEntity: "_user_check_in_rw_repo",
     }
 
     def __init__(
@@ -224,6 +228,7 @@ class SqlAlchemyUnitOfWork:
             TimeBlockDefinitionRepositoryReadWriteProtocol | None
         ) = None
         self._trigger_rw_repo: TriggerRepositoryReadWriteProtocol | None = None
+        self._user_check_in_rw_repo: UserCheckInRepositoryReadWriteProtocol | None = None
         # Note: UserEntity and SmsLoginCodeEntity persistence is intentionally *not*
         # handled by the UnitOfWork. Cross-user identity access is isolated in
         # infrastructure/unauthenticated/identity_access.py.
@@ -370,6 +375,12 @@ class SqlAlchemyUnitOfWork:
             PushNotificationRepository(user=self.user),
         )
         self._push_notification_rw_repo = push_notification_repo
+
+        user_check_in_repo = cast(
+            "UserCheckInRepositoryReadWriteProtocol",
+            UserCheckInRepository(user=self.user),
+        )
+        self._user_check_in_rw_repo = user_check_in_repo
 
         self.workers_to_schedule = (
             self._workers_to_schedule_factory()

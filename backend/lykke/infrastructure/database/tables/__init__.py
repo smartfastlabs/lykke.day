@@ -22,6 +22,7 @@ from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition
 from .trigger_tactics import TriggerTactic
 from .triggers import Trigger
+from .user_check_ins import UserCheckIn
 from .usecase_config import UseCaseConfig
 from .users import User
 
@@ -48,6 +49,7 @@ triggers_tbl = Trigger.__table__
 tasks_tbl = Task.__table__
 time_block_definitions_tbl = TimeBlockDefinition.__table__
 usecase_configs_tbl = UseCaseConfig.__table__
+user_check_ins_tbl = UserCheckIn.__table__
 users_tbl = User.__table__
 
 __all__ = [
@@ -77,6 +79,7 @@ __all__ = [
     "TimeBlockDefinition",
     "UseCaseConfig",
     "User",
+    "UserCheckIn",
     # Table objects (for Core-style queries)
     "auth_tokens_tbl",
     "bot_personalities_tbl",
@@ -101,5 +104,6 @@ __all__ = [
     "tasks_tbl",
     "time_block_definitions_tbl",
     "usecase_configs_tbl",
+    "user_check_ins_tbl",
     "users_tbl",
 ]

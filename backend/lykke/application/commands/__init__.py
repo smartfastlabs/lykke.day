@@ -59,6 +59,12 @@ from .task import (
     RescheduleTaskHandler,
 )
 from .timing_status import EvaluateTimingStatusCommand, EvaluateTimingStatusHandler
+from .user_check_in import (
+    CreateUserCheckInCommand,
+    CreateUserCheckInHandler,
+    UserStatusUseCaseCommand,
+    UserStatusUseCaseHandler,
+)
 
 __all__ = [
     "CalendarEntryNotificationCommand",
@@ -67,6 +73,10 @@ __all__ = [
     "CreateAdhocTaskHandler",
     "CreateBrainDumpCommand",
     "CreateBrainDumpHandler",
+    "CreateUserCheckInCommand",
+    "CreateUserCheckInHandler",
+    "UserStatusUseCaseCommand",
+    "UserStatusUseCaseHandler",
     "DeleteBrainDumpCommand",
     "DeleteBrainDumpHandler",
     "DeleteTaskCommand",

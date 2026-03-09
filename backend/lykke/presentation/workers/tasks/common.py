@@ -32,6 +32,7 @@ if TYPE_CHECKING:
         MorningOverviewHandler,
         SmartNotificationHandler,
     )
+    from lykke.application.commands.user_check_in import UserStatusUseCaseHandler
     from lykke.presentation.handler_factory import CommandHandlerFactory
 
 
@@ -210,6 +211,22 @@ def get_morning_overview_handler(
         uow_factory=uow_factory,
     )
     return factory.create(MorningOverviewHandler)
+
+
+def get_user_status_use_case_handler(
+    user: UserEntity,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> UserStatusUseCaseHandler:
+    """Get a UserStatusUseCaseHandler instance for a user."""
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
+    factory = CommandHandlerFactory(
+        user=user,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(UserStatusUseCaseHandler)
 
 
 def get_calendar_entry_notification_handler(

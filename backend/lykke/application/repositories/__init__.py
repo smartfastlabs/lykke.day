@@ -80,6 +80,10 @@ from .trigger_repository import (
     TriggerRepositoryReadOnlyProtocol,
     TriggerRepositoryReadWriteProtocol,
 )
+from .user_check_in_repository import (
+    UserCheckInRepositoryReadOnlyProtocol,
+    UserCheckInRepositoryReadWriteProtocol,
+)
 from .usecase_config_repository import (
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
@@ -125,6 +129,8 @@ __all__ = [
     "TimeBlockDefinitionRepositoryReadWriteProtocol",
     "TriggerRepositoryReadOnlyProtocol",
     "TriggerRepositoryReadWriteProtocol",
+    "UserCheckInRepositoryReadOnlyProtocol",
+    "UserCheckInRepositoryReadWriteProtocol",
     "UseCaseConfigRepositoryReadOnlyProtocol",
     "UseCaseConfigRepositoryReadWriteProtocol",
 ]

@@ -74,6 +74,7 @@ import MorningOverviewConfigPage from "@/pages/me/settings/morning/Index";
 import MessagingConfigPage from "@/pages/me/settings/messaging/Index";
 import AlarmPresetsPage from "@/pages/me/settings/alarms/Index";
 import CalendarNotificationsPage from "@/pages/me/settings/calendar-notifications/Index";
+import UserStatusUseCaseCheckInConfigPage from "@/pages/me/settings/check-ins/user-status/Index";
 import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/Index";
 import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/New";
 import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detail";
@@ -473,6 +474,10 @@ export default function App() {
                     component={MorningOverviewConfigPage}
                   />
                   <Route path="/messaging" component={MessagingConfigPage} />
+                  <Route
+                    path="/check-ins/user-status"
+                    component={UserStatusUseCaseCheckInConfigPage}
+                  />
                   <Route path="/alarms" component={AlarmPresetsPage} />
                   <Route
                     path="/notifications/push"
