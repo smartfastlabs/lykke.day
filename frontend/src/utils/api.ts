@@ -334,6 +334,18 @@ export const alarmAPI = {
   },
 };
 
+export const checkInAPI = {
+  create: (payload: {
+    text?: string;
+    scores?: Record<string, number>;
+    checkin_at?: string;
+  }): Promise<void> =>
+    fetchData<void>("/api/me/check-ins", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
 export const brainDumpAPI = {
   getToday: async (): Promise<BrainDump[]> => {
     const now = new Date();

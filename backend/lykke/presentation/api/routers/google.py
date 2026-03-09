@@ -1,12 +1,12 @@
 import secrets
-from datetime import UTC, datetime
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from loguru import logger
 
+from lykke.application.gateways import RedisStorageGatewayProtocol
 from lykke.application.commands.google import (
     HandleGoogleLoginCallbackCommand,
     HandleGoogleLoginCallbackHandler,
@@ -27,17 +27,46 @@ from lykke.presentation.workers.tasks.calendar import (
 )
 
 from .dependencies.factories import create_command_handler
-from .dependencies.services import get_read_only_repository_factory
+from .dependencies.services import (
+    get_read_only_repository_factory,
+    get_redis_storage_gateway,
+)
 from .dependencies.user import get_current_user
-
-# Auth state storage (in memory for simplicity, use a database in production)
-oauth_states = {}
 
 router = APIRouter()
 
 
+def _oauth_state_key(state: str) -> str:
+    return f"oauth-state:{state}"
+
+
+def _oauth_state_ttl_seconds() -> int:
+    return max(1, int(OAUTH_STATE_EXPIRY.total_seconds()))
+
+
+async def _store_oauth_state(
+    *,
+    storage_gateway: RedisStorageGatewayProtocol,
+    state: str,
+    action: str,
+    auth_token_id: UUID | None = None,
+) -> None:
+    payload = {
+        "action": action,
+        "auth_token_id": str(auth_token_id) if auth_token_id else None,
+    }
+    await storage_gateway.set_json(
+        key=_oauth_state_key(state),
+        value=payload,
+        ttl_seconds=_oauth_state_ttl_seconds(),
+    )
+
+
 @router.get("/login")
 async def google_login(
+    storage_gateway: Annotated[
+        RedisStorageGatewayProtocol, Depends(get_redis_storage_gateway)
+    ],
     auth_token_id: UUID | None = None,
 ) -> RedirectResponse:
     state = secrets.token_urlsafe(16)
@@ -49,41 +78,35 @@ async def google_login(
         prompt="consent select_account",
     )
 
-    # Store state for validation on callback
-    # If auth_token_id is provided, we're re-authenticating a specific account
-    oauth_states[state] = {
-        "expiry": datetime.now(UTC) + OAUTH_STATE_EXPIRY,
-        "action": "login",
-        "auth_token_id": str(auth_token_id) if auth_token_id else None,
-    }
+    # Store state in Redis with TTL to support multi-worker callbacks.
+    await _store_oauth_state(
+        storage_gateway=storage_gateway,
+        state=state,
+        action="login",
+        auth_token_id=auth_token_id,
+    )
 
     return RedirectResponse(authorization_url)
 
 
-def verify_state(
+async def verify_state(
+    storage_gateway: RedisStorageGatewayProtocol,
     state: str,
     expected_action: str,
-) -> dict:
+) -> dict[str, object]:
     """
     Verify the state parameter and check if it matches the expected action.
     Returns the state data if valid.
     """
 
-    if state not in oauth_states:
+    state_data = await storage_gateway.get_json(_oauth_state_key(state))
+    if state_data is None:
         raise HTTPException(
             status_code=400,
             detail="Invalid state parameter",
         )
-
-    state_data = oauth_states[state]
-    if datetime.now(UTC) > cast("datetime", state_data["expiry"]):
-        del oauth_states[state]
-        raise HTTPException(
-            status_code=400,
-            detail="State parameter expired",
-        )
-    elif state_data["action"] != expected_action:
-        del oauth_states[state]
+    if state_data.get("action") != expected_action:
+        await storage_gateway.delete(_oauth_state_key(state))
         raise HTTPException(
             status_code=400,
             detail="Invalid action parameter",
@@ -92,12 +115,27 @@ def verify_state(
     return state_data
 
 
+def _parse_auth_token_id_from_state(state_data: dict[str, object]) -> UUID | None:
+    raw_auth_token_id = state_data.get("auth_token_id")
+    if raw_auth_token_id is None:
+        return None
+    if not isinstance(raw_auth_token_id, str):
+        raise HTTPException(status_code=400, detail="Invalid auth token in state")
+    try:
+        return UUID(raw_auth_token_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid auth token in state") from exc
+
+
 @router.get("/callback/login")
 async def google_login_callback(
     state: str,
     code: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[HandleGoogleLoginCallbackHandler, Depends(create_command_handler(HandleGoogleLoginCallbackHandler))],
+    storage_gateway: Annotated[
+        RedisStorageGatewayProtocol, Depends(get_redis_storage_gateway)
+    ],
 ) -> RedirectResponse:
     if not code:
         raise HTTPException(
@@ -105,9 +143,8 @@ async def google_login_callback(
             detail="Missing required parameters",
         )
 
-    state_data = verify_state(state, "login")
-    auth_token_id_from_state = state_data.get("auth_token_id")
-    auth_token_id = UUID(auth_token_id_from_state) if auth_token_id_from_state else None
+    state_data = await verify_state(storage_gateway, state, "login")
+    auth_token_id = _parse_auth_token_id_from_state(state_data)
 
     result = await handler.handle(
         HandleGoogleLoginCallbackCommand(
@@ -129,8 +166,8 @@ async def google_login_callback(
                 f"Failed to enqueue resubscribe task for calendar {calendar_id}: {e}"
             )
 
-    # Clean up state
-    oauth_states.pop(state, None)
+    # Consume state so it cannot be reused.
+    await storage_gateway.delete(_oauth_state_key(state))
 
     return RedirectResponse(url="/me")
 

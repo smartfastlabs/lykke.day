@@ -8,12 +8,18 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
+from lykke.infrastructure.gateways import (
+    RedisPubSubGateway,
+    RedisStorageGateway,
+    StubPubSubGateway,
+)
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.services import (
     get_pubsub_gateway,
+    get_redis_storage_gateway,
     get_unit_of_work_factory,
 )
 
@@ -101,3 +107,27 @@ def test_unit_of_work_factory_requires_pubsub_gateway():
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
     assert uow._pubsub_gateway is stub_gateway
+
+
+@pytest.mark.asyncio
+async def test_get_redis_storage_gateway_uses_request_pool():
+    """Redis storage dependency should create a gateway from app pool."""
+    request = MagicMock()
+    request.app.state.redis_pool = MagicMock()
+    gen = get_redis_storage_gateway(request)
+    gateway = await gen.__anext__()
+    assert isinstance(gateway, RedisStorageGateway)
+
+    with contextlib.suppress(StopAsyncIteration):
+        await gen.__anext__()
+
+
+@pytest.mark.asyncio
+async def test_get_redis_storage_gateway_raises_when_pool_missing():
+    """Redis storage dependency should fail fast when Redis is unavailable."""
+    request = MagicMock()
+    request.app.state.redis_pool = None
+    gen = get_redis_storage_gateway(request)
+    with pytest.raises(HTTPException) as exc:
+        await gen.__anext__()
+    assert exc.value.status_code == 503

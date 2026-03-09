@@ -7,6 +7,7 @@ import {
   faCalendarPlus,
   faListCheck,
   faPlus,
+  faSquareCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
 type AddActionModalProps = {
@@ -15,6 +16,7 @@ type AddActionModalProps = {
   onAddTask: () => void;
   onAddReminder: () => void;
   onAddAlarm: () => void;
+  onAddCheckIn: () => void;
   onAddEvent?: () => void;
 };
 
@@ -32,15 +34,15 @@ const AddActionModal: Component<AddActionModalProps> = (props) => {
             Add
           </p>
           <p class="text-xs text-stone-200/70">
-            Create a task, reminder, alarm, or event
+            Create a task, reminder, alarm, check-in, or event
           </p>
         </div>
 
         <div
           classList={{
             "grid gap-6 text-center text-xs text-stone-200/80": true,
-            "grid-cols-3": !props.onAddEvent,
-            "grid-cols-2 sm:grid-cols-4": !!props.onAddEvent,
+            "grid-cols-2 sm:grid-cols-4": !props.onAddEvent,
+            "grid-cols-3 sm:grid-cols-5": !!props.onAddEvent,
           }}
         >
           <div class="flex flex-col items-center gap-2">
@@ -75,6 +77,17 @@ const AddActionModal: Component<AddActionModalProps> = (props) => {
               <Icon icon={faBell} class="h-7 w-7 fill-current" />
             </button>
             <span>Alarm</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={() => props.onAddCheckIn()}
+              class="flex h-20 w-20 items-center justify-center rounded-full border border-violet-200/70 bg-violet-500/80 text-white shadow-lg shadow-violet-900/20 transition hover:bg-violet-400"
+              aria-label="Add check-in"
+            >
+              <Icon icon={faSquareCheck} class="h-7 w-7 fill-current" />
+            </button>
+            <span>Check-In</span>
           </div>
           {props.onAddEvent && (
             <div class="flex flex-col items-center gap-2">

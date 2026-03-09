@@ -12,6 +12,7 @@ describe("createMeMenuActions", () => {
     expect(actions.map((action) => action.label)).toEqual([
       "Brain dumps",
       "Notifications",
+      "Check-ins",
       "Messages",
       "Tomorrow",
       "Events",
@@ -24,6 +25,7 @@ describe("createMeMenuActions", () => {
     const actionRouteMap: Record<string, string> = {
       "Brain dumps": "/me/today/brain-dumps",
       Notifications: "/me/today/notifications",
+      "Check-ins": "/me/today/checkins",
       Messages: "/me/today/messages",
       Tomorrow: "/me/tomorrow",
       Events: "/me/today/events",
@@ -39,7 +41,7 @@ describe("createMeMenuActions", () => {
       expect(navigate).toHaveBeenCalledWith(route);
     });
 
-    expect(close).toHaveBeenCalledTimes(8);
+    expect(close).toHaveBeenCalledTimes(9);
     expect(onRefresh).not.toHaveBeenCalled();
   });
 

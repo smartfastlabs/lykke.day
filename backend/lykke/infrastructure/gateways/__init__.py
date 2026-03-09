@@ -1,8 +1,9 @@
-from . import google, redis_pubsub, sendgrid, stub_pubsub, twilio, web_push
+from . import google, redis_pubsub, redis_storage, sendgrid, stub_pubsub, twilio, web_push
 from .anthropic_llm import AnthropicLLMGateway
 from .google import GoogleCalendarGateway
 from .openai_llm import OpenAILLMGateway
 from .redis_pubsub import RedisPubSubGateway
+from .redis_storage import RedisStorageGateway
 from .sendgrid import SendGridGateway
 from .stub_pubsub import StubPubSubGateway
 from .stub_sms import StubSMSGateway
@@ -14,6 +15,7 @@ __all__ = [
     "GoogleCalendarGateway",
     "OpenAILLMGateway",
     "RedisPubSubGateway",
+    "RedisStorageGateway",
     "SendGridGateway",
     "StubPubSubGateway",
     "StubSMSGateway",
@@ -21,6 +23,7 @@ __all__ = [
     "WebPushGateway",
     "google",
     "redis_pubsub",
+    "redis_storage",
     "sendgrid",
     "stub_pubsub",
     "twilio",

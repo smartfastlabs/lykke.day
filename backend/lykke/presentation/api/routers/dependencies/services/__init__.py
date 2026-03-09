@@ -9,8 +9,10 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Request, WebSocket
+from fastapi import Depends, HTTPException, Request, WebSocket
+from redis import asyncio as aioredis  # type: ignore
 
+from lykke.application.gateways import RedisStorageGatewayProtocol
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayBrainDumpsHandler,
@@ -28,7 +30,7 @@ from lykke.application.unit_of_work import (
     UnitOfWorkFactory,
 )
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.gateways import RedisPubSubGateway, RedisStorageGateway
 from lykke.infrastructure.repository_factories import (
     SqlAlchemyReadOnlyRepositoryFactory,
 )
@@ -39,6 +41,24 @@ from lykke.presentation.api.routers.dependencies.user import (
 from lykke.presentation.handler_factory import QueryHandlerFactory
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
 from lykke.presentation.workers.tasks.registry import WorkerRegistry
+
+
+def _get_redis_pool_from_request(request: Request) -> aioredis.ConnectionPool:
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    if redis_pool is None:
+        raise HTTPException(status_code=503, detail="Redis is unavailable")
+    return redis_pool
+
+
+async def get_redis_storage_gateway(
+    request: Request,
+) -> AsyncIterator[RedisStorageGatewayProtocol]:
+    """Get RedisStorageGateway using the shared Redis connection pool."""
+    gateway = RedisStorageGateway(redis_pool=_get_redis_pool_from_request(request))
+    try:
+        yield gateway
+    finally:
+        await gateway.close()
 
 
 async def get_pubsub_gateway(

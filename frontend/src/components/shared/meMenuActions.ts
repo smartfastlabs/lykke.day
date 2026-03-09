@@ -7,6 +7,7 @@ import {
   faGear,
   faPenToSquare,
   faRotate,
+  faSquareCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import type { ActionGridModalAction } from "@/components/shared/ActionGridModal";
 
@@ -49,6 +50,11 @@ export const createMeMenuActions = (
       label: "Notifications",
       icon: faBell,
       onClick: () => menuNavigate("/me/today/notifications"),
+    },
+    {
+      label: "Check-ins",
+      icon: faSquareCheck,
+      onClick: () => menuNavigate("/me/today/checkins"),
     },
     {
       label: "Messages",

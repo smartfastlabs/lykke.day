@@ -268,6 +268,10 @@ const BrainDumpButton: Component = () => {
           closeAddModal();
           navigate("/me/add-alarm");
         }}
+        onAddCheckIn={() => {
+          closeAddModal();
+          navigate("/me/checkin");
+        }}
         onAddEvent={() => {
           closeAddModal();
           setShowAddEventModal(true);

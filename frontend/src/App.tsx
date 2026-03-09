@@ -47,6 +47,7 @@ import TomorrowRoutinesView from "@/pages/me/tomorrow/Routines";
 import TomorrowEditPage from "@/pages/me/tomorrow/Edit";
 import TodayNotificationsPage from "@/pages/me/today/notifications/Index";
 import TodayNotificationDetailPage from "@/pages/me/today/notifications/Detail";
+import TodayCheckInsPage from "@/pages/me/today/checkins/Index";
 import TodayMessagesPage from "@/pages/me/today/messages/Index";
 import TodayMessageDetailPage from "@/pages/me/today/messages/Detail";
 import TodayBrainDumpsPage from "@/pages/me/today/brain-dumps/Index";
@@ -56,6 +57,7 @@ import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
 import AddAlarmPage from "@/pages/me/today/AddAlarm";
+import CheckInPage from "@/pages/me/CheckIn";
 import MeIndexPage from "@/pages/me/Index";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import KioskPage from "@/pages/me/kiosk/Index";
@@ -390,6 +392,7 @@ export default function App() {
                 <Route path="/brain-dump" component={BrainDumpPage} />
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
                 <Route path="/add-alarm" component={AddAlarmPage} />
+                <Route path="/checkin" component={CheckInPage} />
                 <Route path="/add-reminder" component={AddReminderPage} />
                 <Route
                   path="/tasks"
@@ -443,6 +446,7 @@ export default function App() {
                     path="/notifications"
                     component={TodayNotificationsPage}
                   />
+                  <Route path="/checkins" component={TodayCheckInsPage} />
                   <Route path="/messages" component={TodayMessagesPage} />
                   <Route path="/edit" component={TodayEditPage} />
                 </Route>
