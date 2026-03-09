@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from uuid import uuid4
 
 import pytest
 
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity
+from lykke.domain.entities import DayEntity, MessageEntity
 from lykke.domain.events.ai_chat_events import MessageLLMRunRecordedEvent
 
 
@@ -39,6 +39,24 @@ def test_message_creation() -> None:
     assert message.content == content
     assert message.meta == {}
     assert message.created_at is not None
+    assert message.date == message.created_at.date()
+    assert message.day_id == DayEntity.id_from_date_and_user(message.date, user_id)
+
+
+def test_message_honors_explicit_date_for_day_id() -> None:
+    """Explicit date should be preserved and used for day_id."""
+    user_id = uuid4()
+    explicit_date = date(2025, 11, 27)
+    message = MessageEntity(
+        user_id=user_id,
+        role=value_objects.MessageRole.USER,
+        content="hello",
+        date=explicit_date,
+        created_at=datetime(2025, 11, 28, 3, 0, tzinfo=UTC),
+    )
+
+    assert message.date == explicit_date
+    assert message.day_id == DayEntity.id_from_date_and_user(explicit_date, user_id)
 
 
 def test_message_with_metadata() -> None:

@@ -43,14 +43,13 @@ class MessageRepository(
     @staticmethod
     def entity_to_row(message: MessageEntity) -> dict[str, Any]:
         """Convert a Message entity to a database row dict."""
-        message_date = message.date or message.created_at.date()
         day_id = message.day_id or DayEntity.id_from_date_and_user(
-            message_date, message.user_id
+            message.date, message.user_id
         )
         return {
             "id": message.id,
             "user_id": message.user_id,
-            "date": message_date,
+            "date": message.date,
             "day_id": day_id,
             "role": message.role.value,
             "type": message.type.value,

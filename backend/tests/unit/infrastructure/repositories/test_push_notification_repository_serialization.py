@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from lykke.domain import value_objects
-from lykke.domain.entities import PushNotificationEntity, UserEntity
+from lykke.domain.entities import DayEntity, PushNotificationEntity, UserEntity
 from lykke.infrastructure.repositories.push_notification import (
     PushNotificationRepository,
 )
@@ -40,6 +40,10 @@ def test_push_notification_referenced_entities_json_serializable() -> None:
 
     row = repo.entity_to_row(notification)
 
+    assert row["date"] == notification.sent_at.date()
+    assert row["day_id"] == DayEntity.id_from_date_and_user(
+        notification.sent_at.date(), user_id
+    )
     assert isinstance(row["referenced_entities"], list)
     assert row["referenced_entities"][0]["entity_type"] == "calendar_entry"
     assert row["referenced_entities"][0]["entity_id"] == str(

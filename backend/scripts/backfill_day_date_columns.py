@@ -10,12 +10,19 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 from dataclasses import dataclass
 from datetime import UTC, date as dt_date, datetime
+from pathlib import Path
 from uuid import NAMESPACE_DNS, UUID, uuid5
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
+
+# Allow running as: `poetry run python scripts/...` from backend/
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 from lykke.infrastructure.database import close_engine, get_engine
 

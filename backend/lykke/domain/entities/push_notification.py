@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import UTC, date as dt_date, datetime
+from typing import cast
 from uuid import UUID
 
 from lykke.domain import value_objects
@@ -26,7 +27,7 @@ class PushNotificationEntity(HasDateMixin, BaseEntityObject):
     content: str  # JSON string of the notification payload
     status: str  # "success", "failed", "partial_failure", "skipped"
     error_message: str | None = None
-    date: dt_date | None = None
+    date: dt_date = field(default=None)  # type: ignore[assignment]
     sent_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     # Smart notification metadata (optional for non-LLM pushes)
     message: str | None = None
@@ -40,6 +41,7 @@ class PushNotificationEntity(HasDateMixin, BaseEntityObject):
     )
 
     def __post_init__(self) -> None:
-        if self.date is None:
+        current_date = cast(dt_date | None, object.__getattribute__(self, "date"))
+        if current_date is None:
             self.date = self.sent_at.date()
         self.resolve_day_id()

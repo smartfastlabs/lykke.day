@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date as dt_date
+from typing import cast
 from uuid import UUID
 
 from .day import DayEntity
@@ -11,12 +12,13 @@ from .day import DayEntity
 class HasDateMixin:
     """Shared day-scoped fields/behavior for entities."""
 
-    day_id: UUID | None = None
+    day_id: UUID = field(default=None)  # type: ignore[assignment]
 
     def resolve_day_id(self) -> UUID:
         """Return day_id, computing it from user_id + date when missing."""
-        if self.day_id is not None:
-            return self.day_id
+        current_day_id = cast(UUID | None, object.__getattribute__(self, "day_id"))
+        if current_day_id is not None:
+            return current_day_id
 
         date_value = getattr(self, "date", None)
         user_id = getattr(self, "user_id", None)
