@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from lykke.domain.value_objects.user_check_in import UserCheckInSource
 
 from .base import BaseEntitySchema, BaseSchema
@@ -15,11 +17,11 @@ class UserCheckInSchema(BaseEntitySchema):
     user_id: UUID
     source: UserCheckInSource
     source_name: str | None = None
-    source_metadata: dict[str, Any] = {}
+    source_metadata: dict[str, Any] = Field(default_factory=dict)
     checkin_at: datetime
     created_at: datetime
     text: str | None = None
-    scores: dict[str, Any] = {}
+    scores: dict[str, Any] = Field(default_factory=dict)
 
 
 class UserCheckInCreateSchema(BaseSchema):
